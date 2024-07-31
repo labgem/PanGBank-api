@@ -7,7 +7,7 @@ from .database import create_db_and_tables, engine
 from .models import Collection, CollectionRelease, Genome, TaxonomySource, Pangenome
 from datetime import datetime
 
-from .taxonomy import create_genomes_and_taxonomies, create_taxonomy_source
+from .taxonomy import create_genomes_and_taxonomies, create_taxonomy_source, parse_taxonomy_file
 
 
 def associate_genomes_with_collection_release(genomes:list[Genome], collection_release:CollectionRelease, session:Session):
@@ -81,6 +81,8 @@ def create_collection_release(collection_release_info_file:Path, session:Session
 
     return collection_release
 
+def parse_pangenome_dir(pangenome_dir:Path):
+
 def main():
     create_db_and_tables()
     
@@ -88,12 +90,19 @@ def main():
 
     taxonomy_source_info_file = Path("tests/taxonomy_release_info.json")
 
-    #  avoir tous les genomes et leurs taxo
-    genome_to_taxonomy = {
-        "genomeA": "Bacteria; Pseudomonadota; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Escherichia; Escherichia coli",
-        "genomeB": "Bacteria; Pseudomonadota; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Escherichia; Escherichia albertii"
-    }
+    pangenome_dir = Path("test/pangenomes")
+    taxonomy_file = Path("tests/ar53_taxonomy_clean_h100.tsv")
+
+    genome_to_taxonomy = parse_taxonomy_file(taxonomy_file)
+    # #  avoir tous les genomes et leurs taxo
+    # genome_to_taxonomy = {
+    #     "genomeA": "Bacteria; Pseudomonadota; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Escherichia; Escherichia coli",
+    #     "genomeB": "Bacteria; Pseudomonadota; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Escherichia; Escherichia albertii"
+    # }
     
+    parse_pangenome_dir(pangenome_dir)
+
+
     # Ajouter les pangenome à partir de leur info.yaml?
     # Puis ajouter les génomes avec les genome info de chaque pangenome..
     
@@ -105,8 +114,8 @@ def main():
 
         genomes = create_genomes_and_taxonomies(genome_to_taxonomy, taxonomy_release, session=session)
 
-
         associate_genomes_with_collection_release(genomes, collection_release, session)
+
 
 
 if __name__ == "__main__":

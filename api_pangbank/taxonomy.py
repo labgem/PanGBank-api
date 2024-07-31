@@ -19,10 +19,20 @@ from pathlib import Path
 #         taxon_dict[key] = taxon
 #     return taxon_dict
 
-def get_lineage(taxonomy:Taxonomy) -> tuple[str]:
+def parse_taxonomy_file(taxonomy_file:Path) -> dict[str, str]:
+
+    genome_to_lineage = {}
+    with open(taxonomy_file) as fl:
+        for line in fl:
+            genome_name, taxonomy = line.strip().split('\t')
+            genome_to_lineage[genome_name] = taxonomy
+
+    return genome_to_lineage
+
+def get_lineage(taxonomy:Taxonomy, ranks:list[str]) -> tuple[str]:
     lineage = []
 
-    for rank in ['domain', "phylum", "class_", "order", "family", "genus", "species", "strain"]:
+    for rank in ranks:
         taxon_rank = getattr(taxonomy, rank)
         if taxon_rank is None:
             return tuple(lineage)
@@ -31,12 +41,12 @@ def get_lineage(taxonomy:Taxonomy) -> tuple[str]:
 
     return tuple(lineage)
 
-def build_taxonomy_dict(taxonomies: list[Taxonomy]) -> dict[tuple[str], Taxonomy]:
+def build_taxonomy_dict(taxonomies: list[Taxonomy], ranks:list[str]) -> dict[tuple[str], Taxonomy]:
 
     taxon_dict = {}
 
     for taxonomy in taxonomies:
-        lineage = get_lineage(taxonomy)
+        lineage = get_lineage(taxonomy, ranks)
         taxon_dict[lineage] = taxonomy
 
     return taxon_dict
@@ -47,9 +57,10 @@ def parse_ranks_str(ranks_str) -> list[str]:
 
     return ranks
 
-def create_taxonomy(lineage:tuple[str, ...], ranks:list[str], taxonomy_source:TaxonomySource, taxonomy_dict:dict[tuple[str], Taxonomy]) -> Taxonomy:
+def create_taxonomy(lineage:tuple[str, ... ], ranks:list[str], taxonomy_dict:dict[tuple[str, ...], Taxonomy]) -> Taxonomy:
 
     if lineage in taxonomy_dict:
+        print(f'lineage {lineage[-1]} in taxonomy_dict')
         taxonomy = taxonomy_dict[lineage]
     
     else:
@@ -57,7 +68,10 @@ def create_taxonomy(lineage:tuple[str, ...], ranks:list[str], taxonomy_source:Ta
         for rank, taxon in zip(ranks, lineage):
             setattr(taxonomy, rank, taxon)
 
+        taxonomy_dict[lineage] = taxonomy
+
     return taxonomy
+
 
 
 
@@ -108,11 +122,15 @@ def create_taxonomy_source(taxonomy_source_info_file : Path, session:Session) ->
 def create_genomes_and_taxonomies(genome_to_taxonomy: dict[str,str], taxonomy_source : TaxonomySource, session: Session) -> list[Genome]:
 
 
-    ranks = parse_ranks_str(taxonomy_source.ranks)
+    
+    ranks = ['domain', "phylum", "class_", "order", "family", "genus", "species", "strain"]
+    # ranks_from_taxonomy_source = parse_ranks_str(taxonomy_source.ranks)
+    # TODO compare ranks_from_taxonomy_source and ranks ? 
+
     print(taxonomy_source)
 
     # Add new taxon from taxonomies
-    existing_taxonomy_dict = build_taxonomy_dict(taxonomy_source.taxonomies)
+    existing_taxonomy_dict = build_taxonomy_dict(taxonomy_source.taxonomies, ranks)
     print(f'The taxonomy source has {len(existing_taxonomy_dict)} taxonomies')
 
     genomes = []
@@ -121,10 +139,10 @@ def create_genomes_and_taxonomies(genome_to_taxonomy: dict[str,str], taxonomy_so
         
         lineage = tuple(name.strip() for name in taxonomy_str.split(';'))
 
-        if len(lineage) == 0:
-            raise ValueError()
-        taxonomy = create_taxonomy(lineage=lineage, taxonomy_source=taxonomy_source, taxonomy_dict=existing_taxonomy_dict, ranks=ranks)
+        taxonomy = create_taxonomy(lineage=lineage, taxonomy_dict=existing_taxonomy_dict, ranks=ranks)
         
+        taxonomy_source.taxonomies.append(taxonomy)
+
         session.add(taxonomy)
 
 
@@ -135,15 +153,14 @@ def create_genomes_and_taxonomies(genome_to_taxonomy: dict[str,str], taxonomy_so
         else:
             print(f"Genome {genome_name} already exists. let's use it")
         
+        session.add(genome)
+
         if taxonomy not in genome.taxonomies:
-            print(f"adding {taxonomy} in genome taxa.. as it does not exist yet")
+            print(f"adding {taxonomy.species} taxonomy in genome taxonomy.. as it does not exist yet")
             genome.taxonomies.append(taxonomy)
         else:
-            print(f"{taxonomy} already exists in genome taxa.. nothing to do here")
+            print(f"{taxonomy.species} already exists in genome taxonomies.. nothing to do here")
 
-        genomes.append(genome)
-    
-    session.add_all(genomes)
     session.commit()
     session.refresh(taxonomy_source)
 
