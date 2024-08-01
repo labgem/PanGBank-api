@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 
-from .models import Genome, TaxonomySource, Taxonomy
+from .models import Genome, TaxonomySource, Taxon
 import json
 from pathlib import Path
 
@@ -29,7 +29,7 @@ def parse_taxonomy_file(taxonomy_file:Path) -> dict[str, str]:
 
     return genome_to_lineage
 
-def get_lineage(taxonomy:Taxonomy, ranks:list[str]) -> tuple[str]:
+def get_lineage(taxonomy:Taxon, ranks:list[str]) -> tuple[str]:
     lineage = []
 
     for rank in ranks:
@@ -41,15 +41,27 @@ def get_lineage(taxonomy:Taxonomy, ranks:list[str]) -> tuple[str]:
 
     return tuple(lineage)
 
-def build_taxonomy_dict(taxonomies: list[Taxonomy], ranks:list[str]) -> dict[tuple[str], Taxonomy]:
+# def build_taxonomy_dict(taxonomies: list[Taxonomy], ranks:list[str]) -> dict[tuple[str], Taxonomy]:
 
+#     taxon_dict = {}
+
+#     for taxonomy in taxonomies:
+#         lineage = get_lineage(taxonomy, ranks)
+#         taxon_dict[lineage] = taxonomy
+
+#     return taxon_dict
+
+def get_taxon_key(name: str, rank: str, depth: int) -> tuple[str | int, ...]:
+
+    return tuple((rank, name, depth))
+
+def build_taxon_dict(taxon_list: list[Taxon]) -> dict[tuple[str | int, ...], Taxon]:
     taxon_dict = {}
-
-    for taxonomy in taxonomies:
-        lineage = get_lineage(taxonomy, ranks)
-        taxon_dict[lineage] = taxonomy
-
+    for taxon in taxon_list:
+        key = get_taxon_key(taxon.name, taxon.rank, taxon.depth)
+        taxon_dict[key] = taxon
     return taxon_dict
+
 
 def parse_ranks_str(ranks_str) -> list[str]:
 
@@ -57,22 +69,26 @@ def parse_ranks_str(ranks_str) -> list[str]:
 
     return ranks
 
-def create_taxonomy(lineage:tuple[str, ... ], ranks:list[str], taxonomy_dict:dict[tuple[str, ...], Taxonomy]) -> Taxonomy:
+def create_and_get_taxa(lineage:tuple[str, ... ], ranks:list[str], taxon_dict:dict[tuple[str|int, ...], Taxon]) -> list[Taxon]:
 
-    if lineage in taxonomy_dict:
-        print(f'lineage {lineage[-1]} in taxonomy_dict')
-        taxonomy = taxonomy_dict[lineage]
-    
-    else:
-        taxonomy = Taxonomy()
-        for rank, taxon in zip(ranks, lineage):
-            setattr(taxonomy, rank, taxon)
+    assert len(ranks) >= len(lineage) 
 
-        taxonomy_dict[lineage] = taxonomy
+    taxa = []
+    for depth, (rank, taxon_name) in enumerate(zip(ranks, lineage)):
 
-    return taxonomy
+        taxon_key = get_taxon_key(taxon_name, rank, depth)
 
+        if taxon_key in taxon_dict:
+            print(f'{taxon_key} in taxon_dict, reusing it')
+            taxon = taxon_dict[taxon_key]
+        else:
+            print(f'{taxon_key} NOT in taxon_dict, creating it')
+            taxon = Taxon(name=taxon_name, rank=rank, depth=depth)
+            taxon_dict[taxon_key] = taxon
 
+        taxa.append(taxon)
+
+    return taxa
 
 
 def create_taxonomy_source(taxonomy_source_info_file : Path, session:Session) -> TaxonomySource:
@@ -121,17 +137,14 @@ def create_taxonomy_source(taxonomy_source_info_file : Path, session:Session) ->
 
 def create_genomes_and_taxonomies(genome_to_taxonomy: dict[str,str], taxonomy_source : TaxonomySource, session: Session) -> list[Genome]:
 
-
-    
-    ranks = ['domain', "phylum", "class_", "order", "family", "genus", "species", "strain"]
-    # ranks_from_taxonomy_source = parse_ranks_str(taxonomy_source.ranks)
-    # TODO compare ranks_from_taxonomy_source and ranks ? 
+    # ranks = ['domain', "phylum", "class_", "order", "family", "genus", "species", "strain"]
+    ranks = parse_ranks_str(taxonomy_source.ranks)
 
     print(taxonomy_source)
 
     # Add new taxon from taxonomies
-    existing_taxonomy_dict = build_taxonomy_dict(taxonomy_source.taxonomies, ranks)
-    print(f'The taxonomy source has {len(existing_taxonomy_dict)} taxonomies')
+    existing_taxon_dict = build_taxon_dict(taxonomy_source.taxa)
+    print(f'The taxonomy source has {len(existing_taxon_dict)} taxa')
 
     genomes = []
     for genome_name, taxonomy_str in genome_to_taxonomy.items():
@@ -139,11 +152,11 @@ def create_genomes_and_taxonomies(genome_to_taxonomy: dict[str,str], taxonomy_so
         
         lineage = tuple(name.strip() for name in taxonomy_str.split(';'))
 
-        taxonomy = create_taxonomy(lineage=lineage, taxonomy_dict=existing_taxonomy_dict, ranks=ranks)
+        taxa = create_and_get_taxa(lineage=lineage, taxon_dict=existing_taxon_dict, ranks=ranks)
         
-        taxonomy_source.taxonomies.append(taxonomy)
+        taxonomy_source.taxa += taxa
 
-        session.add(taxonomy)
+        session.add_all(taxa)
 
 
         genome = session.exec(select(Genome).where(Genome.name == genome_name)).first()
@@ -155,15 +168,17 @@ def create_genomes_and_taxonomies(genome_to_taxonomy: dict[str,str], taxonomy_so
         
         session.add(genome)
 
-        if taxonomy not in genome.taxonomies:
-            print(f"adding {taxonomy.species} taxonomy in genome taxonomy.. as it does not exist yet")
-            genome.taxonomies.append(taxonomy)
-        else:
-            print(f"{taxonomy.species} already exists in genome taxonomies.. nothing to do here")
+        for taxon in taxa:
+            if taxon not in genome.taxa:
+                print(f"adding taxon {taxon.name} in genome taxa.. as it does not exist yet")
+                genome.taxa.append(taxon)
+            else:
+                print(f"{taxon.name} already exists in genome taxa.. nothing to do here")
 
     session.commit()
     session.refresh(taxonomy_source)
 
-    print(f'The taxonomy release has {len(taxonomy_source.taxonomies)} taxonomies')
+    print(f'The taxonomy source has {len(taxonomy_source.taxa)} taxa')
+
 
     return genomes

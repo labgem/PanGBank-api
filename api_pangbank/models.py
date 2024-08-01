@@ -8,9 +8,9 @@ class GenomeCollectionReleaseLink(SQLModel, table=True):
     collection_release_id: int | None = Field(default=None, foreign_key="collectionrelease.id", primary_key=True)
 
 
-class GenomeTaxonomyLink(SQLModel, table=True):
+class GenomeTaxonLink(SQLModel, table=True):
     genome_id: int | None = Field(default=None, foreign_key="genome.id", primary_key=True)
-    taxonomy_id: int | None = Field(default=None, foreign_key="taxonomy.id", primary_key=True)
+    taxon_id: int | None = Field(default=None, foreign_key="taxon.id", primary_key=True)
 
     
 
@@ -32,7 +32,7 @@ class TaxonomySource(SQLModel, table=True):
 
     collection_releases : list["CollectionRelease"] = Relationship(back_populates="taxonomy_source")
 
-    taxonomies: list["Taxonomy"] = Relationship(back_populates="taxonomy_source")
+    taxa: list["Taxon"] = Relationship(back_populates="taxonomy_source")
 
 
 class CollectionRelease(SQLModel, table=True):
@@ -81,23 +81,19 @@ class CollectionRelease(SQLModel, table=True):
 #     name: str
 #     rank : str
 
-class Taxonomy(SQLModel, table=True):
+class Taxon(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    strain : str | None = None
-    species: str | None = None
-    genus: str | None = None 
-    family: str | None = None 
-    order: str | None = None 
-    class_: str | None =None 
-    phylum: str | None = None 
-    domain: str | None = None 
+    name : str
+    rank : str
+    depth : int 
 
+    taxid : int | None = None
 
     taxonomy_source_id : int | None = Field(default=None, foreign_key="taxonomysource.id")
-    taxonomy_source : TaxonomySource = Relationship(back_populates="taxonomies")
+    taxonomy_source : TaxonomySource = Relationship(back_populates="taxa")
 
-    genomes: list["Genome"] = Relationship(back_populates="taxonomies", link_model=GenomeTaxonomyLink)
+    genomes: list["Genome"] = Relationship(back_populates="taxa", link_model=GenomeTaxonLink)
 
 
 
@@ -111,7 +107,7 @@ class Genome(SQLModel, table=True):
 
     collection_releases : list[CollectionRelease] = Relationship(back_populates="genomes", link_model=GenomeCollectionReleaseLink)
 
-    taxonomies : list[Taxonomy] =  Relationship(back_populates="genomes", link_model=GenomeTaxonomyLink)
+    taxa : list[Taxon] =  Relationship(back_populates="genomes", link_model=GenomeTaxonLink)
 
 
 class Pangenome(SQLModel, table=True):

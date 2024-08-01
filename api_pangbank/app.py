@@ -81,7 +81,9 @@ def create_collection_release(collection_release_info_file:Path, session:Session
 
     return collection_release
 
-def parse_pangenome_dir(pangenome_dir:Path):
+# def parse_pangenome_dir(pangenome_dir:Path):
+
+    
 
 def main():
     create_db_and_tables()
@@ -100,7 +102,7 @@ def main():
     #     "genomeB": "Bacteria; Pseudomonadota; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Escherichia; Escherichia albertii"
     # }
     
-    parse_pangenome_dir(pangenome_dir)
+    # parse_pangenome_dir(pangenome_dir)
 
 
     # Ajouter les pangenome à partir de leur info.yaml?
