@@ -157,13 +157,11 @@ def manage_genome_taxonomies(pangenome:Pangenome,
 
     # Add new taxon from taxonomies
     existing_taxon_dict = build_taxon_dict(taxonomy_source.taxa)
-    
-    print(f'The taxonomy source has {len(existing_taxon_dict)} taxa')
 
     lineage_to_genomes = defaultdict(list)
-    for genome in pangenome.genomes:
-        lineage = genome_to_taxonomy[genome.name]
-        lineage_to_genomes[lineage].append(genome)
+    for genome_link in pangenome.genome_links:
+        lineage = genome_to_taxonomy[genome_link.genome.name]
+        lineage_to_genomes[lineage].append(genome_link.genome)
 
     
     for lineage, genomes in lineage_to_genomes.items():
@@ -179,8 +177,6 @@ def manage_genome_taxonomies(pangenome:Pangenome,
         session.add_all(taxa)
 
     session.commit()
-    print(f'The taxonomy source has {len(taxonomy_source.taxa)} taxa')
-    
 
 
 # def create_genomes_and_taxonomies(genome_to_taxonomy: dict[str,str], taxonomy_source : TaxonomySource, session: Session) -> list[Genome]:

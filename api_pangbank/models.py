@@ -47,6 +47,19 @@ class TaxonomySource(SQLModel, table=True):
 
     taxa: list["Taxon"] = Relationship(back_populates="taxonomy_source")
 
+class GenomeSource(SQLModel, table=True):
+
+    id: int | None = Field(default=None, primary_key=True)
+    name : str = Field(unique=True)
+    version : str | None
+    description : str | None = None
+    source : str | None = None
+    url : str | None = None
+
+    genomes: list["Genome"] = Relationship(back_populates="genome_source")
+
+
+
 
 class CollectionRelease(SQLModel, table=True):
 
@@ -102,7 +115,11 @@ class Genome(SQLModel, table=True):
 
     pangenome_links: list[GenomePangenomeLink] = Relationship(back_populates="genome")
 
-    pangenomes : list["Pangenome"] = Relationship(back_populates="genomes", link_model=GenomePangenomeLink)
+    # pangenomes : list["Pangenome"] = Relationship(back_populates="genomes", link_model=GenomePangenomeLink)
+
+    genome_source_id : int | None = Field(default=None, foreign_key="genomesource.id")
+    
+    genome_source: GenomeSource = Relationship(back_populates="genomes")
 
 
 class Pangenome(SQLModel, table=True):
@@ -115,7 +132,7 @@ class Pangenome(SQLModel, table=True):
     file_name: str
 
     genome_links: list[GenomePangenomeLink] = Relationship(back_populates="pangenome")
-    genomes : list[Genome] = Relationship(back_populates="pangenomes", link_model=GenomePangenomeLink)
+    # genomes : list[Genome] = Relationship(back_populates="pangenomes", link_model=GenomePangenomeLink)
 
     annotation_source : str | None = None 
 
