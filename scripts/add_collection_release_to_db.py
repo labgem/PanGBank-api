@@ -12,17 +12,6 @@ from app.models import Collection, CollectionRelease, Genome, Pangenome, GenomeP
 
 from taxonomy import create_taxonomy_source, parse_taxonomy_file, manage_genome_taxonomies, build_taxon_dict, parse_ranks_str
 
-
-
-# def associate_genomes_with_collection_release(genomes:list[Genome], collection_release:CollectionRelease, session:Session):
-
-#     for genome in genomes:
-#         if collection_release not in genome.collection_releases:
-#             genome.collection_releases.append(collection_release)
-
-#     session.refresh(collection_release)
-
-
 def add_source_to_genomes(pangenome:Pangenome, genome_sources:list[GenomeSource], genome_to_source:dict[str,str], session:Session):
 
 
