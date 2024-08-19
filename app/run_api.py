@@ -2,24 +2,25 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 
 from sqlmodel import Session, select
 
-from pathlib import Path
-import json
-import csv 
-
 from .database import create_db_and_tables, engine
-from .models import Collection, CollectionPublic, CollectionPublicWithReleases, CollectionRelease, Genome, PangenomePublicWithCollectionRelease, TaxonomySource, Pangenome, GenomePangenomeLink, GenomeSource, GenomePublic
-from datetime import datetime
+from .models import Collection, CollectionPublic, CollectionPublicWithReleases, Genome, PangenomePublicWithCollectionRelease, Pangenome, GenomePublic
 
 
-app = FastAPI()
+
+from contextlib import asynccontextmanager
+
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 def get_session():
     with Session(engine) as session:
         yield session
-
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
 
 @app.get("/collections/", response_model=list[CollectionPublic])
 def read_collections(session: Session = Depends(get_session)):

@@ -2,7 +2,6 @@
 from sqlmodel import Field, Relationship, SQLModel
 
 from datetime import datetime
-from pathlib import Path
 
 # class GenomeCollectionReleaseLink(SQLModel, table=True):
 #     genome_id: int | None = Field(default=None, foreign_key="genome.id", primary_key=True)

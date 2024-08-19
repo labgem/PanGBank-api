@@ -1,14 +1,16 @@
-from datetime import date
 from sqlmodel import Session, select
 from pathlib import Path
 import json
-import csv 
+import csv
+import sys
 
-from .database import create_db_and_tables, engine
-from .models import Collection, CollectionRelease, Genome, TaxonomySource, Pangenome, GenomePangenomeLink, GenomeSource
-from datetime import datetime
+# Add the project root to the sys.path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from .taxonomy import create_taxonomy_source, parse_taxonomy_file, manage_genome_taxonomies, build_taxon_dict, parse_ranks_str
+from app.database import create_db_and_tables, engine
+from app.models import Collection, CollectionRelease, Genome, Pangenome, GenomePangenomeLink, GenomeSource
+
+from taxonomy import create_taxonomy_source, parse_taxonomy_file, manage_genome_taxonomies, build_taxon_dict, parse_ranks_str
 
 
 
@@ -179,8 +181,8 @@ def parse_pangenome_dir(pangenome_main_dir:Path, collection_release: CollectionR
 
         pangenome_file = pangenome_dir / "pangenome.h5"
         genomes_md5sum_file = pangenome_dir / "genomes_md5sum.tsv"
-        pangenome_info_file = pangenome_dir / "info.yaml"
-        genomes_statistics_file = pangenome_dir / "genomes_statistics.tsv"
+        # pangenome_info_file = pangenome_dir / "info.yaml"
+        # genomes_statistics_file = pangenome_dir / "genomes_statistics.tsv"
 
         # TODO: Check files exist
  
@@ -276,13 +278,9 @@ def main():
         for genome_source in genome_sources:
             print(f'The genome source {genome_source.name} has {len(genome_source.genomes)} genomes')
 
-
-
         # genomes = create_genomes_and_taxonomies(genome_to_taxonomy, taxonomy_release, session=session)
 
         # associate_genomes_with_collection_release(genomes, collection_release, session)
-
-        
 
 
 if __name__ == "__main__":

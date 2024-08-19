@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 
-from .models import Genome, TaxonomySource, Taxon, Pangenome
+from app.models import Genome, TaxonomySource, Taxon, Pangenome
 import json
 from pathlib import Path
 import gzip
