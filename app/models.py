@@ -146,7 +146,7 @@ class Genome(GenomeBase, table=True):
 class GenomePublic(GenomeBase):
 
     id:int
-    lineage : str 
+    # lineage : str 
 
 
 class PangenomeBase(SQLModel):

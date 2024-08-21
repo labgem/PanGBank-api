@@ -4,8 +4,10 @@ import json
 import csv
 import sys
 
+print(sys.path)
+
 # Add the project root to the sys.path
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path = [str(Path(__file__).resolve().parent.parent)] + sys.path
 
 from app.database import create_db_and_tables, engine
 from app.models import Collection, CollectionRelease, Genome, Pangenome, GenomePangenomeLink, GenomeSource
