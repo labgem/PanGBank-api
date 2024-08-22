@@ -1,6 +1,6 @@
 
 from sqlmodel import Field, Relationship, SQLModel
-
+from pydantic import BaseModel
 from datetime import datetime
 
 # class GenomeCollectionReleaseLink(SQLModel, table=True):
@@ -146,7 +146,8 @@ class Genome(GenomeBase, table=True):
 class GenomePublic(GenomeBase):
 
     id:int
-    # lineage : str 
+    genome_source : GenomeSourcePublic
+    taxonomies : list["Taxonomy"]
 
 
 class PangenomeBase(SQLModel):
@@ -159,18 +160,25 @@ class PangenomeBase(SQLModel):
 class Pangenome(PangenomeBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
-
+    
     collection_release: CollectionRelease = Relationship(back_populates="pangenomes")
 
     genome_links: list[GenomePangenomeLink] = Relationship(back_populates="pangenome")
 
 
 class PangenomePublic(PangenomeBase):
-
     id : int
+    collection_release : CollectionReleasePublic
+    taxonomy : "Taxonomy"
 
 
-class PangenomePublicWithCollectionRelease(PangenomePublic):
+class TaxonomyBase(BaseModel):
+    pass
 
-    collection_release : CollectionReleasePublic | None = None
-    
+class Taxonomy(TaxonomyBase):
+    taxonomy_source: TaxonomySource
+    taxa : list[Taxon]
+
+class TaxonomyPublic(TaxonomyBase):
+    taxonomy_source: TaxonomySourcePublic
+    taxa : list[TaxonPublic]
