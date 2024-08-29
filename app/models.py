@@ -12,6 +12,10 @@ class GenomeTaxonLink(SQLModel, table=True):
     genome_id: int | None = Field(default=None, foreign_key="genome.id", primary_key=True)
     taxon_id: int | None = Field(default=None, foreign_key="taxon.id", primary_key=True)
 
+class PangenomeTaxonLink(SQLModel, table=True):
+    pangenome_id: int | None = Field(default=None, foreign_key="pangenome.id", primary_key=True)
+    taxon_id: int | None = Field(default=None, foreign_key="taxon.id", primary_key=True)
+
 
 class GenomePangenomeLink(SQLModel, table=True):
     genome_id: int | None = Field(default=None, foreign_key="genome.id", primary_key=True)
@@ -117,6 +121,7 @@ class Taxon(TaxonBase, table=True):
     taxonomy_source : TaxonomySource = Relationship(back_populates="taxa")
 
     genomes: list["Genome"] = Relationship(back_populates="taxa", link_model=GenomeTaxonLink)
+    pangenomes: list["Pangenome"] = Relationship(back_populates="taxa", link_model=PangenomeTaxonLink)
 
 
 class TaxonPublic(TaxonBase):
@@ -147,6 +152,8 @@ class GenomePublic(GenomeBase):
 
     id:int
     genome_source : GenomeSourcePublic
+    
+class GenomePublicWithTaxonomies(GenomePublic):
     taxonomies : list["Taxonomy"]
 
 
@@ -164,12 +171,16 @@ class Pangenome(PangenomeBase, table=True):
     collection_release: CollectionRelease = Relationship(back_populates="pangenomes")
 
     genome_links: list[GenomePangenomeLink] = Relationship(back_populates="pangenome")
+    
+    taxa : list[Taxon] =  Relationship(back_populates="pangenomes", link_model=PangenomeTaxonLink)
+
 
 
 class PangenomePublic(PangenomeBase):
     id : int
     collection_release : CollectionReleasePublic
     taxonomy : "Taxonomy"
+    genome_count : int
 
 
 class TaxonomyBase(BaseModel):

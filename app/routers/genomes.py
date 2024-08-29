@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from ..models import GenomePublic, Genome
+from ..models import GenomePublic, Genome, GenomePublicWithTaxonomies
 from ..dependencies import SessionDep
 from .. import crud
 from sqlmodel import select
@@ -16,21 +16,22 @@ def read_genomes(session: SessionDep, offset: int = 0, limit: int = Query(defaul
 
     return genomes
 
-@router.get("/genomes/{genome_id}", response_model=GenomePublic)
-def get_genome(genome_id:int, session: SessionDep):
+
+@router.get("/genomes/{genome_name}", response_model=GenomePublicWithTaxonomies)
+def get_genome_by_name(genome_name:str, session: SessionDep):
+
+    genome = crud.get_genome_by_name(session=session, genome_name=genome_name)
+    if not genome:
+        raise HTTPException(status_code=404, detail=f"Genome with name {genome_name} not found")
+    return genome
+
+@router.get("/genomes/id/{genome_id}", response_model=GenomePublicWithTaxonomies)
+def get_genome_by_id(genome_id:int, session: SessionDep):
 
     # genome = session.get(Genome, genome_id)
-    genome = crud.get_genome(session=session, genome_id=genome_id)
+    genome = crud.get_genome_by_id(session=session, genome_id=genome_id)
     if not genome:
         raise HTTPException(status_code=404, detail="Genome not found")
     return genome
 
-
-@router.get("/genomes/{genome_id}/lineage", response_model=GenomePublic)
-def get_genome_lineage(genome_id:int, session: SessionDep):
-
-    genome = session.get(Genome, genome_id)
-    if not genome:
-        raise HTTPException(status_code=404, detail="Genome not found")
-    return genome
 

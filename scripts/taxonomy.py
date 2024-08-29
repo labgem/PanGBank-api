@@ -147,6 +147,15 @@ def create_taxonomy_source(taxonomy_source_info_file : Path, session:Session) ->
     session.refresh(taxonomy_source)
 
     return taxonomy_source
+def get_common_taxa(taxa_A:list[Taxon], taxa_B:list[Taxon]) -> list[Taxon]:
+
+    common_taxa = []
+    for taxon in taxa_A:
+        if taxon in taxa_B:
+            common_taxa.append(taxon)
+
+    return common_taxa
+
 
 def manage_genome_taxonomies(pangenome:Pangenome, 
                              genome_to_taxonomy: dict[str,tuple[str]],
@@ -158,6 +167,8 @@ def manage_genome_taxonomies(pangenome:Pangenome,
     # Add new taxon from taxonomies
     existing_taxon_dict = build_taxon_dict(taxonomy_source.taxa)
 
+    pangenome_taxa: list[Taxon] = []
+
     lineage_to_genomes = defaultdict(list)
     for genome_link in pangenome.genome_links:
         lineage = genome_to_taxonomy[genome_link.genome.name]
@@ -166,6 +177,11 @@ def manage_genome_taxonomies(pangenome:Pangenome,
     
     for lineage, genomes in lineage_to_genomes.items():
         taxa = create_and_get_taxa(lineage=lineage, taxon_dict=existing_taxon_dict, ranks=ranks)
+        
+        if not pangenome_taxa:
+            pangenome_taxa = taxa
+
+        pangenome_taxa = get_common_taxa(taxa, pangenome_taxa)
 
         for taxon in taxa:
             for genome in genomes:
@@ -174,8 +190,12 @@ def manage_genome_taxonomies(pangenome:Pangenome,
 
         taxonomy_source.taxa += taxa
         
+        
         session.add_all(taxa)
 
+    pangenome.taxa = pangenome_taxa
+    session.add(pangenome)
+    
     session.commit()
 
 
