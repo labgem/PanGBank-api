@@ -156,18 +156,44 @@ class GenomePublic(GenomeBase):
 class GenomePublicWithTaxonomies(GenomePublic):
     taxonomies : list["Taxonomy"]
 
+class PangenomeMetric(SQLModel):
+    
+    # Metrics
+    genes: int
+    genomes: int
+    families: int
+    edges: int
 
-class PangenomeBase(SQLModel):
+    # Persistent information
+    persistent_family_count: int
+    
+    # Shell information
+    shell_family_count: int
+    
+    # Cloud information
+    cloud_family_count: int
+    
+    number_of_partitions: int
+    rgp: int
+    spots: int
+    
+    # Modules information
+    number_of_modules: int
+    families_in_modules: int
+
+
+class PangenomeBase(PangenomeMetric):
     file_name : str
     annotation_source : str | None = None 
 
-    collection_release_id: int | None = Field(default=None, foreign_key="collectionrelease.id")
     
 
 class Pangenome(PangenomeBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
-    
+
+    collection_release_id: int | None = Field(default=None, foreign_key="collectionrelease.id")
+
     collection_release: CollectionRelease = Relationship(back_populates="pangenomes")
 
     genome_links: list[GenomePangenomeLink] = Relationship(back_populates="pangenome")
@@ -178,10 +204,14 @@ class Pangenome(PangenomeBase, table=True):
 
 class PangenomePublic(PangenomeBase):
     id : int
+    
     collection_release : CollectionReleasePublic
+    
     taxonomy : "Taxonomy"
+    
     genome_count : int
 
+    collection_release_id: int
 
 class TaxonomyBase(BaseModel):
     pass
