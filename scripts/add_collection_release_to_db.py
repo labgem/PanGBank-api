@@ -192,7 +192,7 @@ def get_pangenome_metrics_from_info_file(yaml_file_path:Path) -> PangenomeMetric
         'families_in_modules': data.get('Content', {}).get('Modules', {}).get('Families_in_Modules'),
     }
 
-    return PangenomeMetric.model_validate_strings(pangenome_data)
+    return PangenomeMetric.model_validate(pangenome_data)
 
 
 def parse_pangenome_dir(pangenome_main_dir:Path, collection_release: CollectionRelease, session:Session) -> list[Pangenome]:
@@ -221,7 +221,7 @@ def parse_pangenome_dir(pangenome_main_dir:Path, collection_release: CollectionR
 
             pangenome_metric = get_pangenome_metrics_from_info_file(pangenome_info_file)
             
-            pangenome = Pangenome.model_validate(pangenome_metric, context=pangenome_specific_args)
+            pangenome = Pangenome.model_validate(pangenome_metric, from_attributes=True, update=pangenome_specific_args)
             session.add(pangenome)
 
         # Get genomes that belong to pangenome and associate them to it
