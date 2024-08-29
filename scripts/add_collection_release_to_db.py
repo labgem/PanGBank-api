@@ -5,11 +5,13 @@ import csv
 import sys
 import yaml
 
+from typing import Iterator
+
 # Add the project root to the sys.path
 sys.path = [str(Path(__file__).resolve().parent.parent)] + sys.path
 
 from app.database import create_db_and_tables, engine
-from app.models import Collection, CollectionRelease, Genome, Pangenome, GenomePangenomeLink, GenomeSource, PangenomeMetric
+from app.models import Collection, CollectionRelease, Genome, Pangenome, GenomePangenomeLink, GenomeSource, PangenomeMetric, GenomeInPangenomeMetric
 
 from taxonomy import create_taxonomy_source, parse_taxonomy_file, manage_genome_taxonomies, build_taxon_dict, parse_ranks_str
 
@@ -153,13 +155,30 @@ def gather_pangenome_info(pangenome_file: Path,
     pass
 
 
-def parse_genomes_hash_file(genomes_md5sum_file:Path):
+def parse_genomes_hash_file(genomes_md5sum_file:Path) -> dict[str, dict[str,str]]:
 
     with open(genomes_md5sum_file) as fl:
 
-        for genome_info in csv.DictReader(fl, delimiter='\t'):
-            yield genome_info
+        genome_name_to_genome_info = {genome_info['name']:genome_info for genome_info in csv.DictReader(fl, delimiter='\t')}
+    
+    return genome_name_to_genome_info
 
+def parse_genome_metrics_file(tsv_file_path: Path) -> Iterator[GenomeInPangenomeMetric]:
+    """
+    Parses a TSV file containing genome data into a list of GenomeInPangenomeMetric instances.
+
+    """
+    
+    with open(tsv_file_path, mode='r', newline='', encoding='utf-8') as file:
+        reader = csv.DictReader(filter(lambda row: row[0]!='#', file), delimiter='\t')
+        for row in reader:
+            try:
+                genome_data = GenomeInPangenomeMetric.model_validate({key.lower():value for key, value in row.items()})
+
+            except ValueError as e:
+                raise ValueError(f"Error parsing row {row}: {e}")
+            
+            yield genome_data
 
 
 def get_pangenome_metrics_from_info_file(yaml_file_path:Path) -> PangenomeMetric:
@@ -206,7 +225,7 @@ def parse_pangenome_dir(pangenome_main_dir:Path, collection_release: CollectionR
         pangenome_file = pangenome_dir / "pangenome.h5"
         genomes_md5sum_file = pangenome_dir / "genomes_md5sum.tsv"
         pangenome_info_file = pangenome_dir / "info.yaml"
-        # genomes_statistics_file = pangenome_dir / "genomes_statistics.tsv"
+        genomes_statistics_file = pangenome_dir / "genomes_statistics.tsv"
 
         # TODO: Check files exist
         pangenome_local_path = Path(pangenome_file.parent.name) / pangenome_file.name
@@ -225,22 +244,26 @@ def parse_pangenome_dir(pangenome_main_dir:Path, collection_release: CollectionR
             session.add(pangenome)
 
         # Get genomes that belong to pangenome and associate them to it
-        for genome_info in parse_genomes_hash_file(genomes_md5sum_file):
+        genome_name_to_md5sum_info = parse_genomes_hash_file(genomes_md5sum_file)
 
-            genome = session.exec(select(Genome).where(Genome.name == genome_info['name'])).first()
+        for genome_metric in parse_genome_metrics_file(genomes_statistics_file):
 
+            genome = session.exec(select(Genome).where(Genome.name == genome_metric.genome_name)).first()
+            
             if genome is None:
-                genome = Genome(name=genome_info['name']) # add genome version if given?
+                genome = Genome(name=genome_metric.genome_name) # add genome version if given?
                 session.add(genome)
 
             
             genome_pangenome_link = session.exec(select(GenomePangenomeLink).where((GenomePangenomeLink.genome == genome) and (GenomePangenomeLink.pangenome == pangenome) )).first()
             
             if genome_pangenome_link is None:
-                pangenome_genome_link = GenomePangenomeLink(genome=genome,
-                                                            pangenome=pangenome,
-                                                            genome_file_md5sum=genome_info['md5_sum'],
-                                                            genome_file_name=genome_info["file_name"])
+                genome_file_info = genome_name_to_md5sum_info[genome_metric.genome_name]
+
+                pangenome_genome_link = GenomePangenomeLink.model_validate(genome_metric, from_attributes=True, update={"genome":genome,
+                                                            "pangenome":pangenome,
+                                                            "genome_file_md5sum":genome_file_info['md5_sum'],
+                                                            "genome_file_name":genome_file_info["file_name"]})
                 session.add(pangenome_genome_link)
                 
                 pangenome.genome_links.append(pangenome_genome_link)

@@ -16,8 +16,42 @@ class PangenomeTaxonLink(SQLModel, table=True):
     pangenome_id: int | None = Field(default=None, foreign_key="pangenome.id", primary_key=True)
     taxon_id: int | None = Field(default=None, foreign_key="taxon.id", primary_key=True)
 
+class GenomeInPangenomeMetric(SQLModel):
+    genome_name: str = Field(..., alias="Genome_name")
+    contigs: int = Field(..., alias="Contigs")
+    genes: int = Field(..., alias="Genes")
+    fragmented_genes: int = Field(..., alias="Fragmented_genes")
+    families: int = Field(..., alias="Families")
+    families_with_fragments: int = Field(..., alias="Families_with_fragments")
+    families_in_multicopy: int = Field(..., alias="Families_in_multicopy")
+    soft_core_families: int = Field(..., alias="Soft_core_families")
+    soft_core_genes: int = Field(..., alias="Soft_core_genes")
+    exact_core_families: int = Field(..., alias="Exact_core_families")
+    exact_core_genes: int = Field(..., alias="Exact_core_genes")
+    persistent_genes: int = Field(..., alias="Persistent_genes")
+    persistent_fragmented_genes: int = Field(..., alias="Persistent_fragmented_genes")
+    persistent_families: int = Field(..., alias="Persistent_families")
+    persistent_families_with_fragments: int = Field(..., alias="Persistent_families_with_fragments")
+    persistent_families_in_multicopy: int = Field(..., alias="Persistent_families_in_multicopy")
+    shell_genes: int = Field(..., alias="Shell_genes")
+    shell_fragmented_genes: int = Field(..., alias="Shell_fragmented_genes")
+    shell_families: int = Field(..., alias="Shell_families")
+    shell_families_with_fragments: int = Field(..., alias="Shell_families_with_fragments")
+    shell_families_in_multicopy: int = Field(..., alias="Shell_families_in_multicopy")
+    cloud_genes: int = Field(..., alias="Cloud_genes")
+    cloud_fragmented_genes: int = Field(..., alias="Cloud_fragmented_genes")
+    cloud_families: int = Field(..., alias="Cloud_families")
+    cloud_families_with_fragments: int = Field(..., alias="Cloud_families_with_fragments")
+    cloud_families_in_multicopy: int = Field(..., alias="Cloud_families_in_multicopy")
+    completeness: float = Field(..., alias="Completeness")
+    contamination: float = Field(..., alias="Contamination")
+    fragmentation: float = Field(..., alias="Fragmentation")
+    rgps: int = Field(..., alias="RGPs")
+    spots: int = Field(..., alias="Spots")
+    modules: int = Field(..., alias="Modules")
 
-class GenomePangenomeLink(SQLModel, table=True):
+
+class GenomePangenomeLink(GenomeInPangenomeMetric, table=True):
     genome_id: int | None = Field(default=None, foreign_key="genome.id", primary_key=True)
     pangenome_id: int | None = Field(default=None, foreign_key="pangenome.id", primary_key=True)
 
@@ -131,14 +165,14 @@ class TaxonPublic(TaxonBase):
 
 class GenomeBase(SQLModel):
 
-    name : str
+    name : str = Field(unique=True)
     genome_source_id : int | None = Field(default=None, foreign_key="genomesource.id")
 
 
 
 class Genome(GenomeBase, table=True):
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True) 
     # version : str | None = None
     # collection_releases : list[CollectionRelease] = Relationship(back_populates="genomes", link_model=GenomeCollectionReleaseLink)
 
