@@ -5,7 +5,7 @@ from app.models import Pangenome, PangenomePublic, Genome, Taxon, Taxonomy, Geno
 
 from pathlib import Path
 
-from app.crud.common import get_taxonomies_from_taxa, FilterParams, FilterGenome
+from app.crud.common import FilterPangenome, get_taxonomies_from_taxa, FilterParams, FilterGenome
 
 
 
@@ -41,7 +41,7 @@ def get_public_pangenome(pangenome:Pangenome) -> PangenomePublic:
     return pangenome_public
 
 
-def get_pangenomes(session:Session, filter_params: FilterGenome) -> list[PangenomePublic]:
+def get_pangenomes(session:Session, filter_params: FilterPangenome) -> list[PangenomePublic]:
 
     query = select(Pangenome)
     

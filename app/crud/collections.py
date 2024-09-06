@@ -4,12 +4,12 @@ from sqlmodel import Session, select
 from typing import Sequence
 from app.models import Collection, CollectionRelease
 
-from app.crud.common import FilterParams
+from app.crud.common import FilterCollection
 
 
 
 
-def get_collections(session:Session, filter_params: FilterParams) -> Sequence[Collection]:
+def get_collections(session:Session, filter_params: FilterCollection) -> Sequence[Collection]:
 
     query = select(Collection)
     

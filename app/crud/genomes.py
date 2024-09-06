@@ -2,11 +2,11 @@
 from sqlmodel import Session, select
 
 from app.routers import genomes
-from app.models import GenomePublic, Pangenome, PangenomePublic, Genome, Taxon, Taxonomy, GenomePublicWithTaxonomies
+from app.models import GenomePublic, Pangenome, PangenomePublic, Genome, Taxon, Taxonomy, GenomePublicWithTaxonomies, GenomePangenomeLink
 
 from pathlib import Path
 
-from app.crud.common import get_taxonomies_from_taxa
+from app.crud.common import get_taxonomies_from_taxa, FilterGenome
 
 
 def get_genome_public(genome:Genome) -> GenomePublicWithTaxonomies:
@@ -32,3 +32,20 @@ def get_genome_by_name(session:Session, genome_name:str) -> GenomePublicWithTaxo
         return None
     
     return get_genome_public(genome)
+
+def get_genomes(session:Session, filter_params: FilterGenome) -> list[GenomePublicWithTaxonomies]:
+
+    query = select(Genome)
+
+    if filter_params.genome_name is not None:
+        query = query.where(Genome.name == filter_params.genome_name)
+
+    # Apply offset and limit
+    query = query.offset(filter_params.offset).limit(filter_params.limit)
+
+    db_genomes = session.exec(query).all()
+
+    public_genomes = [get_genome_public(genome) for genome in db_genomes]
+    
+    return public_genomes
+    

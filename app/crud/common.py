@@ -13,7 +13,7 @@ class FilterParams(BaseModel):
 
     offset: int = 0
     limit: int = Query(default=20, le=100)
-
+class FilterCollection(FilterParams):
     collection_release_id: int | None = None
     # Add more filters as needed
 
@@ -29,7 +29,10 @@ class FilterGenome(FilterParams):
     genome_id : int | None = None
     
     taxon_name : str | None = None
-    
+
+
+class FilterPangenome(FilterGenome, FilterCollection):
+    pass
 
 def get_taxonomies_from_taxa(taxa: list[Taxon]) -> list[Taxonomy]:
 
@@ -44,6 +47,4 @@ def get_taxonomies_from_taxa(taxa: list[Taxon]) -> list[Taxonomy]:
 
     taxonomies = list(taxonomy_source_to_taxonomy.values())
     return taxonomies
-
-
 

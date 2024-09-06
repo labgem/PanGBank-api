@@ -1,9 +1,13 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+
 
 from ..models import GenomePublic, Genome, GenomePublicWithTaxonomies
 from ..dependencies import SessionDep
 from ..crud import genomes as genomes_crud
 from sqlmodel import select
+
+from app.crud.common import FilterGenome
+
 
 
 router = APIRouter(
@@ -11,10 +15,11 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-@router.get("/genomes/", response_model=list[GenomePublic])
-async def read_genomes(session: SessionDep, offset: int = 0, limit: int = Query(default=100, le=100)):
+@router.get("/genomes/", response_model=list[GenomePublicWithTaxonomies])
+async def read_genomes(session: SessionDep, filter_params: FilterGenome = Depends()):
 
-    genomes = session.exec(select(Genome).offset(offset).limit(limit)).all()
+    genomes = genomes_crud.get_genomes(session, filter_params)
+
     return genomes
 
 
