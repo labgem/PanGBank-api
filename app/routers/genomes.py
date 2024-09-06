@@ -12,20 +12,12 @@ router = APIRouter(
 
 @router.get("/genomes/", response_model=list[GenomePublic])
 def read_genomes(session: SessionDep, offset: int = 0, limit: int = Query(default=100, le=100)):
-    genomes = session.exec(select(Genome).offset(offset).limit(limit)).all()
 
+    genomes = session.exec(select(Genome).offset(offset).limit(limit)).all()
     return genomes
 
 
-@router.get("/genomes/{genome_name}", response_model=GenomePublicWithTaxonomies)
-def get_genome_by_name(genome_name:str, session: SessionDep):
-
-    genome = crud.get_genome_by_name(session=session, genome_name=genome_name)
-    if not genome:
-        raise HTTPException(status_code=404, detail=f"Genome with name {genome_name} not found")
-    return genome
-
-@router.get("/genomes/id/{genome_id}", response_model=GenomePublicWithTaxonomies)
+@router.get("/genomes/{genome_id}", response_model=GenomePublicWithTaxonomies)
 def get_genome_by_id(genome_id:int, session: SessionDep):
 
     # genome = session.get(Genome, genome_id)
@@ -33,5 +25,4 @@ def get_genome_by_id(genome_id:int, session: SessionDep):
     if not genome:
         raise HTTPException(status_code=404, detail="Genome not found")
     return genome
-
 

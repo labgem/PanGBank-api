@@ -17,10 +17,11 @@ def read_collections(session: SessionDep, offset: int = 0, limit: int = Query(de
     
     return collections
 
-@router.get("/collections/{collection_name}", response_model=CollectionPublicWithReleases)
-def get_collection_by_name(collection_name, session: SessionDep):
+@router.get("/collections/{collection_id}", response_model=CollectionPublicWithReleases)
+def get_collection_by_name(collection_id:int, session: SessionDep):
     
-    collection = session.exec(select(Collection).where(Collection.name == collection_name)).first()
+       
+    collection = session.get(Collection, collection_id)
 
     if not collection:
         raise HTTPException(status_code=404, detail=f"Collection with name {collection_name} not found")
