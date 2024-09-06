@@ -1,10 +1,14 @@
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends
 from fastapi.responses import FileResponse
 from pathlib import Path
+from pydantic import BaseModel
 
 from ..models import PangenomePublic, Pangenome
 from ..dependencies import SessionDep
-from ..crud import common, pangenomes as pangenomes_crud
+from app.crud import pangenomes as pangenomes_crud
+from app.crud.common import FilterGenome
+
+
 from sqlmodel import select
 
 router = APIRouter(
@@ -12,9 +16,9 @@ router = APIRouter(
 )
 
 @router.get("/pangenomes/", response_model=list[PangenomePublic])
-async def read_pangenomes(session: SessionDep, offset: int = 0, limit: int = Query(default=20, le=100)):
+async def read_pangenomes(session: SessionDep, filter_params: FilterGenome = Depends()):
 
-    pangenomes = pangenomes_crud.get_pangenomes(session, offset, limit)
+    pangenomes = pangenomes_crud.get_pangenomes(session, filter_params)
 
     return pangenomes
 

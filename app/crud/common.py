@@ -1,8 +1,35 @@
 
 from sqlmodel import Session, select
+from pydantic import BaseModel
+from pathlib import Path
+from fastapi import Query
+
+
 from app.models import GenomePublic, Pangenome, PangenomePublic, Genome, Taxon, Taxonomy, GenomePublicWithTaxonomies
 
-from pathlib import Path
+
+
+class FilterParams(BaseModel):
+
+    offset: int = 0
+    limit: int = Query(default=20, le=100)
+
+    collection_release_id: int | None = None
+    # Add more filters as needed
+
+class FilterGenome(FilterParams):
+
+    offset: int = 0
+    limit: int = Query(default=20, le=100)
+
+    collection_release_id: int | None = None
+    collection_id: int | None = None
+
+    genome_name : str | None = None
+    genome_id : int | None = None
+    
+    taxon_name : str | None = None
+    
 
 def get_taxonomies_from_taxa(taxa: list[Taxon]) -> list[Taxonomy]:
 

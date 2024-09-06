@@ -1,10 +1,13 @@
 
 from sqlmodel import Session, select
-from app.models import GenomePublic, Pangenome, PangenomePublic, Genome, Taxon, Taxonomy, GenomePublicWithTaxonomies
+
+from app.models import Pangenome, PangenomePublic, Genome, Taxon, Taxonomy, GenomePublicWithTaxonomies, CollectionRelease, GenomeInPangenomeMetric, GenomePangenomeLink
 
 from pathlib import Path
 
-from app.crud.common import get_taxonomies_from_taxa
+from app.crud.common import get_taxonomies_from_taxa, FilterParams, FilterGenome
+
+
 
 
 def get_pangenome_file(session:Session, pangenome_id:int) -> Path | None:
@@ -23,30 +26,44 @@ def get_pangenome(session:Session, pangenome_id:int) -> PangenomePublic | None:
     pangenome = session.get(Pangenome, pangenome_id)
     if pangenome is None:
         return None
-    
+
+    return get_public_pangenome(pangenome)
+
+
+def get_public_pangenome(pangenome:Pangenome) -> PangenomePublic:
+
     taxonomies = get_taxonomies_from_taxa(pangenome.taxa)
 
     assert len(taxonomies) == 1 
 
-    pangenome_public = PangenomePublic.model_validate(pangenome, from_attributes=True, update={"taxonomy":taxonomies[0],
-                                                                                               "genome_count":len(pangenome.genome_links)})
+    pangenome_public = PangenomePublic.model_validate(pangenome, from_attributes=True, update={"taxonomy":taxonomies[0]})
 
     return pangenome_public
 
 
-def get_pangenomes(session:Session, offset: int, limit: int) -> list[PangenomePublic]:
+def get_pangenomes(session:Session, filter_params: FilterGenome) -> list[PangenomePublic]:
 
+    query = select(Pangenome)
+    
+    if filter_params.collection_release_id is not None:
+        query = query.where(Pangenome.collection_release_id == filter_params.collection_release_id)
 
-    pangenomes = session.exec(select(Pangenome).offset(offset).limit(limit)).all()
-    public_pangenomes = []
-    for pangenome in pangenomes:
-        
-        taxonomies = get_taxonomies_from_taxa(pangenome.taxa)
+    if filter_params.collection_id is not None:
+        query = query.join(CollectionRelease).where(
+            CollectionRelease.collection_id == filter_params.collection_id
+        )
 
-        assert len(taxonomies) == 1 
+    if filter_params.genome_name is not None:
+        query = query.join(
+                GenomePangenomeLink).join(
+                Genome).where(
+                    Genome.name == filter_params.genome_name)
 
-        pangenome_public = PangenomePublic.model_validate(pangenome, from_attributes=True, update={"taxonomy":taxonomies[0],
-                                                                                                "genome_count":len(pangenome.genome_links)})
-        public_pangenomes.append(pangenome_public)
+    # Apply offset and limit
+    query = query.offset(filter_params.offset).limit(filter_params.limit)
 
+    pangenomes = session.exec(query).all()
+
+    public_pangenomes = [get_public_pangenome(pangenome) for pangenome in pangenomes]
+    
     return public_pangenomes

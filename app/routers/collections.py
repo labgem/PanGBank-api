@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 
 from ..models import CollectionPublicWithReleases, CollectionPublic, Collection
 from ..dependencies import SessionDep
 from sqlmodel import select
+from app.crud.common import FilterParams
+from app.crud import collections as collections_crud
+
 
 router = APIRouter(
     tags=["collections"],
@@ -11,14 +14,16 @@ router = APIRouter(
 
 
 @router.get("/collections/", response_model=list[CollectionPublicWithReleases])
-def read_collections(session: SessionDep, offset: int = 0, limit: int = Query(default=100, le=100)):
+def get_collections(session: SessionDep, filter_params: FilterParams = Depends() ): # offset: int = 0, limit: int = Query(default=100, le=100)
 
-    collections = session.exec(select(Collection).offset(offset).limit(limit)).all()
+    
+    collections = collections_crud.get_collections(session, filter_params)
+
     
     return collections
 
 @router.get("/collections/{collection_id}", response_model=CollectionPublicWithReleases)
-def get_collection_by_name(collection_id:int, session: SessionDep):
+def get_collection(collection_id:int, session: SessionDep):
     
        
     collection = session.get(Collection, collection_id)
