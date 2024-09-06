@@ -180,38 +180,39 @@ def parse_genome_metrics_file(tsv_file_path: Path) -> Iterator[GenomeInPangenome
             
             yield genome_data
 
-
-def get_pangenome_metrics_from_info_file(yaml_file_path:Path) -> PangenomeMetric:
-
+def get_pangenome_metrics_from_info_file(yaml_file_path: Path) -> PangenomeMetric:
     with open(yaml_file_path, 'r') as file:
         data = yaml.safe_load(file)
-    
-    # Extracting the required fields from the YAML data
+
+    # Initialize pangenome_data
     pangenome_data = {
-        'genes': data.get('Content', {}).get('Genes'),
-        'genomes': data.get('Content', {}).get('Genomes'),
-        'families': data.get('Content', {}).get('Families'),
-        'edges': data.get('Content', {}).get('Edges'),
+        'gene_count': data.get('Content', {}).get('Genes'),
+        'genome_count': data.get('Content', {}).get('Genomes'),
+        'family_count': data.get('Content', {}).get('Families'),
+        'edge_count': data.get('Content', {}).get('Edges'),
         
-        # Persistent information
-        'persistent_family_count': data.get('Content', {}).get('Persistent', {}).get('Family_count'),
-        
-        # Shell information
-        'shell_family_count': data.get('Content', {}).get('Shell', {}).get('Family_count'),
-        
-        # Cloud information
-        'cloud_family_count': data.get('Content', {}).get('Cloud', {}).get('Family_count'),
-        
-        'number_of_partitions': data.get('Content', {}).get('Number_of_partitions'),
-        'rgp': data.get('Content', {}).get('RGP'),
-        'spots': data.get('Content', {}).get('Spots'),
+        # Other information
+        'partition_count': data.get('Content', {}).get('Number_of_partitions'),
+        'rgp_count': data.get('Content', {}).get('RGP'),
+        'spot_count': data.get('Content', {}).get('Spots'),
         
         # Modules information
-        'number_of_modules': data.get('Content', {}).get('Modules', {}).get('Number_of_modules'),
-        'families_in_modules': data.get('Content', {}).get('Modules', {}).get('Families_in_Modules'),
+        'module_count': data.get('Content', {}).get('Modules', {}).get('Number_of_modules'),
+        'family_in_module_count': data.get('Content', {}).get('Modules', {}).get('Families_in_Modules'),
     }
 
+    # Loop through partitions to populate family counts and genome frequency metrics
+    for partition in ["Persistent", "Shell", "Cloud"]:
+        partition_key = partition.lower()
+
+        pangenome_data[f'{partition_key}_family_count'] = data.get('Content', {}).get(partition, {}).get('Family_count')
+        pangenome_data[f'{partition_key}_family_min_genome_frequency'] = data.get('Content', {}).get(partition, {}).get('min_genomes_frequency')
+        pangenome_data[f'{partition_key}_family_max_genome_frequency'] = data.get('Content', {}).get(partition, {}).get('max_genomes_frequency')
+        pangenome_data[f'{partition_key}_family_std_genome_frequency'] = data.get('Content', {}).get(partition, {}).get('sd_genomes_frequency')
+        pangenome_data[f'{partition_key}_family_mean_genome_frequency'] = data.get('Content', {}).get(partition, {}).get('mean_genomes_frequency')
+
     return PangenomeMetric.model_validate(pangenome_data)
+
 
 
 def parse_pangenome_dir(pangenome_main_dir:Path, collection_release: CollectionRelease, session:Session) -> list[Pangenome]:

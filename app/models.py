@@ -48,7 +48,7 @@ class GenomeInPangenomeMetric(SQLModel):
     fragmentation: float = Field(..., alias="Fragmentation")
     rgps: int = Field(..., alias="RGPs")
     spots: int = Field(..., alias="Spots")
-    modules: int = Field(..., alias="Modules")
+    modules: int = Field(..., alias="Modules") 
 
 
 class GenomePangenomeLink(GenomeInPangenomeMetric, table=True):
@@ -193,27 +193,41 @@ class GenomePublicWithTaxonomies(GenomePublic):
 class PangenomeMetric(SQLModel):
     
     # Metrics
-    genes: int
-    genomes: int
-    families: int
-    edges: int
+    gene_count: int
+    genome_count: int
+    family_count: int
+    edge_count: int
 
+        
     # Persistent information
     persistent_family_count: int
-    
+    persistent_family_min_genome_frequency: float
+    persistent_family_max_genome_frequency: float
+    persistent_family_std_genome_frequency: float
+    persistent_family_mean_genome_frequency: float
+
     # Shell information
     shell_family_count: int
-    
+    shell_family_min_genome_frequency: float
+    shell_family_max_genome_frequency: float
+    shell_family_std_genome_frequency: float
+    shell_family_mean_genome_frequency: float
+
     # Cloud information
     cloud_family_count: int
-    
-    number_of_partitions: int
-    rgp: int
-    spots: int
+    cloud_family_min_genome_frequency: float
+    cloud_family_max_genome_frequency: float
+    cloud_family_std_genome_frequency: float
+    cloud_family_mean_genome_frequency: float
+
+
+    partition_count: int
+    rgp_count: int
+    spot_count: int
     
     # Modules information
-    number_of_modules: int
-    families_in_modules: int
+    module_count: int
+    family_in_module_count: int
 
 
 class PangenomeBase(PangenomeMetric):
