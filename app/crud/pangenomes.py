@@ -1,11 +1,11 @@
 
 from sqlmodel import Session, select
 
-from app.models import Pangenome, PangenomePublic, Genome, Taxon, Taxonomy, GenomePublicWithTaxonomies, CollectionRelease, GenomeInPangenomeMetric, GenomePangenomeLink
+from app.models import Pangenome, PangenomePublic, Genome, CollectionRelease, GenomePangenomeLink, PangenomeTaxonLink, Taxon
 
 from pathlib import Path
 
-from app.crud.common import FilterPangenome, get_taxonomies_from_taxa, FilterParams, FilterGenome
+from app.crud.common import FilterPangenome, get_taxonomies_from_taxa
 
 
 
@@ -58,7 +58,14 @@ def get_pangenomes(session:Session, filter_params: FilterPangenome) -> list[Pang
                 GenomePangenomeLink).join(
                 Genome).where(
                     Genome.name == filter_params.genome_name)
-
+        
+    if filter_params.taxon_name is not None:
+        # Apply offset and limit
+        
+        query = query.join(
+                        PangenomeTaxonLink).join(
+                        Taxon).where(
+                            Taxon.name == filter_params.taxon_name)
     # Apply offset and limit
     query = query.offset(filter_params.offset).limit(filter_params.limit)
 

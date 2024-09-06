@@ -1,22 +1,18 @@
-from fastapi import APIRouter, HTTPException, status, Query, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import FileResponse
-from pathlib import Path
-from pydantic import BaseModel
 
-from ..models import PangenomePublic, Pangenome
+from ..models import PangenomePublic
 from ..dependencies import SessionDep
 from app.crud import pangenomes as pangenomes_crud
-from app.crud.common import FilterGenome
+from app.crud.common import FilterPangenome
 
-
-from sqlmodel import select
 
 router = APIRouter(
     tags=["pangenomes"],
 )
 
 @router.get("/pangenomes/", response_model=list[PangenomePublic])
-async def read_pangenomes(session: SessionDep, filter_params: FilterGenome = Depends()):
+async def get_pangenomes(session: SessionDep, filter_params: FilterPangenome = Depends()):
 
     pangenomes = pangenomes_crud.get_pangenomes(session, filter_params)
 
@@ -46,3 +42,13 @@ async def get_pangenome_file(pangenome_id:int, session: SessionDep):
         raise HTTPException(status_code=404, detail="Pangenome file does not exists")
     
     return FileResponse(path=pangenome_file.as_posix(), filename="pangenome.h5")
+
+
+
+@router.get("/pangenomes/count/", response_model=int)
+async def get_pangenome_count(session: SessionDep, filter_params: FilterPangenome = Depends()):
+
+    pangenomes = pangenomes_crud.get_pangenomes(session, filter_params)
+
+    return len(pangenomes)
+

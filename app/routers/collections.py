@@ -1,8 +1,7 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Depends
 
-from ..models import CollectionPublicWithReleases, CollectionPublic, Collection
+from ..models import CollectionPublicWithReleases, Collection
 from ..dependencies import SessionDep
-from sqlmodel import select
 from app.crud.common import FilterCollection
 from app.crud import collections as collections_crud
 

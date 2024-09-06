@@ -1,10 +1,9 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Depends
 
 
-from ..models import GenomePublic, Genome, GenomePublicWithTaxonomies
+from ..models import GenomePublicWithTaxonomies
 from ..dependencies import SessionDep
 from ..crud import genomes as genomes_crud
-from sqlmodel import select
 
 from app.crud.common import FilterGenome
 

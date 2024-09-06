@@ -1,10 +1,7 @@
 
 from sqlmodel import Session, select
 
-from app.routers import genomes
-from app.models import GenomePublic, Pangenome, PangenomePublic, Genome, Taxon, Taxonomy, GenomePublicWithTaxonomies, GenomePangenomeLink
-
-from pathlib import Path
+from app.models import Genome, Taxon, GenomePublicWithTaxonomies, GenomeTaxonLink
 
 from app.crud.common import get_taxonomies_from_taxa, FilterGenome
 
@@ -40,7 +37,15 @@ def get_genomes(session:Session, filter_params: FilterGenome) -> list[GenomePubl
     if filter_params.genome_name is not None:
         query = query.where(Genome.name == filter_params.genome_name)
 
-    # Apply offset and limit
+    if filter_params.taxon_name is not None:
+        # Apply offset and limit
+        
+        query = query.join(
+                        GenomeTaxonLink).join(
+                        Taxon).where(
+                            Taxon.name == filter_params.taxon_name)
+
+
     query = query.offset(filter_params.offset).limit(filter_params.limit)
 
     db_genomes = session.exec(query).all()
