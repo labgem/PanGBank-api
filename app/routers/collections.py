@@ -24,7 +24,7 @@ def get_collection_by_name(collection_id:int, session: SessionDep):
     collection = session.get(Collection, collection_id)
 
     if not collection:
-        raise HTTPException(status_code=404, detail=f"Collection with name {collection_name} not found")
+        raise HTTPException(status_code=404, detail=f"Collection with id={collection_id} not found")
     
     return collection
 

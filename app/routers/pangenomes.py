@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Query
 from fastapi.responses import FileResponse
 from pathlib import Path
 
 from ..models import PangenomePublic, Pangenome
 from ..dependencies import SessionDep
-from .. import crud
+from ..crud import common, pangenomes as pangenomes_crud
 from sqlmodel import select
 
 router = APIRouter(
@@ -12,16 +12,17 @@ router = APIRouter(
 )
 
 @router.get("/pangenomes/", response_model=list[PangenomePublic])
-def read_pangenomes(session: SessionDep):
+async def read_pangenomes(session: SessionDep, offset: int = 0, limit: int = Query(default=20, le=100)):
 
-    pangenomes = session.exec(select(Pangenome)).all()
+    pangenomes = pangenomes_crud.get_pangenomes(session, offset, limit)
+
     return pangenomes
 
 
 @router.get("/pangenomes/{pangenome_id}", response_model=PangenomePublic)
-def get_pangenome(pangenome_id:int, session: SessionDep):
+async def get_pangenome(pangenome_id:int, session: SessionDep):
 
-    pangenome = crud.get_pangenome(session, pangenome_id)
+    pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
 
     if not pangenome:
         raise HTTPException(status_code=404, detail="Pangenome not found")
@@ -29,9 +30,9 @@ def get_pangenome(pangenome_id:int, session: SessionDep):
 
 
 @router.get("/pangenomes/{pangenome_id}/file", response_model=str, response_class=FileResponse)
-def get_pangenome_file(pangenome_id:int, session: SessionDep):
+async def get_pangenome_file(pangenome_id:int, session: SessionDep):
     
-    pangenome_file = crud.get_pangenome_file(session, pangenome_id)
+    pangenome_file = pangenomes_crud.get_pangenome_file(session, pangenome_id)
 
     if not pangenome_file:
         raise HTTPException(status_code=404, detail="Pangenome not found")
