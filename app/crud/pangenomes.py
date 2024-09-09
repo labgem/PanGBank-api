@@ -1,13 +1,14 @@
 
-from typing import Generator, Iterator, Sequence
+from typing import Iterator, Sequence
 from sqlmodel import Session, select
+from sqlalchemy import func
+
 
 from app.models import Pangenome, PangenomePublic, Genome, CollectionRelease, GenomePangenomeLink, PangenomeTaxonLink, Taxon
 
 from pathlib import Path
 
 from app.crud.common import FilterPangenome, get_taxonomies_from_taxa, PaginationParams
-from sqlalchemy import func
 
 
 

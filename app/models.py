@@ -113,13 +113,20 @@ class GenomeSourcePublic(GenomeSourceBase):
     id: int
 
 class CollectionReleaseBase(SQLModel):
+
     version: str
+
     ppanggolin_version: str
     pangbank_wf_version: str
     pangenomes_directory: str
-    date: datetime = Field(default_factory=datetime.now, nullable=False)
-    description: str | None = None
-    state: str | None = None
+    release_note: str
+
+    date: datetime
+
+    
+    # latest: bool = False
+
+    # state : str | None = None
 
     collection_id: int | None = Field(default=None, foreign_key="collection.id")
 
@@ -134,6 +141,7 @@ class CollectionRelease(CollectionReleaseBase, table=True):
     taxonomy_source: "TaxonomySource" = Relationship(back_populates="collection_releases")
 
     pangenomes: list["Pangenome"] = Relationship(back_populates="collection_release")
+
 
 class CollectionReleasePublic(CollectionReleaseBase):
     id: int

@@ -2,18 +2,19 @@ from sqlmodel import Session, select
 from pathlib import Path
 import json
 import csv
-import sys
+# import sys
 import yaml
 
 from typing import Iterator
 
-# Add the project root to the sys.path
-sys.path = [str(Path(__file__).resolve().parent.parent)] + sys.path
+# # Add the project root to the sys.path
+# sys.path = [str(Path(__file__).resolve().parent.parent)] + sys.path
 
-from app.database import create_db_and_tables, engine
-from app.models import Collection, CollectionRelease, Genome, Pangenome, GenomePangenomeLink, GenomeSource, PangenomeMetric, GenomeInPangenomeMetric
+from ..database import create_db_and_tables, engine
+from ..models import Collection, CollectionRelease, Genome, Pangenome, GenomePangenomeLink, GenomeSource, PangenomeMetric, GenomeInPangenomeMetric
 
-from taxonomy import create_taxonomy_source, parse_taxonomy_file, manage_genome_taxonomies, build_taxon_dict, parse_ranks_str
+from .taxonomy import create_taxonomy_source, parse_taxonomy_file, manage_genome_taxonomies, build_taxon_dict, parse_ranks_str
+
 
 def add_source_to_genomes(pangenome:Pangenome, genome_sources:list[GenomeSource], genome_to_source:dict[str,str], session:Session):
 
@@ -86,59 +87,58 @@ def create_collection_release(collection_release_info_file:Path, session:Session
     with open(collection_release_info_file) as fl:
         collection_release_info = json.load(fl)
 
+    print(collection_release_info['release'])
+    collection = Collection.model_validate(collection_release_info.get("collection", {}))
+
     statement = (
         select(Collection)
         .where(
-            (Collection.name == collection_release_info["name"]) 
+            (Collection.name == collection.name) 
         )
     )
 
-    collection = session.exec(statement).first()
+    collection_from_db = session.exec(statement).first()
 
-    if collection is None:
-        print(f'Creating a new collection: {collection_release_info["name"]}')
-        
-        collection = Collection(name=collection_release_info["name"],
-                                description=collection_release_info['description'])
-        
+    if collection_from_db is None:
+        print(f'Adding a new collection to DB: {collection.name}')
         session.add(collection)
-
-
+        session.commit()
     else:
+        collection = collection_from_db
         print(f'Collection {collection.name} already exists in DB')
 
 
+    collection_release = CollectionRelease.model_validate(collection_release_info.get("release", {}))
+
     statement =  select(CollectionRelease).join(Collection).where(
-        (Collection.name == collection_release_info["name"] ) &
-        (CollectionRelease.version == collection_release_info["version"])
+        (Collection.name == collection.name ) &
+        (CollectionRelease.version == collection_release.version)
         )
     
-    collection_release = session.exec(statement).first()
+    collection_release_from_db = session.exec(statement).first()
 
-    if collection_release is None:
+    if collection_release_from_db is None:
 
-        print(f'Creating a new collection release: {collection_release_info["name"]}:{collection_release_info["version"]}')
-
-        collection_release = CollectionRelease(version=collection_release_info["version"],
-                                               ppanggolin_version=collection_release_info["ppanggolin_version"],
-                                               pangbank_wf_version=collection_release_info["pangbank_wf_version"],
-                                               pangenomes_directory=collection_release_info["pangenomes_directory"],
-                                               collection=collection)
+        print(f'Adding a new collection release to DB: {collection.name}:{collection_release.version}')
+        collection_release.collection = collection
 
         session.add(collection_release)
+        session.commit()
 
 
     else:
         print(f'Collection release {collection.name}:{collection_release.version} already exists in DB')
 
-        same_ppanggo_version = collection_release_info["ppanggolin_version"] == collection_release.ppanggolin_version
-        same_pangbank_wf_version = collection_release_info["pangbank_wf_version"] == collection_release.pangbank_wf_version
+        same_ppanggo_version = collection_release.ppanggolin_version == collection_release_from_db.ppanggolin_version
+        same_pangbank_wf_version = collection_release.pangbank_wf_version == collection_release_from_db.pangbank_wf_version
 
         if not same_ppanggo_version or not same_pangbank_wf_version:
             raise ValueError(f'For collection {collection.name} release {collection_release.version}:'
                              'Not the same ppanggolin_version or pangbank_wf_version from input file and whats in the DB.. '
-                             f'ppanggolin version : {collection_release_info["ppanggolin_version"]} vs {collection_release.ppanggolin_version} '
-                             f'ppanggolin version : {collection_release_info["pangbank_wf_version"]} vs {collection_release.pangbank_wf_version} ')
+                             f'ppanggolin version : {collection_release.ppanggolin_version} vs {collection_release.ppanggolin_version} '
+                             f'ppanggolin version : {collection_release.pangbank_wf_version} vs {collection_release.pangbank_wf_version} ')
+
+        collection_release = collection_release_from_db
 
 
 
@@ -147,12 +147,6 @@ def create_collection_release(collection_release_info_file:Path, session:Session
 
 
     return collection_release
-
-def gather_pangenome_info(pangenome_file: Path,
-                                    genomes_md5sum_file: Path,
-                                    pangenome_info_file:Path,
-                                    genomes_statistics_file:Path):
-    pass
 
 
 def parse_genomes_hash_file(genomes_md5sum_file:Path) -> dict[str, dict[str,str]]:
@@ -299,7 +293,7 @@ def main():
     with Session(engine) as session:
 
         collection_release = create_collection_release(collection_release_info_file, session=session)
-
+        
         print(f'The collection release has {len(collection_release.pangenomes)} pangenomes')
 
         pangenomes = parse_pangenome_dir(pangenome_dir, collection_release=collection_release, session=session)
@@ -319,7 +313,6 @@ def main():
             
 
         genome_sources = create_genome_sources(genome_sources_info_file, session=session)
-        print(genome_sources)
 
         genome_to_source = parse_genome_to_source_files(source_genomes_files)
 
@@ -331,10 +324,6 @@ def main():
 
         for genome_source in genome_sources:
             print(f'The genome source {genome_source.name} has {len(genome_source.genomes)} genomes')
-
-        # genomes = create_genomes_and_taxonomies(genome_to_taxonomy, taxonomy_release, session=session)
-
-        # associate_genomes_with_collection_release(genomes, collection_release, session)
 
 
 if __name__ == "__main__":
