@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 from ..models import PangenomePublic
 from ..dependencies import SessionDep
 from app.crud import pangenomes as pangenomes_crud
-from app.crud.common import FilterPangenome
+from app.crud.common import FilterPangenome, PaginationParams
 
 
 router = APIRouter(
@@ -12,9 +12,9 @@ router = APIRouter(
 )
 
 @router.get("/pangenomes/", response_model=list[PangenomePublic])
-async def get_pangenomes(session: SessionDep, filter_params: FilterPangenome = Depends()):
+async def get_pangenomes(session: SessionDep, filter_params: FilterPangenome = Depends(), pagination_params:PaginationParams = Depends()):
 
-    pangenomes = pangenomes_crud.get_pangenomes(session, filter_params)
+    pangenomes = pangenomes_crud.get_public_pangenomes(session, filter_params, pagination_params)
 
     return pangenomes
 

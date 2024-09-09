@@ -1,9 +1,10 @@
 
 from sqlmodel import Session, select
+from sqlalchemy import func
 
 from app.models import Genome, Taxon, GenomePublicWithTaxonomies, GenomeTaxonLink
 
-from app.crud.common import get_taxonomies_from_taxa, FilterGenome
+from app.crud.common import PaginationParams, get_taxonomies_from_taxa, FilterGenome
 
 
 def get_genome_public(genome:Genome) -> GenomePublicWithTaxonomies:
@@ -30,7 +31,7 @@ def get_genome_by_name(session:Session, genome_name:str) -> GenomePublicWithTaxo
     
     return get_genome_public(genome)
 
-def get_genomes(session:Session, filter_params: FilterGenome) -> list[GenomePublicWithTaxonomies]:
+def get_genomes(session:Session, filter_params: FilterGenome, pagination_params: PaginationParams | None) -> list[GenomePublicWithTaxonomies]:
 
     query = select(Genome)
 
@@ -42,11 +43,19 @@ def get_genomes(session:Session, filter_params: FilterGenome) -> list[GenomePubl
         
         query = query.join(
                         GenomeTaxonLink).join(
-                        Taxon).where(
+                        Taxon)
+        
+        if filter_params.fuzzy_match:
+            
+            query = query.where(func.lower(Taxon.name).like(f"%{filter_params.taxon_name.lower()}%"))
+        else:
+            # exact match
+            query = query.where(
                             Taxon.name == filter_params.taxon_name)
 
 
-    query = query.offset(filter_params.offset).limit(filter_params.limit)
+    if pagination_params:
+        query = query.offset(pagination_params.offset).limit(pagination_params.limit)
 
     db_genomes = session.exec(query).all()
 

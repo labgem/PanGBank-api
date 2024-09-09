@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
 
 
-from ..models import GenomePublicWithTaxonomies
-from ..dependencies import SessionDep
-from ..crud import genomes as genomes_crud
+from app.models import GenomePublicWithTaxonomies
+from app.dependencies import SessionDep
+from app.crud import genomes as genomes_crud
 
-from app.crud.common import FilterGenome
+from app.crud.common import FilterGenome, PaginationParams
 
 
 
@@ -15,9 +15,9 @@ router = APIRouter(
 )
 
 @router.get("/genomes/", response_model=list[GenomePublicWithTaxonomies])
-async def read_genomes(session: SessionDep, filter_params: FilterGenome = Depends()):
+async def read_genomes(session: SessionDep, filter_params: FilterGenome = Depends(), pagination_params:PaginationParams = Depends()):
 
-    genomes = genomes_crud.get_genomes(session, filter_params)
+    genomes = genomes_crud.get_genomes(session, filter_params, pagination_params)
 
     return genomes
 

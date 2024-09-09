@@ -7,26 +7,24 @@ from app.models import Taxon, Taxonomy
 
 
 
-class FilterParams(BaseModel):
+class PaginationParams(BaseModel):
 
     offset: int = 0
     limit: int = Query(default=20, le=100)
     
-class FilterCollection(FilterParams):
+class FilterCollection(BaseModel):
     collection_release_id: int | None = None
+
+    collection_id: int | None = None
     # Add more filters as needed
 
-class FilterGenome(FilterParams):
-
-    offset: int = 0
-    limit: int = Query(default=20, le=100)
-
-    collection_release_id: int | None = None
-    collection_id: int | None = None
+class FilterGenome(BaseModel):
 
     genome_name : str | None = None
     
     taxon_name : str | None = None
+
+    fuzzy_match : bool =  False
 
 
 class FilterPangenome(FilterGenome, FilterCollection):

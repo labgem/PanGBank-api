@@ -1,12 +1,13 @@
 
+from typing import Generator, Iterator, Sequence
 from sqlmodel import Session, select
 
 from app.models import Pangenome, PangenomePublic, Genome, CollectionRelease, GenomePangenomeLink, PangenomeTaxonLink, Taxon
 
 from pathlib import Path
 
-from app.crud.common import FilterPangenome, get_taxonomies_from_taxa
-
+from app.crud.common import FilterPangenome, get_taxonomies_from_taxa, PaginationParams
+from sqlalchemy import func
 
 
 
@@ -41,7 +42,7 @@ def get_public_pangenome(pangenome:Pangenome) -> PangenomePublic:
     return pangenome_public
 
 
-def get_pangenomes(session:Session, filter_params: FilterPangenome) -> list[PangenomePublic]:
+def get_pangenomes(session:Session, filter_params: FilterPangenome, pagination_params: PaginationParams | None = None) -> Sequence[Pangenome]:
 
     query = select(Pangenome)
     
@@ -64,13 +65,28 @@ def get_pangenomes(session:Session, filter_params: FilterPangenome) -> list[Pang
         
         query = query.join(
                         PangenomeTaxonLink).join(
-                        Taxon).where(
+                        Taxon)
+        if filter_params.fuzzy_match:
+            query = query.where(func.lower(Taxon.name).like(f"%{filter_params.taxon_name.lower()}%"))
+        else:
+            # exact match
+            query = query.where(
                             Taxon.name == filter_params.taxon_name)
     # Apply offset and limit
-    query = query.offset(filter_params.offset).limit(filter_params.limit)
+    if pagination_params:
+        query = query.offset(pagination_params.offset).limit(pagination_params.limit)
 
     pangenomes = session.exec(query).all()
 
-    public_pangenomes = [get_public_pangenome(pangenome) for pangenome in pangenomes]
+    return pangenomes
+
+
+
+def get_public_pangenomes(session:Session, filter_params: FilterPangenome, pagination_params: PaginationParams | None = None) -> Iterator[PangenomePublic]:
+
+
+    pangenomes = get_pangenomes(session, filter_params, pagination_params)
+                   
+    public_pangenomes = (get_public_pangenome(pangenome) for pangenome in pangenomes)
     
-    return public_pangenomes
+    return public_pangenomes 
