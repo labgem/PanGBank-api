@@ -68,7 +68,7 @@ class CollectionBase(SQLModel):
 class Collection(CollectionBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    collection_releases : list["CollectionRelease"] = Relationship(back_populates="collection")
+    collection_releases : list["CollectionRelease"] = Relationship(back_populates="collection", cascade_delete=True)
 
 class CollectionPublic(CollectionBase):
     id: int
@@ -128,9 +128,10 @@ class CollectionReleaseBase(SQLModel):
 
     # state : str | None = None
 
-    collection_id: int | None = Field(default=None, foreign_key="collection.id")
+    collection_id: int | None = Field(default=None, foreign_key="collection.id", ondelete="CASCADE")
 
-    taxonomy_source_id: int | None = Field(default=None, foreign_key="taxonomysource.id")
+    # RESTRICT: Prevent the deletion of this record (CollectionReleaseBase) if there is a foreign key value by raising an error.
+    taxonomy_source_id: int | None = Field(default=None, foreign_key="taxonomysource.id", ondelete="RESTRICT") 
 
 
 class CollectionRelease(CollectionReleaseBase, table=True):
@@ -140,7 +141,7 @@ class CollectionRelease(CollectionReleaseBase, table=True):
 
     taxonomy_source: "TaxonomySource" = Relationship(back_populates="collection_releases")
 
-    pangenomes: list["Pangenome"] = Relationship(back_populates="collection_release")
+    pangenomes: list["Pangenome"] = Relationship(back_populates="collection_release", cascade_delete=True)
 
 
 class CollectionReleasePublic(CollectionReleaseBase):
@@ -252,7 +253,7 @@ class Pangenome(PangenomeBase, table=True):
 
     collection_release: CollectionRelease = Relationship(back_populates="pangenomes")
 
-    genome_links: list[GenomePangenomeLink] = Relationship(back_populates="pangenome")
+    genome_links: list[GenomePangenomeLink] = Relationship(back_populates="pangenome", cascade_delete=True)
     
     taxa : list[Taxon] =  Relationship(back_populates="pangenomes", link_model=PangenomeTaxonLink)
 

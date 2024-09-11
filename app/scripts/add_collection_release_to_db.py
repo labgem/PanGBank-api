@@ -1,3 +1,4 @@
+from operator import and_
 from sqlmodel import Session, select
 from pathlib import Path
 import json
@@ -210,11 +211,10 @@ def get_pangenome_metrics_from_info_file(yaml_file_path: Path) -> PangenomeMetri
 
 
 def parse_pangenome_dir(pangenome_main_dir:Path, collection_release: CollectionRelease, session:Session) -> list[Pangenome]:
-
     pangenomes = []
     for pangenome_dir in pangenome_main_dir.iterdir():
-
         if not pangenome_dir.is_dir():
+            print(f'skipping {pangenome_dir}')
             continue
 
         pangenome_file = pangenome_dir / "pangenome.h5"
@@ -225,8 +225,11 @@ def parse_pangenome_dir(pangenome_main_dir:Path, collection_release: CollectionR
         # TODO: Check files exist
         pangenome_local_path = Path(pangenome_file.parent.name) / pangenome_file.name
         
-        pangenome = session.exec(select(Pangenome).where((Pangenome.file_name == pangenome_local_path.as_posix()) and (Pangenome.collection_release == collection_release) )).first()
+        pangenome = session.exec(select(Pangenome).where(and_(
+            Pangenome.file_name == pangenome_local_path.as_posix(),
+            Pangenome.collection_release == collection_release) )).first()
 
+        
         if pangenome is None:
             pangenome_specific_args = {
                 'file_name':pangenome_local_path.as_posix(),
