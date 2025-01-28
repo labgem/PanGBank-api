@@ -7,6 +7,9 @@ import csv
 import yaml
 
 from typing import Iterator
+import typer
+import gzip
+
 
 # # Add the project root to the sys.path
 # sys.path = [str(Path(__file__).resolve().parent.parent)] + sys.path
@@ -163,13 +166,15 @@ def parse_genome_metrics_file(tsv_file_path: Path) -> Iterator[GenomeInPangenome
     Parses a TSV file containing genome data into a list of GenomeInPangenomeMetric instances.
 
     """
-    
-    with open(tsv_file_path, mode='r', newline='', encoding='utf-8') as file:
-        reader = csv.DictReader(filter(lambda row: row[0]!='#', file), delimiter='\t')
+    open_func = gzip.open if tsv_file_path.suffix == '.gz' else open
+
+    with open_func(tsv_file_path, mode='rt', newline='', encoding='utf-8') as file:
+        reader = csv.DictReader(filter(lambda row: row[0] != '#', file), delimiter='\t')
         for row in reader:
             try:
-                genome_data = GenomeInPangenomeMetric.model_validate({key.lower():value for key, value in row.items()})
-
+                genome_data = GenomeInPangenomeMetric.model_validate(
+                    {key.lower(): value for key, value in row.items()}
+                )
             except ValueError as e:
                 raise ValueError(f"Error parsing row {row}: {e}")
             
@@ -220,7 +225,7 @@ def parse_pangenome_dir(pangenome_main_dir:Path, collection_release: CollectionR
         pangenome_file = pangenome_dir / "pangenome.h5"
         genomes_md5sum_file = pangenome_dir / "genomes_md5sum.tsv"
         pangenome_info_file = pangenome_dir / "info.yaml"
-        genomes_statistics_file = pangenome_dir / "genomes_statistics.tsv"
+        genomes_statistics_file = pangenome_dir / "genomes_statistics.tsv.gz"
 
         # TODO: Check files exist
         pangenome_local_path = Path(pangenome_file.parent.name) / pangenome_file.name
@@ -274,19 +279,20 @@ def parse_pangenome_dir(pangenome_main_dir:Path, collection_release: CollectionR
     return pangenomes
     
 
-def main():
+def main(collection_dir:Path):
+
     create_db_and_tables()
     
-    collection_release_info_file = Path("tests/collection_release_info.json")
+    collection_release_info_file = collection_dir / "collection_release_info.json"
 
-    taxonomy_source_info_file = Path("tests/taxonomy_release_info.json")
+    taxonomy_source_info_file = collection_dir / "taxonomy_release_info.json"
 
-    genome_sources_info_file = Path("tests/genome_source_info.json")
+    genome_sources_info_file = collection_dir / "genome_source_info.json"
 
-    source_genomes_files = [Path('tests/GenBank.list'), Path('tests/RefSeq.list')]
+    source_genomes_files = [collection_dir / 'GenBank.list', collection_dir / 'RefSeq.list']
 
-    pangenome_dir = Path("tests/pangenomes")
-    taxonomy_file = Path("tests/ar53_taxonomy_clean.tsv.gz")
+    pangenome_dir = collection_dir / "pangenomes"
+    taxonomy_file = collection_dir / "ar53_taxonomy_clean.tsv.gz"
 
 
 
@@ -330,4 +336,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)
