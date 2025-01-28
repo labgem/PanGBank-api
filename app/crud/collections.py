@@ -20,8 +20,6 @@ def get_collections(session:Session, filter_params: FilterCollection) -> Sequenc
             CollectionRelease.id == filter_params.collection_release_id
         )
     
-    # Apply offset and limit
-    query = query.offset(filter_params.offset).limit(filter_params.limit)
     
     collections = session.exec(query).all()
 

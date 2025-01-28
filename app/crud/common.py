@@ -15,16 +15,13 @@ class PaginationParams(BaseModel):
 class FilterCollection(BaseModel):
     collection_release_id: int | None = None
 
-    collection_id: int | None = None
-    # Add more filters as needed
-
 class FilterGenome(BaseModel):
 
     genome_name : str | None = None
     
     taxon_name : str | None = None
 
-    fuzzy_match : bool =  False
+    substring_match : bool =  False
 
 
 class FilterPangenome(FilterGenome, FilterCollection):

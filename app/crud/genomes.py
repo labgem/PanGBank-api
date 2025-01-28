@@ -45,7 +45,7 @@ def get_genomes(session:Session, filter_params: FilterGenome, pagination_params:
                         GenomeTaxonLink).join(
                         Taxon)
         
-        if filter_params.fuzzy_match:
+        if filter_params.substring_match:
             
             query = query.where(func.lower(Taxon.name).like(f"%{filter_params.taxon_name.lower()}%"))
         else:

@@ -50,10 +50,10 @@ def get_pangenomes(session:Session, filter_params: FilterPangenome, pagination_p
     if filter_params.collection_release_id is not None:
         query = query.where(Pangenome.collection_release_id == filter_params.collection_release_id)
 
-    if filter_params.collection_id is not None:
-        query = query.join(CollectionRelease).where(
-            CollectionRelease.collection_id == filter_params.collection_id
-        )
+    # if filter_params.collection_id is not None:
+    #     query = query.join(CollectionRelease).where(
+    #         CollectionRelease.collection_id == filter_params.collection_id
+    #     )
 
     if filter_params.genome_name is not None:
         query = query.join(
@@ -67,7 +67,7 @@ def get_pangenomes(session:Session, filter_params: FilterPangenome, pagination_p
         query = query.join(
                         PangenomeTaxonLink).join(
                         Taxon)
-        if filter_params.fuzzy_match:
+        if filter_params.substring_match:
             query = query.where(func.lower(Taxon.name).like(f"%{filter_params.taxon_name.lower()}%"))
         else:
             # exact match
