@@ -24,6 +24,15 @@ PanGBank is an API designed to manage a database of pangenomes. Built with **Fas
    fastapi dev app/main.py
    ```
 
+### Manage the database
+
+```bash
+python -m app.scripts.add_collection <collection release dir>
+
+python -m app.scripts.delete_collection <collection name>
+
+python -m app.scripts.add_genome_metadata <metadata table>
+```
 ### Docker Compose Setup
 
 1. Build and run the Docker image:
