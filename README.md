@@ -2,13 +2,6 @@
 
 PanGBank is an API designed to manage a database of pangenomes. Built with **FastAPI** and using **SQLModel** as the ORM. The API can be deployed using **Docker**.
 
-## Features
-
-- **FastAPI-based**: High-performance web framework for building APIs.
-- **SQLModel ORM**: Combines Pydantic and SQLAlchemy for easy database interactions.
-- **RESTful Endpoints**: Provides CRUD operations on pangenome-related data.
-- **Docker Deployment**: Simplifies installation and deployment.
-
 ## Installation
 
 ### Local Setup
