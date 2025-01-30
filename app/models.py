@@ -1,8 +1,7 @@
 from sqlmodel import Field, Relationship, SQLModel
 from pydantic import BaseModel
 from datetime import datetime
-
-from tomlkit import table
+from enum import Enum
 
 # class GenomeCollectionReleaseLink(SQLModel, table=True):
 #     genome_id: int | None = Field(default=None, foreign_key="genome.id", primary_key=True)
@@ -154,12 +153,10 @@ class CollectionReleaseBase(SQLModel):
     pangenomes_directory: str
     release_note: str
 
+    mash_sketch: str
+    mash_version: str
+
     date: datetime
-
-    # latest: bool = False
-
-    # state : str | None = None
-
     collection_id: int | None = Field(
         default=None, foreign_key="collection.id", ondelete="CASCADE"
     )
@@ -339,10 +336,29 @@ class TaxonomyPublic(TaxonomyBase):
     taxa: list[TaxonPublic]
 
 
+class MetadataType(str, Enum):
+    STRING = "str"
+    INTEGER = "int"
+    FLOAT = "float"
+    BOOLEAN = "bool"
+
+
 class GenomeMetadata(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     key: str
     value: str
-    type: type
+    type: MetadataType = Field(
+        sa_column_kwargs={"nullable": False}
+    )  # Ensures the column is NOT NULL
     genome_id: int = Field(foreign_key="genome.id")
     genome: Genome = Relationship(back_populates="genome_metadata")
+
+    def get_typed_value(self):
+        """Converts the stored string value to its proper type."""
+        if self.type == MetadataType.INTEGER:
+            return int(self.value)
+        elif self.type == MetadataType.FLOAT:
+            return float(self.value)
+        elif self.type == MetadataType.BOOLEAN:
+            return self.value.lower() in ("true", "1", "yes")
+        return self.value  # Default to string
