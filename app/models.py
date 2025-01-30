@@ -1,7 +1,8 @@
-
 from sqlmodel import Field, Relationship, SQLModel
 from pydantic import BaseModel
 from datetime import datetime
+
+from tomlkit import table
 
 # class GenomeCollectionReleaseLink(SQLModel, table=True):
 #     genome_id: int | None = Field(default=None, foreign_key="genome.id", primary_key=True)
@@ -9,12 +10,18 @@ from datetime import datetime
 
 
 class GenomeTaxonLink(SQLModel, table=True):
-    genome_id: int | None = Field(default=None, foreign_key="genome.id", primary_key=True)
+    genome_id: int | None = Field(
+        default=None, foreign_key="genome.id", primary_key=True
+    )
     taxon_id: int | None = Field(default=None, foreign_key="taxon.id", primary_key=True)
 
+
 class PangenomeTaxonLink(SQLModel, table=True):
-    pangenome_id: int | None = Field(default=None, foreign_key="pangenome.id", primary_key=True)
+    pangenome_id: int | None = Field(
+        default=None, foreign_key="pangenome.id", primary_key=True
+    )
     taxon_id: int | None = Field(default=None, foreign_key="taxon.id", primary_key=True)
+
 
 class GenomeInPangenomeMetric(SQLModel):
     genome_name: str = Field(..., alias="Genome_name")
@@ -31,51 +38,70 @@ class GenomeInPangenomeMetric(SQLModel):
     persistent_genes: int = Field(..., alias="Persistent_genes")
     persistent_fragmented_genes: int = Field(..., alias="Persistent_fragmented_genes")
     persistent_families: int = Field(..., alias="Persistent_families")
-    persistent_families_with_fragments: int = Field(..., alias="Persistent_families_with_fragments")
-    persistent_families_in_multicopy: int = Field(..., alias="Persistent_families_in_multicopy")
+    persistent_families_with_fragments: int = Field(
+        ..., alias="Persistent_families_with_fragments"
+    )
+    persistent_families_in_multicopy: int = Field(
+        ..., alias="Persistent_families_in_multicopy"
+    )
     shell_genes: int = Field(..., alias="Shell_genes")
     shell_fragmented_genes: int = Field(..., alias="Shell_fragmented_genes")
     shell_families: int = Field(..., alias="Shell_families")
-    shell_families_with_fragments: int = Field(..., alias="Shell_families_with_fragments")
+    shell_families_with_fragments: int = Field(
+        ..., alias="Shell_families_with_fragments"
+    )
     shell_families_in_multicopy: int = Field(..., alias="Shell_families_in_multicopy")
     cloud_genes: int = Field(..., alias="Cloud_genes")
     cloud_fragmented_genes: int = Field(..., alias="Cloud_fragmented_genes")
     cloud_families: int = Field(..., alias="Cloud_families")
-    cloud_families_with_fragments: int = Field(..., alias="Cloud_families_with_fragments")
+    cloud_families_with_fragments: int = Field(
+        ..., alias="Cloud_families_with_fragments"
+    )
     cloud_families_in_multicopy: int = Field(..., alias="Cloud_families_in_multicopy")
     completeness: float = Field(..., alias="Completeness")
     contamination: float = Field(..., alias="Contamination")
     fragmentation: float = Field(..., alias="Fragmentation")
     rgps: int = Field(..., alias="RGPs")
     spots: int = Field(..., alias="Spots")
-    modules: int = Field(..., alias="Modules") 
+    modules: int = Field(..., alias="Modules")
 
 
 class GenomePangenomeLink(GenomeInPangenomeMetric, table=True):
-    genome_id: int | None = Field(default=None, foreign_key="genome.id", primary_key=True)
-    pangenome_id: int | None = Field(default=None, foreign_key="pangenome.id", primary_key=True)
+    genome_id: int | None = Field(
+        default=None, foreign_key="genome.id", primary_key=True
+    )
+    pangenome_id: int | None = Field(
+        default=None, foreign_key="pangenome.id", primary_key=True
+    )
 
     pangenome: "Pangenome" = Relationship(back_populates="genome_links")
     genome: "Genome" = Relationship(back_populates="pangenome_links")
 
-    genome_file_md5sum : str 
-    genome_file_name : str
+    genome_file_md5sum: str
+    genome_file_name: str
+
 
 class CollectionBase(SQLModel):
-    name : str = Field(unique=True)
-    description : str | None = None
-    
+    name: str = Field(unique=True)
+    description: str | None = None
+
+
 class Collection(CollectionBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    collection_releases : list["CollectionRelease"] = Relationship(back_populates="collection", cascade_delete=True)
+    collection_releases: list["CollectionRelease"] = Relationship(
+        back_populates="collection", cascade_delete=True
+    )
+
 
 class CollectionPublic(CollectionBase):
     id: int
 
+
 class CollectionPublicWithReleases(CollectionPublic):
-    
-    collection_releases : list["CollectionReleasePublic"]
+
+    collection_releases: list["CollectionReleasePublic"]
+
 
 class TaxonomySourceBase(SQLModel):
     name: str
@@ -85,12 +111,16 @@ class TaxonomySourceBase(SQLModel):
     source: str | None = None
     url: str | None = None
 
+
 class TaxonomySource(TaxonomySourceBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(unique=True)  # Ensuring name uniqueness at the model level
 
-    collection_releases: list["CollectionRelease"] = Relationship(back_populates="taxonomy_source")
+    collection_releases: list["CollectionRelease"] = Relationship(
+        back_populates="taxonomy_source"
+    )
     taxa: list["Taxon"] = Relationship(back_populates="taxonomy_source")
+
 
 class TaxonomySourcePublic(TaxonomySourceBase):
     id: int
@@ -103,14 +133,17 @@ class GenomeSourceBase(SQLModel):
     source: str | None = None
     url: str | None = None
 
+
 class GenomeSource(GenomeSourceBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(unique=True)  # Ensuring name uniqueness at the model level
 
     genomes: list["Genome"] = Relationship(back_populates="genome_source")
 
+
 class GenomeSourcePublic(GenomeSourceBase):
     id: int
+
 
 class CollectionReleaseBase(SQLModel):
 
@@ -123,25 +156,32 @@ class CollectionReleaseBase(SQLModel):
 
     date: datetime
 
-    
     # latest: bool = False
 
     # state : str | None = None
 
-    collection_id: int | None = Field(default=None, foreign_key="collection.id", ondelete="CASCADE")
+    collection_id: int | None = Field(
+        default=None, foreign_key="collection.id", ondelete="CASCADE"
+    )
 
     # RESTRICT: Prevent the deletion of this record (CollectionReleaseBase) if there is a foreign key value by raising an error.
-    taxonomy_source_id: int | None = Field(default=None, foreign_key="taxonomysource.id", ondelete="RESTRICT") 
+    taxonomy_source_id: int | None = Field(
+        default=None, foreign_key="taxonomysource.id", ondelete="RESTRICT"
+    )
 
 
 class CollectionRelease(CollectionReleaseBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    
+
     collection: "Collection" = Relationship(back_populates="collection_releases")
 
-    taxonomy_source: "TaxonomySource" = Relationship(back_populates="collection_releases")
+    taxonomy_source: "TaxonomySource" = Relationship(
+        back_populates="collection_releases"
+    )
 
-    pangenomes: list["Pangenome"] = Relationship(back_populates="collection_release", cascade_delete=True)
+    pangenomes: list["Pangenome"] = Relationship(
+        back_populates="collection_release", cascade_delete=True
+    )
 
 
 class CollectionReleasePublic(CollectionReleaseBase):
@@ -150,64 +190,75 @@ class CollectionReleasePublic(CollectionReleaseBase):
 
 class TaxonBase(SQLModel):
 
-    name : str
-    rank : str
-    depth : int 
+    name: str
+    rank: str
+    depth: int
 
-    taxid : int | None = None
+    taxid: int | None = None
 
-    taxonomy_source_id : int | None = Field(default=None, foreign_key="taxonomysource.id")
+    taxonomy_source_id: int | None = Field(
+        default=None, foreign_key="taxonomysource.id"
+    )
+
 
 class Taxon(TaxonBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    taxonomy_source : TaxonomySource = Relationship(back_populates="taxa")
+    taxonomy_source: TaxonomySource = Relationship(back_populates="taxa")
 
-    genomes: list["Genome"] = Relationship(back_populates="taxa", link_model=GenomeTaxonLink)
-    pangenomes: list["Pangenome"] = Relationship(back_populates="taxa", link_model=PangenomeTaxonLink)
+    genomes: list["Genome"] = Relationship(
+        back_populates="taxa", link_model=GenomeTaxonLink
+    )
+    pangenomes: list["Pangenome"] = Relationship(
+        back_populates="taxa", link_model=PangenomeTaxonLink
+    )
 
 
 class TaxonPublic(TaxonBase):
-    id : int
-
+    id: int
 
 
 class GenomeBase(SQLModel):
 
-    name : str = Field(unique=True)
-    genome_source_id : int | None = Field(default=None, foreign_key="genomesource.id")
-
+    name: str = Field(unique=True)
+    genome_source_id: int | None = Field(default=None, foreign_key="genomesource.id")
 
 
 class Genome(GenomeBase, table=True):
 
-    id: int | None = Field(default=None, primary_key=True) 
+    id: int | None = Field(default=None, primary_key=True)
     # version : str | None = None
     # collection_releases : list[CollectionRelease] = Relationship(back_populates="genomes", link_model=GenomeCollectionReleaseLink)
 
-    taxa : list[Taxon] =  Relationship(back_populates="genomes", link_model=GenomeTaxonLink)
+    taxa: list[Taxon] = Relationship(
+        back_populates="genomes", link_model=GenomeTaxonLink
+    )
 
     pangenome_links: list[GenomePangenomeLink] = Relationship(back_populates="genome")
-    
+
     genome_source: GenomeSource = Relationship(back_populates="genomes")
+
+    genome_metadata: list["GenomeMetadata"] = Relationship(back_populates="genome")
+
 
 class GenomePublic(GenomeBase):
 
-    id:int
-    genome_source : GenomeSourcePublic
-    
+    id: int
+    genome_source: GenomeSourcePublic
+
+
 class GenomePublicWithTaxonomies(GenomePublic):
-    taxonomies : list["Taxonomy"]
+    taxonomies: list["Taxonomy"]
+
 
 class PangenomeMetric(SQLModel):
-    
+
     # Metrics
     gene_count: int
     genome_count: int
     family_count: int
     edge_count: int
 
-        
     # Persistent information
     persistent_family_count: int
     persistent_family_min_genome_frequency: float
@@ -229,54 +280,69 @@ class PangenomeMetric(SQLModel):
     cloud_family_std_genome_frequency: float
     cloud_family_mean_genome_frequency: float
 
-
     partition_count: int
     rgp_count: int
     spot_count: int
-    
+
     # Modules information
     module_count: int
     family_in_module_count: int
 
 
 class PangenomeBase(PangenomeMetric):
-    file_name : str
-    annotation_source : str | None = None 
+    file_name: str
+    annotation_source: str | None = None
 
-    
 
 class Pangenome(PangenomeBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
 
-    collection_release_id: int | None = Field(default=None, foreign_key="collectionrelease.id")
+    collection_release_id: int | None = Field(
+        default=None, foreign_key="collectionrelease.id"
+    )
 
     collection_release: CollectionRelease = Relationship(back_populates="pangenomes")
 
-    genome_links: list[GenomePangenomeLink] = Relationship(back_populates="pangenome", cascade_delete=True)
-    
-    taxa : list[Taxon] =  Relationship(back_populates="pangenomes", link_model=PangenomeTaxonLink)
+    genome_links: list[GenomePangenomeLink] = Relationship(
+        back_populates="pangenome", cascade_delete=True
+    )
 
+    taxa: list[Taxon] = Relationship(
+        back_populates="pangenomes", link_model=PangenomeTaxonLink
+    )
 
 
 class PangenomePublic(PangenomeBase):
-    id : int
-    
-    collection_release : CollectionReleasePublic
-    
-    taxonomy : "Taxonomy"
-    
-    genome_count : int
+    id: int
+
+    collection_release: CollectionReleasePublic
+
+    taxonomy: "Taxonomy"
+
+    genome_count: int
 
     collection_release_id: int
+
 
 class TaxonomyBase(BaseModel):
     pass
 
+
 class Taxonomy(TaxonomyBase):
     taxonomy_source: TaxonomySource
-    taxa : list[Taxon]
+    taxa: list[Taxon]
+
 
 class TaxonomyPublic(TaxonomyBase):
     taxonomy_source: TaxonomySourcePublic
-    taxa : list[TaxonPublic]
+    taxa: list[TaxonPublic]
+
+
+class GenomeMetadata(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    key: str
+    value: str
+    type: type
+    genome_id: int = Field(foreign_key="genome.id")
+    genome: Genome = Relationship(back_populates="genome_metadata")

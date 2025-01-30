@@ -36,4 +36,3 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 if __name__ == "__main__":
     with open("api-docs-my-project.html", "w") as fd:
         print(HTML_TEMPLATE % json.dumps(app.openapi()), file=fd)
-        

@@ -11,11 +11,9 @@ async def lifespan(app: FastAPI):
     create_db_and_tables()
     yield
 
-app = FastAPI(lifespan=lifespan)    
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(collections.router)
 app.include_router(genomes.router)
 app.include_router(pangenomes.router)
-
-some_file_path = "/home/jmainguy/Codes/api_pangbank/cmd.sh"
-
