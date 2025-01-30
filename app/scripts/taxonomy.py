@@ -1,4 +1,5 @@
 from sqlmodel import Session, select
+import logging
 
 from app.models import TaxonomySource, Taxon, Pangenome
 import json
@@ -96,7 +97,7 @@ def create_taxonomy_source(taxonomy_source_info_file : Path, session:Session) ->
     taxonomy_source = session.exec(statement).first()
 
     if taxonomy_source is None:
-        print('Creating a new TaxonomySource')
+        logging.info('Creating a new TaxonomySource')
         taxonomy_source = TaxonomySource(name=taxonomy_source_name, version=taxonomy_source_version, ranks=taxonomy_source_ranks)
 
     else:
@@ -107,7 +108,7 @@ def create_taxonomy_source(taxonomy_source_info_file : Path, session:Session) ->
             raise ValueError(f'Discrepancy in ranks for taxonomy_source {taxonomy_source}. '
                                 f'Existing ranks : {parse_ranks_str(taxonomy_source.ranks)} vs given ranks {parse_ranks_str(taxonomy_source_ranks)}')
             
-        print('taxonomy_source already exist in DB')
+        logging.info('taxonomy_source already exist in DB')
 
     session.add(taxonomy_source)
 
