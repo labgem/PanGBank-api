@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict
 
 from ..database import create_db_and_tables, engine
-from ..models import Collection, CollectionRelease, Genome, GenomeMetadata
+from ..models import Genome, GenomeMetadata
 
 import csv
 import gzip
