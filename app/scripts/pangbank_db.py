@@ -16,7 +16,7 @@ from app.scripts.collection import (
 )
 from app.scripts.genome_metadata import parse_metadata_table, add_metadata
 
-from app.models import Collection, CollectionRelease
+from app.models import Collection
 
 cli = typer.Typer()
 

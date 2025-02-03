@@ -26,13 +26,39 @@ PanGBank is an API designed to manage a database of pangenomes. Built with **Fas
 
 ### Manage the database
 
+1. Install the CLI tool to manage the database with
+
 ```bash
-python -m app.scripts.add_collection <collection release dir>
 
-python -m app.scripts.delete_collection <collection name>
-
-python -m app.scripts.add_genome_metadata <metadata table>
+pip install .
 ```
+
+2. Interact with the database:
+   - Add a collection release to the database with 
+
+
+   ```bash
+   pangbank_db add-collection <collection release dir>
+   ```
+   - List collections
+
+   ```bash
+   pangbank_db list-collection
+   ```
+   
+   - Delete a collection release
+  
+   ```bash
+   pangbank_db delete-collection <collection name> --release-version <release version>
+   ```
+   - Add genome metadata 
+
+   ```bash
+   pangbank_db add-genome-metadata  <genome-metadata file >
+   ```
+
+
+3. 
 ### Docker Compose Setup
 
 1. Build and run the Docker image:
