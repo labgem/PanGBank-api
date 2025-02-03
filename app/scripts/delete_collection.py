@@ -1,9 +1,6 @@
 from sqlmodel import Session, select
 import logging
-import typer
-from typing import Optional
-from ..database import create_db_and_tables, engine
-from ..models import Collection, CollectionRelease
+from app.models import Collection, CollectionRelease
 
 
 def delete_collection(session: Session, collection_name: str) -> None:
@@ -58,23 +55,3 @@ def delete_collection_release(
         )
         session.delete(collection_release_from_db)
         session.commit()
-
-
-def main(collection_name: str, release_version: Optional[str] = None):
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
-
-    create_db_and_tables()
-
-    with Session(engine) as session:
-
-        if release_version:
-            delete_collection_release(session, collection_name, release_version)
-
-        else:
-            delete_collection(session, collection_name)
-
-
-if __name__ == "__main__":
-    typer.run(main)
