@@ -1,6 +1,5 @@
 from sqlmodel import Session, select
 import logging
-import typer
 
 from pathlib import Path
 from typing import Dict
