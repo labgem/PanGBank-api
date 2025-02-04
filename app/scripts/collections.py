@@ -8,32 +8,46 @@ import logging
 # import sys
 import yaml
 
-from typing import Iterator
+from typing import Iterator, List, Optional
 import gzip
 
-from rich.progress import track
 
-# # Add the project root to the sys.path
-# sys.path = [str(Path(__file__).resolve().parent.parent)] + sys.path
+from rich.console import Console
+from rich.progress import track
+from rich.table import Table
+
+from typing_extensions import Annotated
 
 from app.models import (
     Collection,
     CollectionRelease,
     Genome,
+    GenomeSourceInput,
     Pangenome,
     GenomePangenomeLink,
     GenomeSource,
     PangenomeMetric,
     GenomeInPangenomeMetric,
+    CollectionReleaseInput,
+    TaxonomySourceInput,
 )
 
-from .taxonomy import (
+from app.scripts.taxonomy import (
     create_taxonomy_source,
     parse_taxonomy_file,
     manage_genome_taxonomies,
     build_taxon_dict,
     parse_ranks_str,
 )
+
+import typer
+
+from app.database import create_db_and_tables, engine
+
+
+from pydantic import ValidationError
+
+app = typer.Typer(no_args_is_help=True)
 
 
 def add_source_to_genomes(
@@ -48,7 +62,7 @@ def add_source_to_genomes(
     :param pangenome: The pangenome containing genome links.
     :param genome_sources: A list of available genome sources.
     :param genome_to_source: A mapping of genome names to their respective source names.
-    :param session: SQLAlchemy session for database transactions.
+    :param session: SQLModel session for database transactions.
     :return: None
     """
 
@@ -86,7 +100,9 @@ def add_source_to_genomes(
     )
 
 
-def parse_genome_to_source_files(source_genomes_files: list[Path]) -> dict[str, str]:
+def parse_genome_to_source_files(
+    genome_source_inputs: list[GenomeSourceInput],
+) -> dict[str, str]:
     """
     Parse genome-to-source mapping from multiple source files.
 
@@ -94,19 +110,21 @@ def parse_genome_to_source_files(source_genomes_files: list[Path]) -> dict[str, 
     :return: A dictionary mapping genome names to their respective source names.
     """
 
-    genome_to_source = {}
+    genome_to_source: dict[str, str] = {}
 
-    for genome_to_source_file in source_genomes_files:
+    for genome_source_input in genome_source_inputs:
 
-        with open(genome_to_source_file) as fl:
-            source = genome_to_source_file.stem
+        with open(genome_source_input.file) as fl:
+            source = genome_source_input.name
             genome_to_source.update({line.strip(): source for line in fl})
 
     return genome_to_source
 
 
-def create_genome_sources(
-    genome_sources_info_file: Path, session: Session
+def add_source_to_genomes_in_pangenomes(
+    pangenomes: list[Pangenome],
+    genome_source_inputs: list[GenomeSourceInput],
+    session: Session,
 ) -> list[GenomeSource]:
     """
     Create and retrieve genome sources from the database.
@@ -115,23 +133,26 @@ def create_genome_sources(
     :param session: SQLAlchemy session for database transactions.
     :return: A list of GenomeSource objects.
     """
-    genome_sources = []
 
-    with open(genome_sources_info_file) as fl:
-        genome_sources_info = json.load(fl)
+    genome_sources: List[GenomeSource] = []
 
-    for genome_info in genome_sources_info:
+    for genome_source_input in genome_source_inputs:
         # Check if genome source already exists in DB
-        statement = select(GenomeSource).where(GenomeSource.name == genome_info["name"])
+        statement = select(GenomeSource).where(
+            GenomeSource.name == genome_source_input.name
+        )
         genome_source = session.exec(statement).first()
 
         if genome_source is None:
             logging.info("Creating a new GenomeSource")
-            genome_source = GenomeSource(**genome_info)
+            genome_source = GenomeSource.model_validate(genome_source_input)
         else:
-            logging.info("GenomeSource already exists in DB")
+            logging.info(
+                f"GenomeSource {genome_source_input.name} already exists in DB"
+            )
 
         session.add(genome_source)
+
         genome_sources.append(genome_source)
 
     session.commit()
@@ -139,33 +160,29 @@ def create_genome_sources(
     for genome_source in genome_sources:
         session.refresh(genome_source)
 
+    genome_to_source = parse_genome_to_source_files(genome_source_inputs)
+    # Assign genome sources to genomes
+    for pangenome in pangenomes:
+        add_source_to_genomes(pangenome, genome_sources, genome_to_source, session)
+
     return genome_sources
 
 
 def create_collection_release(
-    collection_release_info_file: Path, session: Session
+    collection_input: Collection,
+    collection_release_input: CollectionRelease,
+    session: Session,
 ) -> CollectionRelease:
     """
     Create or retrieve a collection release from the database.
 
-    :param collection_release_info_file: Path to the JSON file containing collection release details.
-    :param session: SQLModel session for database transactions.
-    :return: The corresponding CollectionRelease object.
-
     This function:
-    - Reads collection and release information from the provided JSON file.
     - Ensures the collection exists in the database, creating it if necessary.
     - Ensures the collection release exists in the database, creating it if necessary.
     - Validates version consistency between the input file and existing database records.
     """
 
-    with open(collection_release_info_file) as fl:
-        collection_release_info = json.load(fl)
-
-    collection = Collection.model_validate(
-        collection_release_info.get("collection", {})
-    )
-    print(collection)
+    collection = Collection.model_validate(collection_input)
 
     statement = select(Collection).where((Collection.name == collection.name))
 
@@ -179,9 +196,7 @@ def create_collection_release(
         collection = collection_from_db
         logging.info(f"Collection {collection.name} already exists in DB")
 
-    collection_release = CollectionRelease.model_validate(
-        collection_release_info.get("release", {})
-    )
+    collection_release = CollectionRelease.model_validate(collection_release_input)
 
     statement = (
         select(CollectionRelease)
@@ -349,7 +364,7 @@ def parse_pangenome_dir(
     :param session: SQLAlchemy session for database transactions.
     :return: A list of Pangenome objects.
     """
-    pangenomes = []
+    pangenomes: List[Pangenome] = []
 
     for pangenome_dir in pangenome_main_dir.iterdir():
         if not pangenome_dir.is_dir():
@@ -373,13 +388,14 @@ def parse_pangenome_dir(
         ).first()
 
         if pangenome is None:
-            pangenome_specific_args = {
-                "file_name": pangenome_local_path.as_posix(),
-                "collection_release": collection_release,
-            }
             pangenome_metric = get_pangenome_metrics_from_info_file(pangenome_info_file)
             pangenome = Pangenome.model_validate(
-                pangenome_metric, from_attributes=True, update=pangenome_specific_args
+                pangenome_metric,
+                from_attributes=True,
+                update={
+                    "file_name": pangenome_local_path.as_posix(),
+                    "collection_release": collection_release,
+                },
             )
             session.add(pangenome)
 
@@ -430,30 +446,106 @@ def parse_pangenome_dir(
     return pangenomes
 
 
+@app.command(no_args_is_help=True)
+def add(
+    collection_release_json: Annotated[
+        Path, typer.Argument(help="Path to the collection release info JSON file.")
+    ],
+):
+
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+
+    create_db_and_tables()
+
+    data_input = check_collection_release_input_json(collection_release_json)
+
+    collection_input = data_input.collection
+    collection_release_input = data_input.release
+    taxonomy_input = data_input.taxonomy
+
+    taxonomy_file = collection_release_json.parent / taxonomy_input.file
+
+    genome_sources = data_input.genome_sources
+
+    for genome_source in genome_sources:
+        genome_source.file = collection_release_json.parent / genome_source.file
+
+    pangenome_dir = (
+        collection_release_json.parent / collection_release_input.pangenomes_directory
+    )
+
+    # Check if paths exist
+    missing_files = [taxonomy_file] + [gs.file for gs in genome_sources]
+    missing_files = [f for f in missing_files if not f.exists()]
+
+    if missing_files:
+        typer.echo(
+            "[bold red]Error:[/bold red] The following files are missing:", err=True
+        )
+        for f in missing_files:
+            typer.echo(f"  - {f}", err=True)
+        raise typer.Exit(1)
+
+    with Session(engine) as session:
+        add_collection_release(
+            session,
+            collection_input,
+            collection_release_input,
+            taxonomy_input,
+            taxonomy_file,
+            genome_sources,
+            pangenome_dir,
+        )
+
+
+def check_collection_release_input_json(collection_release_json: Path):
+
+    if not collection_release_json.exists():
+        typer.echo(
+            f"[bold red]Error:[/bold red] JSON file '{collection_release_json}' does not exist.",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    try:
+        with open(collection_release_json) as fl:
+            all_info = json.load(fl)
+
+        # Validate JSON structure using Pydantic
+        data = CollectionReleaseInput.model_validate(all_info)
+
+    except json.JSONDecodeError as e:
+        typer.echo(f"[bold red]Error:[/bold red] Invalid JSON format: {e}", err=True)
+        raise typer.Exit(1)
+    except ValidationError as e:
+        typer.echo(
+            f"[bold red]Error:[/bold red] JSON structure validation failed:\n{e}",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    return data
+
+
 def add_collection_release(
     session: Session,
-    collection_release_info_file: Path,
-    taxonomy_source_info_file: Path,
-    genome_sources_info_file: Path,
-    genome_source_dir: Path,
-    pangenome_dir: Path,
+    collection_input: Collection,
+    collection_release_input: CollectionRelease,
+    taxonomy_input: TaxonomySourceInput,
     taxonomy_file: Path,
+    genome_source_inputs: list[GenomeSourceInput],
+    pangenome_dir: Path,
 ):
     """
     Process and integrate genome, taxonomy, and pangenome data into the database.
 
-    This function:
-    - Parses and loads taxonomy, genome sources, and pangenome data.
-    - Maps genomes to taxonomy and genome sources.
-    - Logs key statistics on collection releases, taxonomy sources, and genome sources.
-
     """
-
-    genome_to_taxonomy = parse_taxonomy_file(taxonomy_file)
-    source_genomes_files = list(genome_source_dir.iterdir())
-
     collection_release = create_collection_release(
-        collection_release_info_file, session=session
+        collection_input=collection_input,
+        collection_release_input=collection_release_input,
+        session=session,
     )
     logging.info(
         f"The collection release has {len(collection_release.pangenomes)} pangenomes"
@@ -462,11 +554,13 @@ def add_collection_release(
     pangenomes = parse_pangenome_dir(
         pangenome_dir, collection_release=collection_release, session=session
     )
-    taxonomy_source = create_taxonomy_source(taxonomy_source_info_file, session=session)
-    logging.info(f"The taxonomy source has {len(taxonomy_source.taxa)} taxa")
+
+    taxonomy_source = create_taxonomy_source(taxonomy_input, session=session)
 
     existing_taxon_dict = build_taxon_dict(taxonomy_source.taxa)
     ranks = parse_ranks_str(taxonomy_source.ranks)
+
+    genome_to_taxonomy = parse_taxonomy_file(taxonomy_file)
 
     # Process genome taxonomies
     for pangenome in track(pangenomes, description="Processing genome taxonomies"):
@@ -479,12 +573,9 @@ def add_collection_release(
             session=session,
         )
 
-    genome_sources = create_genome_sources(genome_sources_info_file, session=session)
-    genome_to_source = parse_genome_to_source_files(source_genomes_files)
-
-    # Assign genome sources to genomes
-    for pangenome in pangenomes:
-        add_source_to_genomes(pangenome, genome_sources, genome_to_source, session)
+    genome_sources = add_source_to_genomes_in_pangenomes(
+        pangenomes, genome_source_inputs, session=session
+    )
 
     logging.info(
         f"The taxonomy source {taxonomy_source.name}-{taxonomy_source.version} has {len(taxonomy_source.taxa)} taxa"
@@ -497,6 +588,33 @@ def add_collection_release(
         logging.info(
             f"The genome source {genome_source.name} has {len(genome_source.genomes)} genomes"
         )
+
+
+@app.command(no_args_is_help=True)
+def delete(
+    collection_name: Annotated[
+        str, typer.Argument(help="Name of the collection to delete.")
+    ],
+    release_version: Annotated[
+        Optional[str],
+        typer.Option(
+            help="Specific release version to delete. If not provided, the entire collection will be deleted."
+        ),
+    ] = None,
+):
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+
+    create_db_and_tables()
+
+    with Session(engine) as session:
+
+        if release_version:
+            delete_collection_release(session, collection_name, release_version)
+
+        else:
+            delete_collection(session, collection_name)
 
 
 def delete_collection(session: Session, collection_name: str) -> None:
@@ -551,3 +669,43 @@ def delete_collection_release(
         )
         session.delete(collection_release_from_db)
         session.commit()
+
+
+@app.command()
+def list():
+
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+
+    create_db_and_tables()
+
+    console = Console()
+    with Session(engine) as session:
+        statement = select(Collection)
+
+        results = session.exec(statement).all()
+
+        if not results:
+            console.print("[bold red]No collections found in the database.[/bold red]")
+            return
+
+        for collection in results:
+            table = Table(
+                title=f"Collections {collection.name}",
+                caption=collection.description,
+                show_header=True,
+                header_style="bold magenta",
+            )
+            table.add_column("Release", style="bold cyan")
+            table.add_column("Pangenomes", justify="right")
+            table.add_column("Note", style="dim")
+
+            for collection_release in collection.collection_releases:
+                table.add_row(
+                    str(collection_release.version),
+                    str(len(collection_release.pangenomes)),
+                    collection_release.release_note,
+                )
+
+            console.print(table)

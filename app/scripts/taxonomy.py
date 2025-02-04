@@ -1,16 +1,16 @@
+from typing import List
 from sqlmodel import Session, select
 import logging
 
-from app.models import TaxonomySource, Taxon, Pangenome
-import json
+from app.models import Genome, TaxonomySource, Taxon, Pangenome, TaxonomySourceInput
 from pathlib import Path
 import gzip
 from collections import defaultdict
 
 
-def parse_taxonomy_file(taxonomy_file: Path) -> dict[str, tuple[str]]:
+def parse_taxonomy_file(taxonomy_file: Path) -> dict[str, tuple[str, ...]]:
 
-    genome_to_lineage = {}
+    genome_to_lineage: dict[str, tuple[str, ...]] = {}
 
     proper_open = gzip.open if taxonomy_file.suffix == ".gz" else open
 
@@ -24,8 +24,8 @@ def parse_taxonomy_file(taxonomy_file: Path) -> dict[str, tuple[str]]:
     return genome_to_lineage
 
 
-def get_lineage(taxonomy: Taxon, ranks: list[str]) -> tuple[str]:
-    lineage = []
+def get_lineage(taxonomy: Taxon, ranks: list[str]) -> tuple[str, ...]:
+    lineage: List[str] = []
 
     for rank in ranks:
         taxon_rank = getattr(taxonomy, rank)
@@ -43,14 +43,15 @@ def get_taxon_key(name: str, rank: str, depth: int) -> tuple[str | int, ...]:
 
 
 def build_taxon_dict(taxon_list: list[Taxon]) -> dict[tuple[str | int, ...], Taxon]:
-    taxon_dict = {}
+    taxon_dict: dict[tuple[str | int, ...], Taxon] = {}
     for taxon in taxon_list:
         key = get_taxon_key(taxon.name, taxon.rank, taxon.depth)
         taxon_dict[key] = taxon
+
     return taxon_dict
 
 
-def parse_ranks_str(ranks_str) -> list[str]:
+def parse_ranks_str(ranks_str: str) -> list[str]:
 
     ranks = [rank.strip().title() for rank in ranks_str.split(";")]
 
@@ -65,7 +66,7 @@ def create_and_get_taxa(
 
     assert len(ranks) >= len(lineage)
 
-    taxa = []
+    taxa: List[Taxon] = []
     for depth, (rank, taxon_name) in enumerate(zip(ranks, lineage)):
 
         taxon_key = get_taxon_key(taxon_name, rank, depth)
@@ -84,57 +85,50 @@ def create_and_get_taxa(
 
 
 def create_taxonomy_source(
-    taxonomy_source_info_file: Path, session: Session
+    taxonomy_source_input: TaxonomySourceInput, session: Session
 ) -> TaxonomySource:
-
-    with open(taxonomy_source_info_file) as fl:
-        taxonomy_info = json.load(fl)
-
-    taxonomy_source_name = taxonomy_info["name"]
-    taxonomy_source_version = taxonomy_info["version"]
-    taxonomy_source_ranks = taxonomy_info["ranks"]
 
     # Check if taxonomy release already exists in DB
     statement = select(TaxonomySource).where(
-        (TaxonomySource.name == taxonomy_source_name)
-        & (TaxonomySource.version == taxonomy_source_version)
+        (TaxonomySource.name == taxonomy_source_input.name)
+        & (TaxonomySource.version == taxonomy_source_input.version)
     )
 
     taxonomy_source = session.exec(statement).first()
 
     if taxonomy_source is None:
-        logging.info("Creating a new TaxonomySource")
-        taxonomy_source = TaxonomySource(
-            name=taxonomy_source_name,
-            version=taxonomy_source_version,
-            ranks=taxonomy_source_ranks,
+        logging.info(
+            f"Taxonomy source '{taxonomy_source_input.name}' (version {taxonomy_source_input.version}) not found in the database. Adding it now."
         )
+        taxonomy_source = TaxonomySource.model_validate(taxonomy_source_input)
+
+        session.add(taxonomy_source)
+
+        session.commit()
+        session.refresh(taxonomy_source)
 
     else:
         # the taxonomy release exists already
         # checking that given ranks are identical that ones attached to the taxonomy release
 
         if parse_ranks_str(taxonomy_source.ranks) != parse_ranks_str(
-            taxonomy_source_ranks
+            taxonomy_source_input.ranks
         ):
             raise ValueError(
                 f"Discrepancy in ranks for taxonomy_source {taxonomy_source}. "
-                f"Existing ranks : {parse_ranks_str(taxonomy_source.ranks)} vs given ranks {parse_ranks_str(taxonomy_source_ranks)}"
+                f"Existing ranks : {parse_ranks_str(taxonomy_source.ranks)} vs given ranks {parse_ranks_str(taxonomy_source_input.ranks)}"
             )
 
-        logging.info("taxonomy_source already exist in DB")
-
-    session.add(taxonomy_source)
-
-    session.commit()
-    session.refresh(taxonomy_source)
+        logging.info(
+            f"taxonomy_source {taxonomy_source_input.name}:{taxonomy_source_input.version} already exist in DB"
+        )
 
     return taxonomy_source
 
 
 def get_common_taxa(taxa_A: list[Taxon], taxa_B: list[Taxon]) -> list[Taxon]:
 
-    common_taxa = []
+    common_taxa: list[Taxon] = []
     for taxon in taxa_A:
         if taxon in taxa_B:
             common_taxa.append(taxon)
@@ -144,7 +138,7 @@ def get_common_taxa(taxa_A: list[Taxon], taxa_B: list[Taxon]) -> list[Taxon]:
 
 def manage_genome_taxonomies(
     pangenome: Pangenome,
-    genome_to_taxonomy: dict[str, tuple[str]],
+    genome_to_taxonomy: dict[str, tuple[str, ...]],
     taxonomy_source: TaxonomySource,
     existing_taxon_dict: dict[tuple[str | int, ...], Taxon],
     ranks: list[str],
@@ -156,7 +150,8 @@ def manage_genome_taxonomies(
 
     pangenome_taxa: list[Taxon] = []
 
-    lineage_to_genomes = defaultdict(list)
+    lineage_to_genomes: defaultdict[tuple[str, ...], List[Genome]] = defaultdict(list)
+
     for genome_link in pangenome.genome_links:
         lineage = genome_to_taxonomy[genome_link.genome.name]
         lineage_to_genomes[lineage].append(genome_link.genome)
