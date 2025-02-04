@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import Generator
 
-from app.models import Genome, GenomeMetadata, MetadataType
+from app.models import Genome, GenomeMetadata, GenomeMetadataBase, MetadataType
 
 import csv
 import gzip
@@ -33,7 +33,7 @@ def guess_type(value: str):
 
 def parse_metadata_table(
     file_path: Path,
-) -> Generator[tuple[str, list[GenomeMetadata]], None, None]:
+) -> Generator[tuple[str, list[GenomeMetadataBase]], None, None]:
     """Parse a gzip-compressed TSV and yield rows as dictionaries."""
     proper_open = gzip.open if file_path.name.endswith("gz") else open
     with proper_open(file_path, mode="rt") as tsvfile:
@@ -47,7 +47,7 @@ def parse_metadata_table(
                     "Ensure the TSV contains a 'Genome' column."
                 )
             genome_metadata_list = [
-                GenomeMetadata(
+                GenomeMetadataBase(
                     key=key,
                     value=str(value),
                     type=MetadataType(guess_type(value)),
@@ -60,7 +60,7 @@ def parse_metadata_table(
 
 
 def add_metadata(
-    genome_name: str, metadata_list: list[GenomeMetadata], session: Session
+    genome_name: str, metadata_list: list[GenomeMetadataBase], session: Session
 ):
     """ """
 
@@ -73,7 +73,10 @@ def add_metadata(
 
     else:
         logging.info(f"Adding metadata to genome {genome_name}.")
-        for metadata in metadata_list:
+        for metadata_input in metadata_list:
+            metadata = GenomeMetadata.model_validate(
+                metadata_input, update={"genome": genome}
+            )
             session.add(metadata)
 
 

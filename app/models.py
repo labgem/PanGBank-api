@@ -1,12 +1,8 @@
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel  # type: ignore
 from pydantic import BaseModel
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-
-# class GenomeCollectionReleaseLink(SQLModel, table=True):
-#     genome_id: int | None = Field(default=None, foreign_key="genome.id", primary_key=True)
-#     collection_release_id: int | None = Field(default=None, foreign_key="collectionrelease.id", primary_key=True)
 
 
 class GenomeTaxonLink(SQLModel, table=True):
@@ -343,18 +339,14 @@ class MetadataType(str, Enum):
     FLOAT = "float"
     BOOLEAN = "bool"
 
-class GenomeMetadata(SQLModel, table=True):
+
+class GenomeMetadataBase(SQLModel):
     id: int | None = Field(default=None, primary_key=True)
     key: str
     value: str
     type: MetadataType = Field(
         sa_column_kwargs={"nullable": False}
     )  # Ensures the column is NOT NULL
-    genome_id: int | None = Field(
-        foreign_key="genome.id",
-        default=None,
-    )
-    genome: Genome = Relationship(back_populates="genome_metadata")
 
     def get_typed_value(self):
         """Converts the stored string value to its proper type."""
@@ -365,6 +357,12 @@ class GenomeMetadata(SQLModel, table=True):
         elif self.type == MetadataType.BOOLEAN:
             return self.value.lower() in ("true", "1", "yes")
         return self.value  # Default to string
+
+
+class GenomeMetadata(GenomeMetadataBase, table=True):
+
+    genome_id: int | None = Field(foreign_key="genome.id", default=None)
+    genome: Genome = Relationship(back_populates="genome_metadata")
 
 
 class GenomeSourceInput(GenomeSourceBase):
