@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 
+from sqlalchemy import UniqueConstraint
 
 class GenomeTaxonLink(SQLModel, table=True):
     genome_id: int | None = Field(
@@ -109,8 +110,11 @@ class TaxonomySourceBase(SQLModel):
 
 
 class TaxonomySource(TaxonomySourceBase, table=True):
+
+    __table_args__ = (UniqueConstraint("name", "version", name="uq_name_version"),)
+
     id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(unique=True)  # Ensuring name uniqueness at the model level
+    name: str = Field()
 
     collection_releases: list["CollectionRelease"] = Relationship(
         back_populates="taxonomy_source"
@@ -184,14 +188,14 @@ class CollectionReleasePublic(CollectionReleaseBase):
 
 class TaxonBase(SQLModel):
 
-    name: str
+    name: str = Field(index=True)
     rank: str
     depth: int
 
     taxid: int | None = None
 
     taxonomy_source_id: int | None = Field(
-        default=None, foreign_key="taxonomysource.id"
+        index=True, default=None, foreign_key="taxonomysource.id"
     )
 
 
@@ -214,7 +218,7 @@ class TaxonPublic(TaxonBase):
 
 class GenomeBase(SQLModel):
 
-    name: str = Field(unique=True)
+    name: str = Field(unique=True, index=True)
     genome_source_id: int | None = Field(default=None, foreign_key="genomesource.id")
 
 

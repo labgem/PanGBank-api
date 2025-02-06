@@ -2,10 +2,26 @@ from typing import List
 from sqlmodel import Session, select
 import logging
 
-from app.models import Genome, TaxonomySource, Taxon, Pangenome, TaxonomySourceInput
+from app.models import (
+    Genome,
+    Pangenome,
+    TaxonomySourceInput,
+    TaxonomySource,
+    Taxon,
+    GenomeTaxonLink,
+)
+
 from pathlib import Path
 import gzip
 from collections import defaultdict
+from rich.progress import Progress
+
+import typer
+
+
+from rich.progress import track
+
+app = typer.Typer(no_args_is_help=True)
 
 
 def parse_taxonomy_file(taxonomy_file: Path) -> dict[str, tuple[str, ...]]:
@@ -37,13 +53,12 @@ def get_lineage(taxonomy: Taxon, ranks: list[str]) -> tuple[str, ...]:
     return tuple(lineage)
 
 
-def get_taxon_key(name: str, rank: str, depth: int) -> tuple[str | int, ...]:
+def get_taxon_key(name: str, rank: str, depth: int) -> tuple[str, str, int]:
+    return (rank, name, depth)
 
-    return tuple((rank, name, depth))
 
-
-def build_taxon_dict(taxon_list: list[Taxon]) -> dict[tuple[str | int, ...], Taxon]:
-    taxon_dict: dict[tuple[str | int, ...], Taxon] = {}
+def build_taxon_dict(taxon_list: list[Taxon]) -> dict[tuple[str, str, int], Taxon]:
+    taxon_dict: dict[tuple[str, str, int], Taxon] = {}
     for taxon in taxon_list:
         key = get_taxon_key(taxon.name, taxon.rank, taxon.depth)
         taxon_dict[key] = taxon
@@ -140,13 +155,10 @@ def manage_genome_taxonomies(
     pangenome: Pangenome,
     genome_to_taxonomy: dict[str, tuple[str, ...]],
     taxonomy_source: TaxonomySource,
-    existing_taxon_dict: dict[tuple[str | int, ...], Taxon],
+    existing_taxon_dict: dict[tuple[str, str, int], Taxon],
     ranks: list[str],
     session: Session,
 ):
-
-    # Add new taxon from taxonomies
-    existing_taxon_dict = build_taxon_dict(taxonomy_source.taxa)
 
     pangenome_taxa: list[Taxon] = []
 
@@ -179,3 +191,153 @@ def manage_genome_taxonomies(
     session.add(pangenome)
 
     session.commit()
+
+
+def get_taxa_by_depth(depth: int, taxonomy_source: TaxonomySource, session: Session):
+
+    statement = select(Taxon).where(
+        (Taxon.depth == depth) & (Taxon.taxonomy_source == taxonomy_source)
+    )
+    taxa = session.exec(statement).all()
+
+    return taxa
+
+
+def create_taxon_from_lineages(
+    ranks: list[str],
+    lineages: set[tuple[str, ...]],
+    taxonomy_source: TaxonomySource,
+    session: Session,
+):
+
+    taxon_names_by_depths: list[set[str]] = [set() for _ in range(len(ranks))]
+    new_taxa: list[Taxon] = []
+    taxa: list[Taxon] = []
+
+    for lineage in lineages:
+        for i, taxon_name in enumerate(lineage):
+            taxon_names_by_depths[i].add(taxon_name)
+
+    taxa_count = sum(len(taxon_set) for taxon_set in taxon_names_by_depths)
+
+    name_to_taxon_by_depth: list[dict[str, Taxon]] = []
+
+    with Progress() as progress:
+
+        progress_task = progress.add_task("Creating taxa", total=taxa_count)
+
+        for depth, taxon_set in enumerate(taxon_names_by_depths):
+
+            taxon_name_to_taxon: dict[str, Taxon] = {}
+            name_to_taxon_by_depth.append(taxon_name_to_taxon)
+
+            name_to_taxon_at_depth = {
+                taxon.name: taxon
+                for taxon in get_taxa_by_depth(depth, taxonomy_source, session)
+            }
+
+            for taxon_name in taxon_set:
+
+                try:
+
+                    taxon = name_to_taxon_at_depth[taxon_name]
+                except KeyError:
+
+                    taxon = Taxon(
+                        name=taxon_name,
+                        rank=ranks[depth],
+                        depth=depth,
+                    )
+                    new_taxa.append(taxon)
+
+                taxa.append(taxon)
+                taxon_name_to_taxon[taxon.name] = taxon
+
+                progress.update(progress_task, advance=1)
+
+    logging.info(f"Created {len(new_taxa)} new taxa out of {len(taxa)} total taxa.")
+    session.add_all(new_taxa)
+
+    for new_taxon in new_taxa:
+        new_taxon.taxonomy_source = taxonomy_source
+
+    session.refresh(taxonomy_source)
+    session.commit()
+
+    return name_to_taxon_by_depth
+
+
+def link_genomes_and_taxa(
+    genome_name_to_genome: dict[str, Genome],
+    genome_name_to_lineage: dict[
+        str,
+        tuple[str, ...],
+    ],
+    name_to_taxon_by_depth: list[dict[str, Taxon]],
+    session: Session,
+):
+
+    new_genome_taxon_links: list[GenomeTaxonLink] = []
+    logging.info(f"Linking {len(genome_name_to_genome)} genomes.")
+
+    linked_genome_count = 0
+    unlinked_genomes_count = 0
+    for genome_name, genome in track(
+        genome_name_to_genome.items(), "Linking genomes to taxa"
+    ):
+
+        lineage = genome_name_to_lineage[genome_name]
+
+        taxon_name = lineage[0]
+        taxon = name_to_taxon_by_depth[0][taxon_name]
+
+        existing_link = session.get(GenomeTaxonLink, (genome.id, taxon.id))
+        if existing_link is None:
+            unlinked_genomes_count += 1
+            for depth, taxon_name in enumerate(lineage):
+
+                taxon = name_to_taxon_by_depth[depth][taxon_name]
+
+                new_genome_taxon_links.append(
+                    GenomeTaxonLink(genome_id=genome.id, taxon_id=taxon.id)
+                )
+        else:
+            linked_genome_count += 1
+
+    logging.info(
+        f"{linked_genome_count} genomes were already linked in the GenomeTaxonLink table."
+    )
+    logging.info(
+        f"{unlinked_genomes_count} genomes were not linked in the GenomeTaxonLink table."
+    )
+    logging.info(
+        f"Adding {len(new_genome_taxon_links)} new GenomeTaxonLink entries to the database."
+    )
+    session.add_all(new_genome_taxon_links)
+
+    session.commit()
+
+
+def add_taxon_to_db(
+    taxonomy_input: TaxonomySourceInput,
+    lineages: set[tuple[str, ...]],
+    session: Session,
+):
+
+    taxonomy_source = create_taxonomy_source(taxonomy_input, session=session)
+
+    ranks = [rank.strip() for rank in taxonomy_source.ranks.split(";")]
+
+    logging.info(
+        f"Adding taxa from taxonomy source '{taxonomy_source.name}' to the database."
+    )
+    name_to_taxon_by_depth = create_taxon_from_lineages(
+        ranks=ranks,
+        lineages=lineages,
+        taxonomy_source=taxonomy_source,
+        session=session,
+    )
+    logging.info(
+        f"Completed adding taxa from taxonomy source '{taxonomy_source.name}' to the database."
+    )
+    return name_to_taxon_by_depth
