@@ -15,6 +15,7 @@ from rich.progress import track
 from rich.table import Table
 
 from typing_extensions import Annotated
+from app.scripts.taxonomy import get_common_taxa
 
 from app.models import (
     Collection,
@@ -24,6 +25,8 @@ from app.models import (
     GenomePangenomeLink,
     PangenomeMetric,
     GenomeInPangenomeMetric,
+    Taxon,
+    PangenomeTaxonLink,
 )
 
 import typer
@@ -279,14 +282,19 @@ def add_pangenomes_to_db(
                 },
             )
             new_pangenomes.append(pangenome)
+            # session.add(pangenome)
 
-            link_pangenome_and_genomes(
+            genomes = link_pangenome_and_genomes(
                 pangenome=pangenome,
                 genome_name_to_genome=genome_name_to_genome,
                 genomes_md5sum_file=genomes_md5sum_file,
                 genomes_statistics_file=genomes_statistics_file,
                 session=session,
             )
+            # session.commit()
+            # session.refresh(pangenome)
+
+            link_pangenome_and_genome_taxa(pangenome, genomes, session)
 
         pangenomes.append(pangenome)
 
@@ -295,6 +303,24 @@ def add_pangenomes_to_db(
     session.commit()
 
     return pangenomes
+
+
+def link_pangenome_and_genome_taxa(
+    pangenome: Pangenome, genomes: list[Genome], session: Session
+):
+
+    pangenome_taxa: List[Taxon] = []
+
+    for genome in genomes:
+        if not pangenome_taxa:
+            pangenome_taxa = genome.taxa
+        else:
+            pangenome_taxa = get_common_taxa(genome.taxa, pangenome_taxa)
+    pangenome_taxon_links = [
+        PangenomeTaxonLink(pangenome_id=pangenome.id, taxon_id=taxon.id)
+        for taxon in pangenome_taxa
+    ]
+    session.add_all(pangenome_taxon_links)
 
 
 def link_pangenome_and_genomes(
@@ -307,6 +333,8 @@ def link_pangenome_and_genomes(
     genome_name_to_md5sum_info = parse_genomes_hash_file(genomes_md5sum_file)
     pangenome_genome_links: List[GenomePangenomeLink] = []
 
+    # pangenome_taxa: List[Taxon] = []
+    genomes: List[Genome] = []
     for genome_metric in parse_genome_metrics_file(genomes_statistics_file):
 
         genome = genome_name_to_genome[genome_metric.genome_name]
@@ -324,8 +352,21 @@ def link_pangenome_and_genomes(
             },
         )
         pangenome_genome_links.append(pangenome_genome_link)
+        genomes.append(genome)
+        # pangenome_taxa = get_common_taxa(genome.taxa, pangenome_taxa)
 
+    # session.add(pangenome)
     session.add_all(pangenome_genome_links)
+
+    return genomes
+    # session.commit()
+
+    # pangenome_taxon_links = [
+    #     PangenomeTaxonLink(pangenome_id=pangenome.id, taxon_id=taxon.id)
+    #     for taxon in pangenome_taxa
+    # ]
+    # session.add_all(pangenome_taxon_links)
+    # link_pangenome_and_taxa(pangenome, pangenome_taxa, session)
 
 
 @app.command(no_args_is_help=True)
