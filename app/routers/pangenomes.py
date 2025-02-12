@@ -47,7 +47,10 @@ async def get_pangenome_file(pangenome_id: int, session: SessionDep):
         raise HTTPException(status_code=404, detail="Pangenome not found")
 
     if not pangenome_file.exists():
-        raise HTTPException(status_code=404, detail="Pangenome file does not exists")
+
+        raise HTTPException(
+            status_code=404, detail=f"Pangenome file {pangenome_file} does not exists"
+        )
 
     return FileResponse(path=pangenome_file.as_posix(), filename="pangenome.h5")
 
