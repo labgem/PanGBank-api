@@ -7,7 +7,6 @@ from app.models import (
     Pangenome,
     PangenomePublic,
     Genome,
-    CollectionRelease,
     GenomePangenomeLink,
     PangenomeTaxonLink,
     Taxon,
@@ -28,7 +27,7 @@ def get_pangenome_file(session: Session, pangenome_id: int) -> Path | None:
     pangenome_file = (
         Path(pangenome.collection_release.pangenomes_directory) / pangenome.file_name
     )
-
+    print(Path(pangenome.collection_release.pangenomes_directory))
     return pangenome_file
 
 

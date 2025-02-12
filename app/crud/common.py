@@ -30,14 +30,20 @@ class FilterPangenome(FilterGenome, FilterCollection):
 
 def get_taxonomies_from_taxa(taxa: list[Taxon]) -> list[Taxonomy]:
 
-    taxonomy_source_to_taxonomy = {}
+    taxonomy_source_to_taxonomy: dict[int, Taxonomy] = {}
+
     for taxon in taxa:
         if taxon.taxonomy_source_id in taxonomy_source_to_taxonomy:
             taxonomy = taxonomy_source_to_taxonomy[taxon.taxonomy_source_id]
             taxonomy.taxa.append(taxon)
         else:
             taxonomy = Taxonomy(taxa=[taxon], taxonomy_source=taxon.taxonomy_source)
-            taxonomy_source_to_taxonomy[taxon.taxonomy_source_id] = taxonomy
 
+            if taxon.taxonomy_source_id is not None:
+                taxonomy_source_to_taxonomy[taxon.taxonomy_source_id] = taxonomy
+            else:
+                raise ValueError(
+                    f"Taxon {taxon} has no taxonomy source associated with it"
+                )
     taxonomies = list(taxonomy_source_to_taxonomy.values())
     return taxonomies
