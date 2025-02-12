@@ -38,8 +38,13 @@ def check_collection_release_input_json(collection_release_json: Path):
     for genome_source in data_input.genome_sources:
         genome_source.file = collection_release_json.parent / genome_source.file
 
+    pangenomes_directory = (
+        collection_release_json.parent / data_input.release.pangenomes_directory
+    )
+    data_input.release.pangenomes_directory = str(pangenomes_directory)
+
     # Check if paths exist
-    missing_files = [data_input.taxonomy.file] + [
+    missing_files = [data_input.taxonomy.file, pangenomes_directory] + [
         gs.file for gs in data_input.genome_sources
     ]
     missing_files = [f for f in missing_files if not f.exists()]
