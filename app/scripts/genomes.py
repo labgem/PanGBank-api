@@ -25,10 +25,11 @@ def create_genomes(
     :param session: The database session.
     """
 
-    new_genomes: list[Genome] = []
     genome_name_to_genomes: dict[str, Genome] = {}
 
     for genome_source in genome_sources:
+
+        new_genomes: list[Genome] = []
 
         name_to_existing_genome = {
             genome.name: genome
