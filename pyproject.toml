@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
-pangbank_db = "app.scripts.pangbank_db:cli"
+pangbank_db = "app.manage_db.pangbank_db:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]

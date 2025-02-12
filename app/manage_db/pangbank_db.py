@@ -1,29 +1,29 @@
 import typer
 
-from app.scripts.collections import (
+from app.manage_db.collections import (
     app as collection_app,
     add_pangenomes_to_db,
     create_collection_release,
 )
-from app.scripts.genome_metadata import app as genome_metadata_app
-from app.scripts.taxonomy import (
+from app.manage_db.genome_metadata import app as genome_metadata_app
+from app.manage_db.taxonomy import (
     add_taxon_to_db,
     link_genomes_and_taxa,
 )
-from app.scripts.genomes import app as genome_app, add_genomes_to_db
+from app.manage_db.genomes import app as genome_app, add_genomes_to_db
 
 from pathlib import Path
 import logging
 
 from typing_extensions import Annotated
 
-from app.scripts.taxonomy import parse_taxonomy_file
+from app.manage_db.taxonomy import parse_taxonomy_file
 
 
 from app.database import create_db_and_tables, engine
 
 
-from app.scripts.utils import check_collection_release_input_json
+from app.manage_db.utils import check_collection_release_input_json
 
 from rich.logging import RichHandler
 

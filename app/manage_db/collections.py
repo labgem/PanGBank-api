@@ -15,7 +15,7 @@ from rich.progress import track
 from rich.table import Table
 
 from typing_extensions import Annotated
-from app.scripts.taxonomy import get_common_taxa
+from app.manage_db.taxonomy import get_common_taxa
 
 from app.models import (
     Collection,
