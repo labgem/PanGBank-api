@@ -1,25 +1,26 @@
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-
-[project]
-name = "api-pangbank"
+[tool.poetry]
+name = "pangbank-api"
 version = "0.1.0"
 description = "Source code to PanGBank API"
-authors = [
-    {name = "JeanMainguy",email = "jean.mainguy@outlook.fr"}
-]
+authors = ["JeanMainguy <jean.mainguy@outlook.fr>"]
 readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-    "fastapi (>=0.115.7,<0.116.0)",
-    "sqlmodel (>=0.0.22,<0.0.23)"
+packages = [
+    { include = "app" }
 ]
 
-[project.scripts]
-pangbank_db = "app.manage_db.pangbank_db:cli"
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.8"
+sqlmodel = "^0.0.22"
+typer = "^0.15.1"
+pyyaml = "^6.0.2"
 
-[tool.hatch.build.targets.wheel]
-packages = ["app"]
+
+[tool.poetry.scripts]
+pangbank_db = "app.manage_db.pangbank_db:cli"
+rick-portal-gun = "rick_portal_gun.main:app"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
