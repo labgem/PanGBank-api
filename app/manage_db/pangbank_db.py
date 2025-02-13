@@ -1,16 +1,22 @@
+from typing import Optional
 import typer
 
+from sqlmodel import Session
+
+
 from app.manage_db.collections import (
-    app as collection_app,
     add_pangenomes_to_db,
     create_collection_release,
+    print_collections,
+    delete_full_collection,
+    delete_collection_release,
 )
 from app.manage_db.genome_metadata import app as genome_metadata_app
 from app.manage_db.taxonomy import (
     add_taxon_to_db,
     link_genomes_and_taxa,
 )
-from app.manage_db.genomes import app as genome_app, add_genomes_to_db
+from app.manage_db.genomes import add_genomes_to_db
 
 from pathlib import Path
 import logging
@@ -27,23 +33,28 @@ from app.manage_db.utils import check_collection_release_input_json
 
 from rich.logging import RichHandler
 
-from sqlmodel import Session
 
-cli = typer.Typer(no_args_is_help=True)
+cli = typer.Typer(
+    no_args_is_help=True,
+    add_completion=False,
+    short_help="Manage pangbank database.",
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 
 
-cli.add_typer(collection_app, name="collections")
-
-cli.add_typer(genome_metadata_app, name="genome_metadata")
-
-cli.add_typer(genome_app, name="genomes")
+cli.add_typer(
+    genome_metadata_app, name="genome_metadata", short_help="Manage genome metadata."
+)
 
 
 @cli.command(no_args_is_help=True)
-def add_pangenomes(
-    collection_release_json: Annotated[
-        Path, typer.Argument(help="Path to the collection release input json file.")
-    ]
+def add_collection_release(
+    collection_release_json: Path = typer.Argument(
+        ...,
+        help="Path to the collection release input json file.",
+        exists=True,
+        dir_okay=True,
+    ),
 ):
     logging.basicConfig(
         level=logging.DEBUG,
@@ -98,6 +109,45 @@ def add_pangenomes(
             collection_release=collection_release,
             session=session,
         )
+
+
+@cli.command()
+def list_collections():
+
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+
+    create_db_and_tables()
+
+    print_collections()
+
+
+@cli.command(no_args_is_help=True)
+def delete_collection(
+    collection_name: Annotated[
+        str, typer.Argument(help="Name of the collection to delete.")
+    ],
+    release_version: Annotated[
+        Optional[str],
+        typer.Option(
+            help="Specific release version to delete. If not provided, the entire collection will be deleted."
+        ),
+    ] = None,
+):
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+
+    create_db_and_tables()
+
+    with Session(engine) as session:
+
+        if release_version:
+            delete_collection_release(session, collection_name, release_version)
+
+        else:
+            delete_full_collection(session, collection_name)
 
 
 if __name__ == "__main__":

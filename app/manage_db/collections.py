@@ -6,7 +6,7 @@ import logging
 # import sys
 import yaml
 
-from typing import Iterator, List, Optional
+from typing import Iterator, List
 import gzip
 
 
@@ -14,7 +14,6 @@ from rich.console import Console
 from rich.progress import track
 from rich.table import Table
 
-from typing_extensions import Annotated
 from app.manage_db.taxonomy import get_common_taxa
 
 from app.models import (
@@ -29,13 +28,10 @@ from app.models import (
     PangenomeTaxonLink,
 )
 
-import typer
 
-from app.database import create_db_and_tables, engine
+from app.database import engine
 
 logger = logging.getLogger(__name__)  # __name__ ensures uniqueness per module
-
-app = typer.Typer(no_args_is_help=True)
 
 
 def create_collection_release(
@@ -369,34 +365,7 @@ def link_pangenome_and_genomes(
     # link_pangenome_and_taxa(pangenome, pangenome_taxa, session)
 
 
-@app.command(no_args_is_help=True)
-def delete(
-    collection_name: Annotated[
-        str, typer.Argument(help="Name of the collection to delete.")
-    ],
-    release_version: Annotated[
-        Optional[str],
-        typer.Option(
-            help="Specific release version to delete. If not provided, the entire collection will be deleted."
-        ),
-    ] = None,
-):
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
-
-    create_db_and_tables()
-
-    with Session(engine) as session:
-
-        if release_version:
-            delete_collection_release(session, collection_name, release_version)
-
-        else:
-            delete_collection(session, collection_name)
-
-
-def delete_collection(session: Session, collection_name: str) -> None:
+def delete_full_collection(session: Session, collection_name: str) -> None:
     """
     Deletes a collection from the database if it exists.
 
@@ -450,15 +419,8 @@ def delete_collection_release(
         session.commit()
 
 
-@app.command()
-def list():
-
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
-
-    create_db_and_tables()
-
+def print_collections():
+    """ """
     console = Console()
     with Session(engine) as session:
         statement = select(Collection)

@@ -2,14 +2,10 @@ import gzip
 import logging
 from typing import List
 
-import typer
 from rich.progress import track
 from sqlmodel import Session, select
 
 from app.models import Genome, GenomeSourceInput, GenomeSource
-
-
-app = typer.Typer(no_args_is_help=True)
 
 
 def create_genomes(
