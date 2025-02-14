@@ -29,9 +29,10 @@ from app.manage_db.taxonomy import parse_taxonomy_file
 from app.database import create_db_and_tables, engine
 
 
-from app.manage_db.utils import check_collection_release_input_json
-
-from rich.logging import RichHandler
+from app.manage_db.utils import (
+    parse_collection_release_input_json,
+    set_up_logging_config,
+)
 
 
 cli = typer.Typer(
@@ -43,7 +44,7 @@ cli = typer.Typer(
 
 
 cli.add_typer(
-    genome_metadata_app, name="genome_metadata", short_help="Manage genome metadata."
+    genome_metadata_app, name="genome-metadata", short_help="Manage genome metadata."
 )
 
 
@@ -56,15 +57,11 @@ def add_collection_release(
         dir_okay=True,
     ),
 ):
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        handlers=[RichHandler()],
-    )
+    set_up_logging_config()
 
     create_db_and_tables()
 
-    data_input = check_collection_release_input_json(collection_release_json)
+    data_input = parse_collection_release_input_json(collection_release_json)
 
     collection_input = data_input.collection
     collection_release_input = data_input.release

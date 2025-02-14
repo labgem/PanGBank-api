@@ -1,7 +1,6 @@
 from sqlmodel import Field, Relationship, SQLModel  # type: ignore
 from pydantic import BaseModel
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
 
 from sqlalchemy import UniqueConstraint
@@ -236,7 +235,9 @@ class Genome(GenomeBase, table=True):
 
     genome_source: GenomeSource = Relationship(back_populates="genomes")
 
-    genome_metadata: list["GenomeMetadata"] = Relationship(back_populates="genome")
+    genome_metadata: list["GenomeMetadata"] = Relationship(
+        back_populates="genome", cascade_delete=True
+    )
 
 
 class GenomePublic(GenomeBase):
@@ -337,36 +338,41 @@ class TaxonomyPublic(TaxonomyBase):
     taxa: list[TaxonPublic]
 
 
-class MetadataType(str, Enum):
-    STRING = "str"
-    INTEGER = "int"
-    FLOAT = "float"
-    BOOLEAN = "bool"
-
-
 class GenomeMetadataBase(SQLModel):
     id: int | None = Field(default=None, primary_key=True)
     key: str
     value: str
-    type: MetadataType = Field(
-        sa_column_kwargs={"nullable": False}
-    )  # Ensures the column is NOT NULL
-
-    def get_typed_value(self):
-        """Converts the stored string value to its proper type."""
-        if self.type == MetadataType.INTEGER:
-            return int(self.value)
-        elif self.type == MetadataType.FLOAT:
-            return float(self.value)
-        elif self.type == MetadataType.BOOLEAN:
-            return self.value.lower() in ("true", "1", "yes")
-        return self.value  # Default to string
 
 
 class GenomeMetadata(GenomeMetadataBase, table=True):
+    source_id: int | None = Field(
+        foreign_key="genomemetadatasource.id", default=None, ondelete="CASCADE"
+    )
 
-    genome_id: int | None = Field(foreign_key="genome.id", default=None)
+    genome_id: int | None = Field(
+        foreign_key="genome.id", default=None, ondelete="CASCADE"
+    )
     genome: Genome = Relationship(back_populates="genome_metadata")
+
+    source: "GenomeMetadataSource" = Relationship(back_populates="genome_metadata")
+
+
+class GenomeMetadataSourceBase(SQLModel):
+
+    __table_args__ = (UniqueConstraint("name", "version", name="uq_name_version"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field()
+    version: str | None = None
+    description: str | None = None
+    url: str | None = None
+
+
+class GenomeMetadataSource(GenomeMetadataSourceBase, table=True):
+
+    genome_metadata: list[GenomeMetadata] = Relationship(
+        back_populates="source", cascade_delete=True
+    )
 
 
 class GenomeSourceInput(GenomeSourceBase):

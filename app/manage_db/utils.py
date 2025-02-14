@@ -5,23 +5,22 @@ from app.models import CollectionReleaseInput
 import typer
 
 from pydantic import ValidationError
+import logging
+from rich.logging import RichHandler
 
 
-def check_collection_release_input_json(collection_release_json: Path):
+def check_and_read_json_file(input_json_file: Path):
 
-    if not collection_release_json.exists():
+    if not input_json_file.exists():
         typer.echo(
-            f"[bold red]Error:[/bold red] JSON file '{collection_release_json}' does not exist.",
+            f"[bold red]Error:[/bold red] JSON file '{input_json_file}' does not exist.",
             err=True,
         )
         raise typer.Exit(1)
 
     try:
-        with open(collection_release_json) as fl:
-            all_info = json.load(fl)
-
-        # Validate JSON structure using Pydantic
-        data_input = CollectionReleaseInput.model_validate(all_info)
+        with open(input_json_file) as fl:
+            json_content = json.load(fl)
 
     except json.JSONDecodeError as e:
         typer.echo(f"[bold red]Error:[/bold red] Invalid JSON format: {e}", err=True)
@@ -32,6 +31,15 @@ def check_collection_release_input_json(collection_release_json: Path):
             err=True,
         )
         raise typer.Exit(1)
+
+    return json_content
+
+
+def parse_collection_release_input_json(collection_release_json: Path):
+
+    json_content = check_and_read_json_file(collection_release_json)
+    # Validate JSON structure using Pydantic
+    data_input = CollectionReleaseInput.model_validate(json_content)
 
     data_input.taxonomy.file = collection_release_json.parent / data_input.taxonomy.file
 
@@ -58,3 +66,11 @@ def check_collection_release_input_json(collection_release_json: Path):
         raise typer.Exit(1)
 
     return data_input
+
+
+def set_up_logging_config():
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[RichHandler()],
+    )
