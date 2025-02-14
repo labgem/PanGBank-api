@@ -21,6 +21,10 @@ pangbank_db = "app.manage_db.pangbank_db:cli"
 rick-portal-gun = "rick_portal_gun.main:app"
 
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+requests = "^2.32.3"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
