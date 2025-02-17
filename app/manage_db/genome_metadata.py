@@ -2,7 +2,7 @@ from sqlmodel import Session, select
 import logging
 
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Generator, Optional, List
 
 from app.models import (
     Genome,
@@ -57,7 +57,7 @@ def create_metadata(
     source: GenomeMetadataSource,
 ):
     """ """
-    metadatas: list[GenomeMetadata] = []
+    metadatas: List[GenomeMetadata] = []
 
     for metadata_input in metadata_list:
         metadata = GenomeMetadata.model_validate(
@@ -139,7 +139,7 @@ def add(
 
     if not metadata_file.exists():
         typer.echo(
-            f"[bold red]Error:[/bold red] The file {metadata_file} does not exist",
+            f"Error: The file {metadata_file} does not exist",
             err=True,
         )
         raise typer.Exit(1)
@@ -156,16 +156,18 @@ def add(
         genome_name_to_genome_id = {genome.name: genome.id for genome in genomes}
 
         logging.info(
-            f"Retrieved {len(genome_name_to_genome_id)} genomes from the database."
+            f"Retrieved {len(genome_name_to_genome_id)} genomes within a pangenome from the database."
         )
 
-        metadada_list: list[GenomeMetadata] = []
+        metadada_list: List[GenomeMetadata] = []
 
         unknown_genome_count = 0
         genome_processed_count = 0
         logging.info(f"Parsing genome metadata from {metadata_file}.")
 
-        genome_to_metadata = list(parse_metadata_table(metadata_file))
+        genome_to_metadata = [
+            (genome, metdata) for genome, metdata in parse_metadata_table(metadata_file)
+        ]
 
         logging.info(
             f"Metadata for {len(genome_to_metadata)} genomes have been collected."
@@ -186,14 +188,15 @@ def add(
             else:
                 unknown_genome_count += 1
 
-            if genome_processed_count == 5000:
+            if genome_processed_count == 10000:
                 logging.info(
                     f"Adding new {len(metadada_list)} metadata to the database describing {genome_processed_count} genomes."
                 )
 
                 session.add_all(metadada_list)
+                session.commit()
                 genome_processed_count = 0
-                metadada_list: list[GenomeMetadata] = []
+                metadada_list: List[GenomeMetadata] = []
 
         logging.info(
             f"Adding final {len(metadada_list)} metadata to the database describing {genome_processed_count} genomes."
@@ -270,3 +273,25 @@ def delete(
                 session.delete(source)
 
             session.commit()
+
+
+@app.command()
+def list():
+    """
+    List all genome metadata sources in the database.
+    """
+
+    set_up_logging_config()
+
+    create_db_and_tables()
+
+    with Session(engine) as session:
+
+        metadata_sources = session.exec(select(GenomeMetadataSource)).all()
+
+        if not metadata_sources:
+            logging.info("No genome metadata sources found in the database.")
+        else:
+            logging.info(
+                f"Genome metadata sources in the database: {[f'name={source.name} version={source.version}' for source in metadata_sources]}"
+            )
