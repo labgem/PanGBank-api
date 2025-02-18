@@ -44,7 +44,7 @@ def get_genomes(
     pagination_params: PaginationParams | None,
 ) -> list[GenomePublicWithTaxonomies]:
 
-    query = select(Genome)
+    query = select(Genome).distinct()
 
     if filter_params.genome_name is not None:
         query = query.where(Genome.name == filter_params.genome_name)
