@@ -1,6 +1,5 @@
-from pydantic import BaseModel
 from fastapi import Query
-
+from pydantic import BaseModel
 
 from app.models import Taxon, Taxonomy
 

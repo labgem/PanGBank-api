@@ -1,9 +1,8 @@
-from sqlmodel import Session, select
 from sqlalchemy import func
+from sqlmodel import Session, select
 
-from app.models import Genome, Taxon, GenomePublicWithTaxonomies, GenomeTaxonLink
-
-from app.crud.common import PaginationParams, get_taxonomies_from_taxa, FilterGenome
+from app.crud.common import FilterGenome, PaginationParams, get_taxonomies_from_taxa
+from app.models import Genome, GenomePublicWithTaxonomies, GenomeTaxonLink, Taxon
 
 
 def get_genome_public(genome: Genome) -> GenomePublicWithTaxonomies:

@@ -1,12 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
-
-from app.models import GenomePublicWithTaxonomies
-from app.dependencies import SessionDep
 from app.crud import genomes as genomes_crud
-
 from app.crud.common import FilterGenome, PaginationParams
-
+from app.dependencies import SessionDep
+from app.models import GenomePublicWithTaxonomies
 
 router = APIRouter(
     tags=["genomes"],

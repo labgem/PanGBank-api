@@ -1,35 +1,29 @@
-from sqlmodel import Session, select
-from pathlib import Path
 import csv
+import gzip
 import logging
+from pathlib import Path
+from typing import Iterator, List
 
 # import sys
 import yaml
-
-from typing import Iterator, List
-import gzip
-
-
 from rich.console import Console
 from rich.progress import track
 from rich.table import Table
+from sqlmodel import Session, select
 
+from app.database import engine
 from app.manage_db.taxonomy import get_common_taxa
-
 from app.models import (
     Collection,
     CollectionRelease,
     Genome,
-    Pangenome,
-    GenomePangenomeLink,
-    PangenomeMetric,
     GenomeInPangenomeMetric,
-    Taxon,
+    GenomePangenomeLink,
+    Pangenome,
+    PangenomeMetric,
     PangenomeTaxonLink,
+    Taxon,
 )
-
-
-from app.database import engine
 
 logger = logging.getLogger(__name__)  # __name__ ensures uniqueness per module
 

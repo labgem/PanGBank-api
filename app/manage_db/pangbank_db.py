@@ -1,39 +1,30 @@
+import logging
+from pathlib import Path
 from typing import Optional
+
 import typer
-
 from sqlmodel import Session
+from typing_extensions import Annotated
 
-
+from app.database import create_db_and_tables, engine
 from app.manage_db.collections import (
     add_pangenomes_to_db,
     create_collection_release,
-    print_collections,
-    delete_full_collection,
     delete_collection_release,
+    delete_full_collection,
+    print_collections,
 )
 from app.manage_db.genome_metadata import app as genome_metadata_app
+from app.manage_db.genomes import add_genomes_to_db
 from app.manage_db.taxonomy import (
     add_taxon_to_db,
     link_genomes_and_taxa,
+    parse_taxonomy_file,
 )
-from app.manage_db.genomes import add_genomes_to_db
-
-from pathlib import Path
-import logging
-
-from typing_extensions import Annotated
-
-from app.manage_db.taxonomy import parse_taxonomy_file
-
-
-from app.database import create_db_and_tables, engine
-
-
 from app.manage_db.utils import (
     parse_collection_release_input_json,
     set_up_logging_config,
 )
-
 
 cli = typer.Typer(
     no_args_is_help=True,

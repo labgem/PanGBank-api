@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
-from ..models import PangenomePublic
-from ..dependencies import SessionDep
 from app.crud import pangenomes as pangenomes_crud
 from app.crud.common import FilterPangenome, PaginationParams
 
+from ..dependencies import SessionDep
+from ..models import PangenomePublic
 
 router = APIRouter(
     tags=["pangenomes"],
@@ -23,7 +23,7 @@ async def get_pangenomes(
         session, filter_params, pagination_params
     )
 
-    return pangenomes
+    return list(pangenomes)
 
 
 @router.get("/pangenomes/{pangenome_id}", response_model=PangenomePublic)

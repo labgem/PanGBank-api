@@ -1,26 +1,24 @@
-from sqlmodel import Session, select
+import csv
+import gzip
 import logging
-
 from pathlib import Path
-from typing import Generator, Optional, List
+from typing import Generator, List, Optional
 
+import typer
+from rich.progress import track
+from sqlmodel import Session, select
+from typing_extensions import Annotated
+
+from app.database import create_db_and_tables, engine
+from app.manage_db.utils import check_and_read_json_file, set_up_logging_config
 from app.models import (
     Genome,
     GenomeMetadata,
     GenomeMetadataBase,
-    GenomePangenomeLink,
     GenomeMetadataSource,
+    GenomePangenomeLink,
     GenomeSource,
 )
-from app.manage_db.utils import set_up_logging_config, check_and_read_json_file
-import csv
-import gzip
-import typer
-
-from app.database import create_db_and_tables, engine
-
-from typing_extensions import Annotated
-from rich.progress import track
 
 app = typer.Typer(no_args_is_help=True)
 

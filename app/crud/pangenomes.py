@@ -1,20 +1,18 @@
+from pathlib import Path
 from typing import Iterator, Sequence
-from sqlmodel import Session, select
+
 from sqlalchemy import func
+from sqlmodel import Session, select
 
-
+from app.crud.common import FilterPangenome, PaginationParams, get_taxonomies_from_taxa
 from app.models import (
-    Pangenome,
-    PangenomePublic,
     Genome,
     GenomePangenomeLink,
+    Pangenome,
+    PangenomePublic,
     PangenomeTaxonLink,
     Taxon,
 )
-
-from pathlib import Path
-
-from app.crud.common import FilterPangenome, get_taxonomies_from_taxa, PaginationParams
 
 
 def get_pangenome_file(session: Session, pangenome_id: int) -> Path | None:
@@ -27,7 +25,6 @@ def get_pangenome_file(session: Session, pangenome_id: int) -> Path | None:
     pangenome_file = (
         Path(pangenome.collection_release.pangenomes_directory) / pangenome.file_name
     )
-    print(Path(pangenome.collection_release.pangenomes_directory))
     return pangenome_file
 
 
@@ -43,7 +40,6 @@ def get_pangenome(session: Session, pangenome_id: int) -> PangenomePublic | None
 def get_public_pangenome(pangenome: Pangenome) -> PangenomePublic:
 
     taxonomies = get_taxonomies_from_taxa(pangenome.taxa)
-
     assert len(taxonomies) == 1
 
     pangenome_public = PangenomePublic.model_validate(
@@ -59,7 +55,7 @@ def get_pangenomes(
     pagination_params: PaginationParams | None = None,
 ) -> Sequence[Pangenome]:
 
-    query = select(Pangenome)
+    query = select(Pangenome).distinct()
 
     if filter_params.collection_release_id is not None:
         query = query.where(

@@ -1,25 +1,21 @@
-from typing import List
-from sqlmodel import Session, select
+import gzip
 import logging
+from collections import defaultdict
+from pathlib import Path
+from typing import List
+
+import typer
+from rich.progress import Progress, track
+from sqlmodel import Session, select
 
 from app.models import (
     Genome,
-    Pangenome,
-    TaxonomySourceInput,
-    TaxonomySource,
-    Taxon,
     GenomeTaxonLink,
+    Pangenome,
+    Taxon,
+    TaxonomySource,
+    TaxonomySourceInput,
 )
-
-from pathlib import Path
-import gzip
-from collections import defaultdict
-from rich.progress import Progress
-
-import typer
-
-
-from rich.progress import track
 
 app = typer.Typer(no_args_is_help=True)
 

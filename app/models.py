@@ -1,9 +1,10 @@
-from sqlmodel import Field, Relationship, SQLModel  # type: ignore
-from pydantic import BaseModel
 from datetime import datetime
 from pathlib import Path
 
+from pydantic import BaseModel
 from sqlalchemy import UniqueConstraint
+from sqlmodel import Field, Relationship, SQLModel  # type: ignore
+
 
 class GenomeTaxonLink(SQLModel, table=True):
     genome_id: int | None = Field(

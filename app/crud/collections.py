@@ -1,8 +1,9 @@
-from sqlmodel import Session, select
 from typing import Sequence
-from app.models import Collection, CollectionRelease
+
+from sqlmodel import Session, select
 
 from app.crud.common import FilterCollection
+from app.models import Collection, CollectionRelease
 
 
 def get_collections(

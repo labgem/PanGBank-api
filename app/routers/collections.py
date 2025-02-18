@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
-from ..models import CollectionPublicWithReleases, Collection
-from ..dependencies import SessionDep
-from app.crud.common import FilterCollection
 from app.crud import collections as collections_crud
+from app.crud.common import FilterCollection
 
+from ..dependencies import SessionDep
+from ..models import Collection, CollectionPublicWithReleases
 
 router = APIRouter(
     tags=["collections"],

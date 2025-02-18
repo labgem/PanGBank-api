@@ -1,12 +1,12 @@
-from pathlib import Path
 import json
-from app.models import CollectionReleaseInput
+import logging
+from pathlib import Path
 
 import typer
-
 from pydantic import ValidationError
-import logging
 from rich.logging import RichHandler
+
+from app.models import CollectionReleaseInput
 
 
 def check_and_read_json_file(input_json_file: Path):
