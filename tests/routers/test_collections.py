@@ -1,37 +1,13 @@
+from datetime import datetime
 from typing import Any
 
-from requests import Response
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
+from httpx import Response
+from sqlmodel import Session
 
-from app.main import app
-from app.dependencies import get_session
+
 from app.models import Collection, CollectionRelease
-
-from datetime import datetime
-
-
-@pytest.fixture(name="session") 
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-
-
-@pytest.fixture(name="client")
-def client_fixture(session: Session):
-    def get_session_override():
-        return session
-
-    app.dependency_overrides[get_session] = get_session_override
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -46,11 +22,14 @@ def collection_release_data() -> dict[str, Any]:
         "mash_version": "2.0",
         "date": datetime.now(),
         "collection_id": 1,
-        "taxonomy_source_id": 1
+        "taxonomy_source_id": 1,
     }
 
-@pytest.fixture
-def create_collection_release(session:Session, collection_release_data: dict[str, Any]) -> CollectionRelease:
+
+@pytest.fixture(name="release")
+def create_collection_release(
+    session: Session, collection_release_data: dict[str, Any]
+) -> CollectionRelease:
     release = CollectionRelease(**collection_release_data)
     session.add(release)
     session.commit()
@@ -58,8 +37,9 @@ def create_collection_release(session:Session, collection_release_data: dict[str
     return release
 
 
-
-def test_get_collections(session: Session, client: TestClient, collection_release_data: dict[str, Any]):
+def test_get_collections(
+    session: Session, client: TestClient, collection_release_data: dict[str, Any]
+):
 
     collection_1 = Collection(name="Collection 1")
     collection_2 = Collection(name="Collection 2")
@@ -74,10 +54,10 @@ def test_get_collections(session: Session, client: TestClient, collection_releas
     session.refresh(release1)
     session.refresh(release2)
 
-    response : Response = client.get("/collections/") 
+    response: Response = client.get("/collections/")
 
     assert response.status_code == 200
-    
+
     data = response.json()
 
     assert len(data) == 2
@@ -91,10 +71,17 @@ def test_get_collections(session: Session, client: TestClient, collection_releas
     assert data[0]["collection_releases"][0]["version"] == release1.version
     assert data[1]["collection_releases"][0]["version"] == release2.version
 
-    assert data[0]["collection_releases"][0]["pangenomes_directory"] == release1.pangenomes_directory
-    assert data[1]["collection_releases"][0]["pangenomes_directory"] == release2.pangenomes_directory
+    assert (
+        data[0]["collection_releases"][0]["pangenomes_directory"]
+        == release1.pangenomes_directory
+    )
+    assert (
+        data[1]["collection_releases"][0]["pangenomes_directory"]
+        == release2.pangenomes_directory
+    )
 
-def test_get_collection(session: Session, client: TestClient, collection_release_data: dict[str, Any]):
+
+def test_get_collection(session: Session, client: TestClient):
 
     collection_1 = Collection(name="Collection 1")
 
@@ -104,11 +91,9 @@ def test_get_collection(session: Session, client: TestClient, collection_release
 
     collection_id = collection_1.id
 
-    response : Response = client.get(f"/collections/{collection_id}") 
+    response: Response = client.get(f"/collections/{collection_id}")
 
     assert response.status_code == 200
 
     data = response.json()
     assert data["name"] == collection_1.name
-
-     
