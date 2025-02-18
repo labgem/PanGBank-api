@@ -175,14 +175,6 @@ def mock_data(
     )
     session.commit()
 
-    pans = session.exec(select(Pangenome)).all()
-    for p in pans:
-        print(p.file_name)
-    # session.refresh(pangenome1)
-    # session.refresh(pangenome3)
-
-    # session.refresh(genomeA)
-
 
 def test_get_pangenomes_no_filters(session: Session, mock_data: None):
     """Test with no filters applied, should return all pangenomes."""

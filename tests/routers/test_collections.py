@@ -10,6 +10,7 @@ from sqlmodel import Session
 from app.models import Collection, CollectionRelease
 from tests.routers.mock_session import session_fixture, client_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
+
 @pytest.fixture
 def collection_release_data() -> dict[str, Any]:
     return {

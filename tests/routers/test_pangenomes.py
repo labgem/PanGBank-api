@@ -16,8 +16,9 @@ from app.models import (
 )
 from tests.routers.mock_session import session_fixture, client_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
+
 @pytest.fixture
-def collection_release_data(tmp_path:Path) -> dict[str, Any]:
+def collection_release_data(tmp_path: Path) -> dict[str, Any]:
     return {
         "version": "1.0.0",
         "ppanggolin_version": "2.3.4",
@@ -79,7 +80,10 @@ def pangenome_metric_data(session: Session) -> Dict[str, Any]:
 
 @pytest.fixture
 def test_data(
-    session: Session, pangenome_metric_data: Dict[str, Any], release: CollectionRelease, tmp_path:Path
+    session: Session,
+    pangenome_metric_data: Dict[str, Any],
+    release: CollectionRelease,
+    tmp_path: Path,
 ):
     # Create test pangenomes
     taxonomy_source = TaxonomySource(name="NCBI", ranks="Domain")
@@ -87,11 +91,10 @@ def test_data(
         Taxon(name="Bacteria", rank="Domain", depth=0, taxonomy_source=taxonomy_source)
     ]
     pangneom1_file = tmp_path / "PangenomeOne.h5"
-    pangneom1_file.write_text('pangenome content')
-
+    pangneom1_file.write_text("pangenome content")
 
     pangneom2_file = tmp_path / "PangenomeTwo.h5"
-    pangneom2_file.write_text('pangenome content')
+    pangneom2_file.write_text("pangenome content")
 
     pangenome1 = Pangenome(
         **pangenome_metric_data,
@@ -112,7 +115,7 @@ def test_data(
     session.commit()
 
 
-def test_get_pangenomes(client: TestClient, test_data:None):
+def test_get_pangenomes(client: TestClient, test_data: None):
 
     response = client.get("/pangenomes/")
 
@@ -123,7 +126,7 @@ def test_get_pangenomes(client: TestClient, test_data:None):
     assert data[1]["file_name"] == "PangenomeTwo.h5"
 
 
-def test_get_existing_pangenome(client: TestClient, test_data:None):
+def test_get_existing_pangenome(client: TestClient, test_data: None):
 
     # Existing pangenome
     response = client.get("/pangenomes/1")
@@ -139,17 +142,18 @@ def test_get_non_existing_pangenome(client: TestClient):
     assert response.json()["detail"] == "Pangenome not found"
 
 
-def test_get_pangenome_file_success(client: TestClient, session: Session, test_data:None):
+def test_get_pangenome_file_success(
+    client: TestClient, session: Session, test_data: None
+):
     # Arrange
     pangenome_id = 1  # Assuming this ID exists in test_data
-    
+
     response = client.get(f"/pangenomes/{pangenome_id}/file")
 
     # Assert
     assert response.status_code == 200
     assert (
-    response.headers["content-disposition"]
-    == 'attachment; filename="pangenome.h5"'
+        response.headers["content-disposition"] == 'attachment; filename="pangenome.h5"'
     )
 
 
@@ -165,7 +169,9 @@ def test_get_pangenome_file_not_found(client: TestClient, session: Session):
     assert response.json() == {"detail": "Pangenome not found"}
 
 
-def test_get_pangenome_file_not_exists(client: TestClient, session: Session, test_data:None):
+def test_get_pangenome_file_not_exists(
+    client: TestClient, session: Session, test_data: None
+):
     # Arrange
     pangenome_id = 1  # Assuming this ID exists in test_data
 
