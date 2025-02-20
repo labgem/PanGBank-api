@@ -1,6 +1,5 @@
 import gzip
 import logging
-from collections import defaultdict
 from pathlib import Path
 from typing import List
 
@@ -11,7 +10,6 @@ from sqlmodel import Session, select
 from app.models import (
     Genome,
     GenomeTaxonLink,
-    Pangenome,
     Taxon,
     TaxonomySource,
     TaxonomySourceInput,
@@ -34,19 +32,6 @@ def parse_taxonomy_file(taxonomy_file: Path) -> dict[str, tuple[str, ...]]:
             )
 
     return genome_to_lineage
-
-
-def get_lineage(taxonomy: Taxon, ranks: list[str]) -> tuple[str, ...]:
-    lineage: List[str] = []
-
-    for rank in ranks:
-        taxon_rank = getattr(taxonomy, rank)
-        if taxon_rank is None:
-            return tuple(lineage)
-        else:
-            lineage.append(taxon_rank)
-
-    return tuple(lineage)
 
 
 def get_taxon_key(name: str, rank: str, depth: int) -> tuple[str, str, int]:
@@ -145,48 +130,6 @@ def get_common_taxa(taxa_A: list[Taxon], taxa_B: list[Taxon]) -> list[Taxon]:
             common_taxa.append(taxon)
 
     return common_taxa
-
-
-def manage_genome_taxonomies(
-    pangenome: Pangenome,
-    genome_to_taxonomy: dict[str, tuple[str, ...]],
-    taxonomy_source: TaxonomySource,
-    existing_taxon_dict: dict[tuple[str, str, int], Taxon],
-    ranks: list[str],
-    session: Session,
-):
-
-    pangenome_taxa: list[Taxon] = []
-
-    lineage_to_genomes: defaultdict[tuple[str, ...], List[Genome]] = defaultdict(list)
-
-    for genome_link in pangenome.genome_links:
-        lineage = genome_to_taxonomy[genome_link.genome.name]
-        lineage_to_genomes[lineage].append(genome_link.genome)
-
-    for lineage, genomes in lineage_to_genomes.items():
-        taxa = create_and_get_taxa(
-            lineage=lineage, taxon_dict=existing_taxon_dict, ranks=ranks
-        )
-
-        if not pangenome_taxa:
-            pangenome_taxa = taxa
-
-        pangenome_taxa = get_common_taxa(taxa, pangenome_taxa)
-
-        for taxon in taxa:
-            for genome in genomes:
-                if genome not in taxon.genomes:
-                    taxon.genomes.append(genome)
-
-        taxonomy_source.taxa += taxa
-
-        session.add_all(taxa)
-
-    pangenome.taxa = pangenome_taxa
-    session.add(pangenome)
-
-    session.commit()
 
 
 def get_taxa_by_depth(depth: int, taxonomy_source: TaxonomySource, session: Session):

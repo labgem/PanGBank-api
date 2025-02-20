@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 
 import typer
-from pydantic import ValidationError
 from rich.logging import RichHandler
 
 from app.models import CollectionReleaseInput
@@ -24,12 +23,6 @@ def check_and_read_json_file(input_json_file: Path):
 
     except json.JSONDecodeError as e:
         typer.echo(f"[bold red]Error:[/bold red] Invalid JSON format: {e}", err=True)
-        raise typer.Exit(1)
-    except ValidationError as e:
-        typer.echo(
-            f"[bold red]Error:[/bold red] JSON structure validation failed:\n{e}",
-            err=True,
-        )
         raise typer.Exit(1)
 
     return json_content

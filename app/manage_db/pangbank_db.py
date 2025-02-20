@@ -50,8 +50,6 @@ def add_collection_release(
 ):
     set_up_logging_config()
 
-    create_db_and_tables()
-
     data_input = parse_collection_release_input_json(collection_release_json)
 
     collection_input = data_input.collection
