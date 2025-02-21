@@ -3,6 +3,8 @@ import gzip
 import logging
 from pathlib import Path
 from typing import Generator, List, Optional
+from rich.console import Console
+from rich.table import Table
 
 import typer
 from rich.progress import track
@@ -17,7 +19,6 @@ from app.models import (
     GenomeMetadataBase,
     GenomeMetadataSource,
     GenomePangenomeLink,
-    GenomeSource,
 )
 
 app = typer.Typer(no_args_is_help=True)
@@ -86,16 +87,6 @@ def get_all_genomes_in_pangenome(session: Session):
     genomes_with_links = session.exec(genomes_statement).all()
 
     return genomes_with_links
-
-
-def get_all_genomes_from_genome_source(session: Session, genome_source: str):
-    # select all genome that are linked with a pangenome in the database
-
-    genomes_statement = session.exec(
-        select(Genome).join(GenomeSource).where(GenomeSource.name == genome_source)
-    )
-
-    return genomes_statement.all()
 
 
 def add_genome_source_to_db(metadata_source: GenomeMetadataSource, session: Session):
@@ -256,13 +247,11 @@ def delete(
                 if metadata_source_version
                 else metadata_source_name
             )
-            logging.info(
-                f"Genome Metadata Source '{source_info}' not found in the database. Deletion aborted."
-            )
+            error_message = f"Genome Metadata Source '{source_info}' not found in the database. Deletion aborted. "
+
             metadata_sources = session.exec(select(GenomeMetadataSource)).all()
-            logging.info(
-                f"Available genome metadata sources in the database: {[f"name='{source.name} version='{source.version}'" for source in metadata_sources]}"
-            )
+            error_message += f"Available genome metadata sources in the database: {[f"name='{source.name} version='{source.version}'" for source in metadata_sources]}"
+            raise ValueError(error_message)
 
         else:
             for source in metadata_sources:
@@ -281,16 +270,24 @@ def list():
     """
 
     set_up_logging_config()
-
-    create_db_and_tables()
+    console = Console()
 
     with Session(engine) as session:
 
         metadata_sources = session.exec(select(GenomeMetadataSource)).all()
 
         if not metadata_sources:
-            logging.info("No genome metadata sources found in the database.")
-        else:
-            logging.info(
-                f"Genome metadata sources in the database: {[f'name={source.name} version={source.version}' for source in metadata_sources]}"
+            console.print(
+                "[bold red]No genome metadata sources found in the database.[/bold red]"
             )
+            return
+
+        # Create a table for the metadata sources
+        table = Table(title="Genome Metadata Sources", header_style="bold magenta")
+        table.add_column("Name", style="bold cyan")
+        table.add_column("Version", style="bold yellow")
+
+        for source in metadata_sources:
+            table.add_row(source.name, source.version)
+
+        console.print(table)
