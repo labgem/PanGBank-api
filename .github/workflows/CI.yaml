@@ -44,7 +44,7 @@ jobs:
         run: poetry install
       
       - name: Run the automated tests
-        run: poetry run pytest --cov=app --cov-report=term #--cov-report=xml --cov-report=html
+        run: poetry run pytest --cov=app --cov-report=term -vv #--cov-report=xml --cov-report=html
 
       # TODO: To use when repo is public
       # - name: Generate coverage badge
