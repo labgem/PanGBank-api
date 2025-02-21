@@ -44,6 +44,7 @@ def parse_metadata_table(
                     value=str(value),
                 )
                 for key, value in row.items()
+                if key != "Genome"
             ]
 
             yield genome_name, genome_metadata_list
