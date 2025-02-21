@@ -1,7 +1,6 @@
 import gzip
 import logging
 from pathlib import Path
-from typing import List
 
 import typer
 from rich.progress import Progress, track
@@ -34,50 +33,11 @@ def parse_taxonomy_file(taxonomy_file: Path) -> dict[str, tuple[str, ...]]:
     return genome_to_lineage
 
 
-def get_taxon_key(name: str, rank: str, depth: int) -> tuple[str, str, int]:
-    return (rank, name, depth)
-
-
-def build_taxon_dict(taxon_list: list[Taxon]) -> dict[tuple[str, str, int], Taxon]:
-    taxon_dict: dict[tuple[str, str, int], Taxon] = {}
-    for taxon in taxon_list:
-        key = get_taxon_key(taxon.name, taxon.rank, taxon.depth)
-        taxon_dict[key] = taxon
-
-    return taxon_dict
-
-
 def parse_ranks_str(ranks_str: str) -> list[str]:
 
     ranks = [rank.strip().title() for rank in ranks_str.split(";")]
 
     return ranks
-
-
-def create_and_get_taxa(
-    lineage: tuple[str, ...],
-    ranks: list[str],
-    taxon_dict: dict[tuple[str | int, ...], Taxon],
-) -> list[Taxon]:
-
-    assert len(ranks) >= len(lineage)
-
-    taxa: List[Taxon] = []
-    for depth, (rank, taxon_name) in enumerate(zip(ranks, lineage)):
-
-        taxon_key = get_taxon_key(taxon_name, rank, depth)
-
-        if taxon_key in taxon_dict:
-            # print(f'{taxon_key} in taxon_dict, reusing it')
-            taxon = taxon_dict[taxon_key]
-        else:
-            # print(f'{taxon_key} NOT in taxon_dict, creating it')
-            taxon = Taxon(name=taxon_name, rank=rank, depth=depth)
-            taxon_dict[taxon_key] = taxon
-
-        taxa.append(taxon)
-
-    return taxa
 
 
 def create_taxonomy_source(
