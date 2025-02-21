@@ -60,16 +60,14 @@ def test_app(session: Session, metadata_source_file: str, metadata_file: str):
 
     genomes = [Genome(name=f"Genome_{i}") for i in range(1, 6)]
 
-
     session.add_all(genomes)
     session.commit()
 
-    
     # Mock get_all_genomes_in_pangenome to return the same genomes we inserted
     with patch("app.manage_db.genome_metadata.get_all_genomes_in_pangenome", return_value=genomes):
         with patch("app.manage_db.genome_metadata.Session", return_value=session):
-            add(Path(metadata_source_file), Path(metadata_file))
-            
+            with patch("app.manage_db.genome_metadata.create_db_and_tables"):
+                add(Path(metadata_source_file), Path(metadata_file))
 
     metadata = session.exec(select(GenomeMetadata)).all()
 
