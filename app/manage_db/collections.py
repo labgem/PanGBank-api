@@ -371,9 +371,7 @@ def delete_full_collection(session: Session, collection_name: str) -> None:
     collection_from_db = session.exec(statement).first()
 
     if collection_from_db is None:
-        logger.info(
-            f"Collection '{collection_name}' not found in the database. Deletion aborted."
-        )
+        raise ValueError(f"Collection '{collection_name}' not found in the database.")
     else:
         logger.info(f"Deleting collection '{collection_name}' from the database.")
         session.delete(collection_from_db)
@@ -402,8 +400,8 @@ def delete_collection_release(
     collection_release_from_db = session.exec(statement).first()
 
     if collection_release_from_db is None:
-        logger.info(
-            f"Collection release '{collection_name}' (version: {release_version}) not found in the database. Deletion aborted."
+        raise ValueError(
+            f"Collection release '{collection_name}' (version: {release_version}) not found in the database."
         )
     else:
         logger.info(
