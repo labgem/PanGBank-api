@@ -12,7 +12,12 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    title="PanGBank API",
+    docs_url="/",
+    description="API for managing collections pangenomes.",
+)
 
 app.include_router(collections.router)
 app.include_router(genomes.router)
