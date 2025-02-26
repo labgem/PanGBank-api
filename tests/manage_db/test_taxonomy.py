@@ -9,18 +9,10 @@ from app.manage_db.taxonomy import (
 )
 
 from app.models import TaxonomySourceInput, Taxon, Genome
-from sqlmodel import Session, SQLModel, create_engine, select
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session, select
 
 
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
+from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture
@@ -178,7 +170,7 @@ def other_taxa():
     ]
 
 
-def test_get_common_taxa(sample_taxa:list[Taxon], other_taxa:list[Taxon]):
+def test_get_common_taxa(sample_taxa: list[Taxon], other_taxa: list[Taxon]):
     """Tests if common taxa are correctly identified."""
     common = get_common_taxa(sample_taxa, other_taxa)
 
@@ -196,7 +188,7 @@ def test_get_common_taxa_no_common():
     assert common == []
 
 
-def test_get_common_taxa_identical_lists(sample_taxa:list[Taxon]):
+def test_get_common_taxa_identical_lists(sample_taxa: list[Taxon]):
     """Tests when both lists are identical."""
     common = get_common_taxa(sample_taxa, sample_taxa)
     assert len(common) == len(sample_taxa)

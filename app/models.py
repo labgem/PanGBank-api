@@ -64,15 +64,19 @@ class GenomeInPangenomeMetric(SQLModel):
 
 
 class GenomePangenomeLink(GenomeInPangenomeMetric, table=True):
-    genome_id: int | None = Field(
-        default=None, foreign_key="genome.id", primary_key=True
-    )
-    pangenome_id: int | None = Field(
-        default=None, foreign_key="pangenome.id", primary_key=True
-    )
+
+    __table_args__ = (UniqueConstraint("genome_id", "pangenome_id"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    genome_id: int | None = Field(default=None, foreign_key="genome.id")
+    pangenome_id: int | None = Field(default=None, foreign_key="pangenome.id")
 
     pangenome: "Pangenome" = Relationship(back_populates="genome_links")
     genome: "Genome" = Relationship(back_populates="pangenome_links")
+
+    genome_metadata: list["GenomeInPangenomeMetadata"] = Relationship(
+        back_populates="genome_in_pangenome", cascade_delete=True
+    )
 
     genome_file_md5sum: str
     genome_file_name: str
@@ -339,13 +343,13 @@ class TaxonomyPublic(TaxonomyBase):
     taxa: list[TaxonPublic]
 
 
-class GenomeMetadataBase(SQLModel):
+class MetadataBase(SQLModel):
     id: int | None = Field(default=None, primary_key=True)
     key: str
     value: str
 
 
-class GenomeMetadata(GenomeMetadataBase, table=True):
+class GenomeMetadata(MetadataBase, table=True):
     source_id: int | None = Field(
         foreign_key="genomemetadatasource.id", default=None, ondelete="CASCADE"
     )
@@ -358,7 +362,29 @@ class GenomeMetadata(GenomeMetadataBase, table=True):
     source: "GenomeMetadataSource" = Relationship(back_populates="genome_metadata")
 
 
-class GenomeMetadataSourceBase(SQLModel):
+class GenomeInPangenomeMetadata(MetadataBase, table=True):
+    source_id: int | None = Field(
+        foreign_key="genomeinpangenomemetadatasource.id",
+        default=None,
+        ondelete="CASCADE",
+    )
+
+    genome_pangenome_link_id: int | None = Field(
+        foreign_key="genomepangenomelink.id",
+        ondelete="CASCADE",
+        default=None,
+    )
+
+    genome_in_pangenome: GenomePangenomeLink = Relationship(
+        back_populates="genome_metadata",
+    )
+
+    source: "GenomeInPangenomeMetadataSource" = Relationship(
+        back_populates="genome_metadata"
+    )
+
+
+class MetadataSourceBase(SQLModel):
 
     __table_args__ = (UniqueConstraint("name", "version", name="uq_name_version"),)
 
@@ -369,9 +395,16 @@ class GenomeMetadataSourceBase(SQLModel):
     url: str | None = None
 
 
-class GenomeMetadataSource(GenomeMetadataSourceBase, table=True):
+class GenomeMetadataSource(MetadataSourceBase, table=True):
 
     genome_metadata: list[GenomeMetadata] = Relationship(
+        back_populates="source", cascade_delete=True
+    )
+
+
+class GenomeInPangenomeMetadataSource(MetadataSourceBase, table=True):
+
+    genome_metadata: list[GenomeInPangenomeMetadata] = Relationship(
         back_populates="source", cascade_delete=True
     )
 

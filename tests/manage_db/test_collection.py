@@ -1,58 +1,59 @@
 from datetime import datetime
 from pathlib import Path
 import pytest
-from app.manage_db.collections import create_collection_release, add_pangenomes_to_db, delete_full_collection, delete_collection_release, print_collections
-
-from app.models import (
-    CollectionRelease,
-    Collection,
-    Genome,
-    Pangenome
+from app.manage_db.collections import (
+    create_collection_release,
+    add_pangenomes_to_db,
+    delete_full_collection,
+    delete_collection_release,
+    print_collections,
 )
-from sqlmodel import Session, SQLModel, create_engine, select
-from sqlmodel.pool import StaticPool
 
+from app.models import CollectionRelease, Collection, Genome, Pangenome
+from sqlmodel import Session, select
 from unittest.mock import patch
 
 import gzip
+from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
 
 @pytest.fixture()
 def collection_release():
-    collection_release= CollectionRelease( version= "1.0", date= datetime(2021, 1, 1),
-                                          ppanggolin_version= "3.0.0",
-                                          pangbank_wf_version= "1.0.0",
-                                          release_note="This is the first release of the collection",
-                                          mash_sketch="mash_sketch/families_persistent_all.msh",
-                                          mash_version= "2.3",
-                                          pangenomes_directory= "pangenomes",)
-    
+    collection_release = CollectionRelease(
+        version="1.0",
+        date=datetime(2021, 1, 1),
+        ppanggolin_version="3.0.0",
+        pangbank_wf_version="1.0.0",
+        release_note="This is the first release of the collection",
+        mash_sketch="mash_sketch/families_persistent_all.msh",
+        mash_version="2.3",
+        pangenomes_directory="pangenomes",
+    )
+
     return collection_release
+
 
 @pytest.fixture()
 def collection_release2():
-    collection_release2 = CollectionRelease( version= "2.0", date= datetime(2021, 1, 1),
-                                          ppanggolin_version= "3.0.0",
-                                          pangbank_wf_version= "1.0.0",
-                                          release_note="This is the first release of the collection",
-                                          mash_sketch="mash_sketch/families_persistent_all.msh",
-                                          mash_version= "2.3",
-                                          pangenomes_directory= "pangenomes",)
+    collection_release2 = CollectionRelease(
+        version="2.0",
+        date=datetime(2021, 1, 1),
+        ppanggolin_version="3.0.0",
+        pangbank_wf_version="1.0.0",
+        release_note="This is the first release of the collection",
+        mash_sketch="mash_sketch/families_persistent_all.msh",
+        mash_version="2.3",
+        pangenomes_directory="pangenomes",
+    )
     return collection_release2
 
 
 @pytest.fixture()
 def collection():
 
-    collection = Collection( name = "collection_A",)
+    collection = Collection(
+        name="collection_A",
+    )
     return collection
 
 
@@ -135,11 +136,16 @@ GenomeB	1	811	2	810	1	1	766	767	766	767	784	2	783	1	1	27	0	27	0	0	0	0	0	0	0	99.8
     return pangenome_dir
 
 
-def test_create_collection_release(session:Session, collection:Collection, collection_release:CollectionRelease, collection_release2:CollectionRelease):
+def test_create_collection_release(
+    session: Session,
+    collection: Collection,
+    collection_release: CollectionRelease,
+    collection_release2: CollectionRelease,
+):
 
-
-
-    collection_release = create_collection_release(collection, collection_release, session)
+    collection_release = create_collection_release(
+        collection, collection_release, session
+    )
 
     assert collection_release.collection.name == "collection_A"
     assert collection_release.version == "1.0"
@@ -147,13 +153,14 @@ def test_create_collection_release(session:Session, collection:Collection, colle
     assert collection_release.ppanggolin_version == "3.0.0"
     assert collection_release.pangbank_wf_version == "1.0.0"
 
-    
     collections = session.exec(select(Collection)).all()
     releases = session.exec(select(CollectionRelease)).all()
     assert len(releases) == 1
     assert len(collections) == 1
 
-    collection_release = create_collection_release(collection, collection_release2, session)
+    collection_release = create_collection_release(
+        collection, collection_release2, session
+    )
 
     collections = session.exec(select(Collection)).all()
     releases = session.exec(select(CollectionRelease)).all()
@@ -161,7 +168,9 @@ def test_create_collection_release(session:Session, collection:Collection, colle
     assert len(collections) == 1
 
     # add again the same release and collection to check if it is not added again
-    collection_release = create_collection_release(collection, collection_release2, session)
+    collection_release = create_collection_release(
+        collection, collection_release2, session
+    )
 
     collections = session.exec(select(Collection)).all()
     releases = session.exec(select(CollectionRelease)).all()
@@ -169,16 +178,23 @@ def test_create_collection_release(session:Session, collection:Collection, colle
     assert len(collections) == 1
 
 
-def test_create_collection_release_ppanggo_version_mismatch(session:Session, collection:Collection, collection_release:CollectionRelease):
+def test_create_collection_release_ppanggo_version_mismatch(
+    session: Session, collection: Collection, collection_release: CollectionRelease
+):
 
     create_collection_release(collection, collection_release, session)
 
     collection_release.ppanggolin_version = "4.0.0"
 
     with pytest.raises(ValueError):
-        collection_release = create_collection_release(collection, collection_release, session)
+        collection_release = create_collection_release(
+            collection, collection_release, session
+        )
 
-def test_add_pangenomes_to_db(pangenome_dir:Path, collection_release:CollectionRelease, session:Session):
+
+def test_add_pangenomes_to_db(
+    pangenome_dir: Path, collection_release: CollectionRelease, session: Session
+):
 
     pangenome_main_dir = pangenome_dir.parent
 
@@ -193,21 +209,26 @@ def test_add_pangenomes_to_db(pangenome_dir:Path, collection_release:CollectionR
     session.add_all([genome_a, genome_b])
     session.commit()
 
+    pangenomes = add_pangenomes_to_db(
+        pangenome_main_dir=pangenome_main_dir,
+        collection_release=collection_release,
+        genome_name_to_genome=genome_name_to_genome,
+        session=session,
+    )
 
-    pangenomes = add_pangenomes_to_db(pangenome_main_dir=pangenome_main_dir, collection_release=collection_release, 
-                         genome_name_to_genome=genome_name_to_genome, session=session)
-    
     assert len(pangenomes) == 1
     pangenome = pangenomes[0]
     assert pangenome.file_name == "speciesA/pangenome.h5"
     assert len(pangenome.genome_links) == 2
-    
+
     pangenome_in_DB = session.exec(select(Pangenome)).all()
 
     assert pangenomes == pangenome_in_DB
 
-    
-def test_delete_full_collection(session:Session, collection:Collection, collection_release:CollectionRelease):
+
+def test_delete_full_collection(
+    session: Session, collection: Collection, collection_release: CollectionRelease
+):
 
     create_collection_release(collection, collection_release, session)
 
@@ -218,14 +239,16 @@ def test_delete_full_collection(session:Session, collection:Collection, collecti
     assert len(releases) == 0
     assert len(collections) == 0
 
-def test_delete_unexisting_collection(session:Session):
 
-    
+def test_delete_unexisting_collection(session: Session):
+
     with pytest.raises(ValueError):
         delete_full_collection(session, "unexisting_collection")
 
 
-def test_delete_unexisting_collection_release(session:Session, collection:Collection, collection_release:CollectionRelease):
+def test_delete_unexisting_collection_release(
+    session: Session, collection: Collection, collection_release: CollectionRelease
+):
 
     create_collection_release(collection, collection_release, session)
 
@@ -233,7 +256,9 @@ def test_delete_unexisting_collection_release(session:Session, collection:Collec
         delete_collection_release(session, collection.name, "99999")
 
 
-def test_delete_collection_release(session:Session, collection:Collection, collection_release:CollectionRelease):
+def test_delete_collection_release(
+    session: Session, collection: Collection, collection_release: CollectionRelease
+):
 
     create_collection_release(collection, collection_release, session)
 
@@ -246,9 +271,8 @@ def test_delete_collection_release(session:Session, collection:Collection, colle
     assert len(releases) == 0
 
 
-
 def test_print_collections(
-    session: Session, collection: Collection, collection_release: CollectionRelease, capsys: pytest.CaptureFixture # type: ignore
+    session: Session, collection: Collection, collection_release: CollectionRelease, capsys: pytest.CaptureFixture  # type: ignore
 ) -> None:
     """Tests if the collection name appears in console output."""
     create_collection_release(collection, collection_release, session)
@@ -256,5 +280,5 @@ def test_print_collections(
     with patch("app.manage_db.collections.Session", return_value=session):
         print_collections()
 
-    captured = capsys.readouterr() # type: ignore
-    assert "collection_A" in captured.out # type: ignore
+    captured = capsys.readouterr()  # type: ignore
+    assert "collection_A" in captured.out  # type: ignore

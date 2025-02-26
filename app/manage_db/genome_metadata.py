@@ -16,7 +16,7 @@ from app.manage_db.utils import check_and_read_json_file, set_up_logging_config
 from app.models import (
     Genome,
     GenomeMetadata,
-    GenomeMetadataBase,
+    MetadataBase,
     GenomeMetadataSource,
     GenomePangenomeLink,
 )
@@ -26,7 +26,7 @@ app = typer.Typer(no_args_is_help=True)
 
 def parse_metadata_table(
     file_path: Path,
-) -> Generator[tuple[str, list[GenomeMetadataBase]], None, None]:
+) -> Generator[tuple[str, list[MetadataBase]], None, None]:
     """Parse a gzip-compressed TSV and yield rows as dictionaries."""
     proper_open = gzip.open if file_path.name.endswith("gz") else open
     with proper_open(file_path, mode="rt") as tsvfile:
@@ -40,7 +40,7 @@ def parse_metadata_table(
                     "Ensure the TSV contains a 'Genome' column."
                 )
             genome_metadata_list = [
-                GenomeMetadataBase(
+                MetadataBase(
                     key=key,
                     value=str(value),
                 )
@@ -53,7 +53,7 @@ def parse_metadata_table(
 
 def create_metadata(
     genome_id: int,
-    metadata_list: list[GenomeMetadataBase],
+    metadata_list: list[MetadataBase],
     source: GenomeMetadataSource,
 ):
     """ """
@@ -250,7 +250,13 @@ def delete(
             error_message = f"Genome Metadata Source '{source_info}' not found in the database. Deletion aborted. "
 
             metadata_sources = session.exec(select(GenomeMetadataSource)).all()
-            error_message += f"Available genome metadata sources in the database: {[f"name='{source.name} version='{source.version}'" for source in metadata_sources]}"
+
+            avalaible_metadata = [
+                f"name='{source.name} version='{source.version}'"
+                for source in metadata_sources
+            ]
+
+            error_message += f"Available genome metadata sources in the database: {avalaible_metadata}"
             raise ValueError(error_message)
 
         else:

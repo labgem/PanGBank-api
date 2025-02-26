@@ -1,5 +1,3 @@
-from typer.testing import CliRunner
-
 from app.manage_db.genome_metadata import add, delete, list
 from app.models import Genome, GenomeMetadata, GenomeMetadataSource
 
@@ -9,20 +7,9 @@ import json
 import random
 from pathlib import Path
 from unittest.mock import patch
-from sqlmodel import Session, SQLModel, create_engine, select
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session, select
 
-runner = CliRunner()
-
-
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
+from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture
@@ -66,7 +53,10 @@ def test_add_genome_metadata(
     session.commit()
 
     # Mock get_all_genomes_in_pangenome to return the same genomes we inserted
-    with patch("app.manage_db.genome_metadata.get_all_genomes_in_pangenome", return_value=genomes):
+    with patch(
+        "app.manage_db.genome_metadata.get_all_genomes_in_pangenome",
+        return_value=genomes,
+    ):
         with patch("app.manage_db.genome_metadata.Session", return_value=session):
             with patch("app.manage_db.genome_metadata.create_db_and_tables"):
                 add(Path(metadata_source_file), Path(metadata_file))
