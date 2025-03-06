@@ -101,7 +101,7 @@ class CollectionPublic(CollectionBase):
 
 class CollectionPublicWithReleases(CollectionPublic):
 
-    collection_releases: list["CollectionReleasePublic"]
+    collection_releases: list["CollectionReleasePublicWithCount"]
 
 
 class TaxonomySourceBase(SQLModel):
@@ -188,6 +188,10 @@ class CollectionRelease(CollectionReleaseBase, table=True):
 
 class CollectionReleasePublic(CollectionReleaseBase):
     id: int
+
+
+class CollectionReleasePublicWithCount(CollectionReleasePublic):
+    pangenome_count: int
 
 
 class TaxonBase(SQLModel):

@@ -1,14 +1,19 @@
-from typing import Sequence
+from typing import List, Sequence
 
 from sqlmodel import Session, select
 
 from app.crud.common import FilterCollection
-from app.models import Collection, CollectionRelease
+from app.models import (
+    Collection,
+    CollectionRelease,
+    CollectionReleasePublicWithCount,
+    CollectionPublicWithReleases,
+)
 
 
 def get_collections(
     session: Session, filter_params: FilterCollection
-) -> Sequence[Collection]:
+) -> Sequence[CollectionPublicWithReleases]:
 
     query = select(Collection)
 
@@ -21,4 +26,26 @@ def get_collections(
 
     collections = session.exec(query).all()
 
-    return collections
+    public_collections: List[CollectionPublicWithReleases] = []
+    for collection in collections:
+
+        public_releases: List[CollectionReleasePublicWithCount] = []
+        for release in collection.collection_releases:
+            print(release.pangenomes)
+
+            release_public = CollectionReleasePublicWithCount.model_validate(
+                release,
+                from_attributes=True,
+                update={"pangenome_count": len(release.pangenomes)},
+            )
+            public_releases.append(release_public)
+
+        collection_public = CollectionPublicWithReleases.model_validate(
+            collection,
+            from_attributes=True,
+            update={"collection_releases": public_releases},
+        )
+
+        public_collections.append(collection_public)
+
+    return public_collections
