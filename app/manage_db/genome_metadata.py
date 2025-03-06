@@ -26,18 +26,19 @@ app = typer.Typer(no_args_is_help=True)
 
 def parse_metadata_table(
     file_path: Path,
+    disable_track: bool = False,
 ) -> Generator[tuple[str, list[MetadataBase]], None, None]:
     """Parse a gzip-compressed TSV and yield rows as dictionaries."""
     proper_open = gzip.open if file_path.name.endswith("gz") else open
     with proper_open(file_path, mode="rt") as tsvfile:
         reader = csv.DictReader(tsvfile, delimiter="\t")
-        for row in track(reader, "Parsing metadata", total=None):
+        for row in track(reader, "Parsing metadata", total=None, disable=disable_track):
             try:
-                genome_name = row["Genome"]
+                genome_name = row["genomes"]
             except KeyError:
                 raise KeyError(
-                    f"Missing 'Genome' column in {file_path}. "
-                    "Ensure the TSV contains a 'Genome' column."
+                    f"Missing 'genomes' column in {file_path}. "
+                    "Ensure the TSV contains a 'genomes' column."
                 )
             genome_metadata_list = [
                 MetadataBase(
@@ -45,7 +46,7 @@ def parse_metadata_table(
                     value=str(value),
                 )
                 for key, value in row.items()
-                if key != "Genome"
+                if key != "genomes"
             ]
 
             yield genome_name, genome_metadata_list

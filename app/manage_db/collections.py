@@ -23,7 +23,12 @@ from app.models import (
     PangenomeMetric,
     PangenomeTaxonLink,
     Taxon,
+    GenomeInPangenomeMetadataSource,
+    MetadataBase,
+    GenomeInPangenomeMetadata,
 )
+from app.manage_db.genome_metadata import parse_metadata_table
+
 
 logger = logging.getLogger(__name__)  # __name__ ensures uniqueness per module
 
@@ -124,8 +129,9 @@ def parse_genomes_hash_file(genomes_md5sum_file: Path) -> dict[str, dict[str, st
         raise FileNotFoundError(
             f"Genome MD5 checksum file not found: {genomes_md5sum_file}"
         )
+    proper_open = gzip.open if genomes_md5sum_file.suffix == ".gz" else open
 
-    with open(genomes_md5sum_file) as fl:
+    with proper_open(genomes_md5sum_file, "rt") as fl:
         genome_name_to_genome_info = {
             genome_info["name"]: genome_info
             for genome_info in csv.DictReader(fl, delimiter="\t")
@@ -251,9 +257,11 @@ def add_pangenomes_to_db(
     ):
 
         pangenome_file = pangenome_dir / "pangenome.h5"
-        genomes_md5sum_file = pangenome_dir / "genomes_md5sum.tsv"
+        genomes_md5sum_file = pangenome_dir / "genomes_md5sum.tsv.gz"
         pangenome_info_file = pangenome_dir / "info.yaml"
         genomes_statistics_file = pangenome_dir / "genomes_statistics.tsv.gz"
+
+        genomes_metadata_dir = pangenome_dir / "metadata"
 
         pangenome_local_path = Path(pangenome_file.parent.name) / pangenome_file.name
 
@@ -274,7 +282,7 @@ def add_pangenomes_to_db(
             new_pangenomes.append(pangenome)
             # session.add(pangenome)
 
-            genomes = link_pangenome_and_genomes(
+            genomes, pangenome_genome_links = link_pangenome_and_genomes(
                 pangenome=pangenome,
                 genome_name_to_genome=genome_name_to_genome,
                 genomes_md5sum_file=genomes_md5sum_file,
@@ -286,6 +294,15 @@ def add_pangenomes_to_db(
 
             link_pangenome_and_genome_taxa(pangenome, genomes, session)
 
+            metadata_files = list(
+                genomes_metadata_dir.glob("genomes_metadata_from_*.tsv*")
+            )
+
+            if genomes_metadata_dir.exists() and metadata_files:
+                add_metadata_to_genome_pangenome_links(
+                    metadata_files, pangenome_genome_links, session
+                )
+
         pangenomes.append(pangenome)
 
     session.add_all(new_pangenomes)
@@ -293,6 +310,107 @@ def add_pangenomes_to_db(
     session.commit()
 
     return pangenomes
+
+
+def add_metadata_to_genome_pangenome_links(
+    metadata_files: List[Path],
+    pangenome_genome_links: list[GenomePangenomeLink],
+    session: Session,
+):
+    genome_name_to_link = {link.genome.name: link for link in pangenome_genome_links}
+
+    for metadata_file in metadata_files:
+
+        source_name = extract_source_from_metadata_file(metadata_file)
+
+        metadata_source = add_metadata_source_to_db(source_name, session)
+
+        metadatas: List[GenomeInPangenomeMetadata] = []
+        genome_to_metadata_list = parse_metadata_table(
+            metadata_file, disable_track=True
+        )
+
+        for genome_name, metadata_list in genome_to_metadata_list:
+            link = genome_name_to_link.get(genome_name, None)
+            if link:
+                metadatas += create_metadata(link, metadata_list, metadata_source)
+
+        session.add_all(metadatas)
+
+    session.commit()
+
+
+def add_metadata_source_to_db(metadata_source_name: str, session: Session):
+
+    metadata_source = session.exec(
+        select(GenomeInPangenomeMetadataSource).where(
+            (GenomeInPangenomeMetadataSource.name == metadata_source_name)
+        )
+    ).first()
+
+    if metadata_source is None:
+        metadata_source = GenomeInPangenomeMetadataSource(name=metadata_source_name)
+
+        logger.info(f"Adding metadata source '{metadata_source_name}' to the database")
+
+        session.add(metadata_source)
+        session.commit()
+        session.refresh(metadata_source)
+    # else:
+    #     logger.debug(
+    #         f"Metadata source '{metadata_source_name}' already exists in the database"
+    #     )
+
+    return metadata_source
+
+
+def create_metadata(
+    genome_in_pangenome: GenomePangenomeLink,
+    metadata_list: list[MetadataBase],
+    source: GenomeInPangenomeMetadataSource,
+):
+    """ """
+    metadatas: List[GenomeInPangenomeMetadata] = []
+
+    for metadata_input in metadata_list:
+        metadata = GenomeInPangenomeMetadata.model_validate(
+            metadata_input,
+            update={"genome_in_pangenome": genome_in_pangenome, "source": source},
+        )
+        metadatas.append(metadata)
+
+    return metadatas
+
+
+def extract_source_from_metadata_file(metadata_file: Path) -> str:
+    """
+    Extract the source name from a metadata file with a specific naming pattern.
+    """
+
+    prefix = "genomes_metadata_from_"
+    valid_suffixes = {".tsv", ".tsv.gz"}
+
+    filename = metadata_file.name
+    suffix = "".join(metadata_file.suffixes)  # Handles single and multiple suffixes
+
+    if not filename.startswith(prefix) or suffix not in valid_suffixes:
+        raise ValueError(
+            f"Invalid metadata file name '{filename}'. Expected format: '{prefix}<source>.tsv' or '{prefix}<source>.tsv.gz'"
+        )
+
+    source = metadata_file.stem  # Removes the last suffix (.tsv or .gz if present)
+
+    if source.startswith(prefix):
+        source = source[len(prefix) :]  # Remove prefix
+
+    source = source.strip()
+
+    if not source:
+        raise ValueError(
+            f"Metadata file name '{filename}' does not contain a valid source name."
+        )
+
+    return source
 
 
 def link_pangenome_and_genome_taxa(
@@ -348,7 +466,7 @@ def link_pangenome_and_genomes(
     # session.add(pangenome)
     session.add_all(pangenome_genome_links)
 
-    return genomes
+    return genomes, pangenome_genome_links
     # session.commit()
 
     # pangenome_taxon_links = [

@@ -402,8 +402,10 @@ class GenomeMetadataSource(MetadataSourceBase, table=True):
     )
 
 
-class GenomeInPangenomeMetadataSource(MetadataSourceBase, table=True):
+class GenomeInPangenomeMetadataSource(SQLModel, table=True):
 
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(unique=True)
     genome_metadata: list[GenomeInPangenomeMetadata] = Relationship(
         back_populates="source", cascade_delete=True
     )
