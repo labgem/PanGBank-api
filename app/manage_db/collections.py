@@ -26,6 +26,7 @@ from app.models import (
     GenomeInPangenomeMetadataSource,
     MetadataBase,
     GenomeInPangenomeMetadata,
+    TaxonomySource,
 )
 from app.manage_db.genome_metadata import parse_metadata_table
 
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)  # __name__ ensures uniqueness per module
 def create_collection_release(
     collection_input: Collection,
     collection_release_input: CollectionRelease,
+    taxonomy_source: TaxonomySource,
     session: Session,
 ) -> CollectionRelease:
     """
@@ -47,7 +49,9 @@ def create_collection_release(
     - Validates version consistency between the input file and existing database records.
     """
 
-    collection = Collection.model_validate(collection_input)
+    collection = Collection.model_validate(
+        collection_input, update={"taxonomy_source": taxonomy_source}
+    )
 
     statement = select(Collection).where((Collection.name == collection.name))
 

@@ -9,12 +9,18 @@ from app.manage_db.collections import (
     print_collections,
 )
 
-from app.models import CollectionRelease, Collection, Genome, Pangenome
+from app.models import CollectionRelease, Collection, Genome, Pangenome, TaxonomySource
 from sqlmodel import Session, select
 from unittest.mock import patch
 
 import gzip
 from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
+
+
+@pytest.fixture()
+def taxonomy_source():
+    taxonomy_source = TaxonomySource(name="TaxSouce", ranks="Domain;Family;Species")
+    return taxonomy_source
 
 
 @pytest.fixture()
@@ -142,10 +148,11 @@ def test_create_collection_release(
     collection: Collection,
     collection_release: CollectionRelease,
     collection_release2: CollectionRelease,
+    taxonomy_source: TaxonomySource,
 ):
 
     collection_release = create_collection_release(
-        collection, collection_release, session
+        collection, collection_release, taxonomy_source, session
     )
 
     assert collection_release.collection.name == "collection_A"
@@ -160,7 +167,7 @@ def test_create_collection_release(
     assert len(collections) == 1
 
     collection_release = create_collection_release(
-        collection, collection_release2, session
+        collection, collection_release2, taxonomy_source, session
     )
 
     collections = session.exec(select(Collection)).all()
@@ -170,7 +177,7 @@ def test_create_collection_release(
 
     # add again the same release and collection to check if it is not added again
     collection_release = create_collection_release(
-        collection, collection_release2, session
+        collection, collection_release2, taxonomy_source, session
     )
 
     collections = session.exec(select(Collection)).all()
@@ -180,16 +187,19 @@ def test_create_collection_release(
 
 
 def test_create_collection_release_ppanggo_version_mismatch(
-    session: Session, collection: Collection, collection_release: CollectionRelease
+    session: Session,
+    collection: Collection,
+    collection_release: CollectionRelease,
+    taxonomy_source: TaxonomySource,
 ):
 
-    create_collection_release(collection, collection_release, session)
+    create_collection_release(collection, collection_release, taxonomy_source, session)
 
     collection_release.ppanggolin_version = "4.0.0"
 
     with pytest.raises(ValueError):
         collection_release = create_collection_release(
-            collection, collection_release, session
+            collection, collection_release, taxonomy_source, session
         )
 
 
@@ -228,10 +238,13 @@ def test_add_pangenomes_to_db(
 
 
 def test_delete_full_collection(
-    session: Session, collection: Collection, collection_release: CollectionRelease
+    session: Session,
+    collection: Collection,
+    collection_release: CollectionRelease,
+    taxonomy_source: TaxonomySource,
 ):
 
-    create_collection_release(collection, collection_release, session)
+    create_collection_release(collection, collection_release, taxonomy_source, session)
 
     delete_full_collection(session, collection.name)
 
@@ -248,20 +261,26 @@ def test_delete_unexisting_collection(session: Session):
 
 
 def test_delete_unexisting_collection_release(
-    session: Session, collection: Collection, collection_release: CollectionRelease
+    session: Session,
+    collection: Collection,
+    collection_release: CollectionRelease,
+    taxonomy_source: TaxonomySource,
 ):
 
-    create_collection_release(collection, collection_release, session)
+    create_collection_release(collection, collection_release, taxonomy_source, session)
 
     with pytest.raises(ValueError):
         delete_collection_release(session, collection.name, "99999")
 
 
 def test_delete_collection_release(
-    session: Session, collection: Collection, collection_release: CollectionRelease
+    session: Session,
+    collection: Collection,
+    collection_release: CollectionRelease,
+    taxonomy_source: TaxonomySource,
 ):
 
-    create_collection_release(collection, collection_release, session)
+    create_collection_release(collection, collection_release, taxonomy_source, session)
 
     delete_collection_release(session, collection.name, collection_release.version)
 
@@ -273,10 +292,14 @@ def test_delete_collection_release(
 
 
 def test_print_collections(
-    session: Session, collection: Collection, collection_release: CollectionRelease, capsys: pytest.CaptureFixture  # type: ignore
+    session: Session,
+    collection: Collection,
+    collection_release: CollectionRelease,
+    taxonomy_source: TaxonomySource,
+    capsys: pytest.CaptureFixture,  # type: ignore
 ) -> None:
     """Tests if the collection name appears in console output."""
-    create_collection_release(collection, collection_release, session)
+    create_collection_release(collection, collection_release, taxonomy_source, session)
 
     with patch("app.manage_db.collections.Session", return_value=session):
         print_collections()

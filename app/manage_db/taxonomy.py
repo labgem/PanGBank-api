@@ -218,12 +218,10 @@ def link_genomes_and_taxa(
 
 
 def add_taxon_to_db(
-    taxonomy_input: TaxonomySourceInput,
+    taxonomy_source: TaxonomySource,
     lineages: set[tuple[str, ...]],
     session: Session,
 ):
-
-    taxonomy_source = create_taxonomy_source(taxonomy_input, session=session)
 
     ranks = [rank.strip() for rank in taxonomy_source.ranks.split(";")]
 

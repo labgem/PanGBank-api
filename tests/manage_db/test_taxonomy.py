@@ -8,7 +8,7 @@ from app.manage_db.taxonomy import (
     get_common_taxa,
 )
 
-from app.models import TaxonomySourceInput, Taxon, Genome
+from app.models import TaxonomySource, Taxon, Genome
 from sqlmodel import Session, select
 
 
@@ -72,13 +72,14 @@ def test_parse_taxonomy_malformed(malformed_taxonomy_file: Path):
 
 def test_add_taxon_to_db(session: Session):
 
-    taxonomy_source = TaxonomySourceInput(
+    taxonomy_source = TaxonomySource(
         name="GTDB",
         version="24.1",
         ranks="Domain; Phylum; Species",
-        file=Path("taxonomy_tsv_gz"),
     )
 
+    session.add(taxonomy_source)
+    session.commit()
     lineages = {
         ("D1", "P1", "S1a"),
         ("D1", "P1", "S1b"),

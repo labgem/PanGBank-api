@@ -20,6 +20,7 @@ from app.manage_db.taxonomy import (
     add_taxon_to_db,
     link_genomes_and_taxa,
     parse_taxonomy_file,
+    create_taxonomy_source,
 )
 from app.manage_db.utils import (
     parse_collection_release_input_json,
@@ -70,8 +71,10 @@ def add_collection_release(
 
         genome_name_to_genome = add_genomes_to_db(genome_sources, session)
 
+        taxonomy_source = create_taxonomy_source(taxonomy_input, session=session)
+
         name_to_taxon_by_depth = add_taxon_to_db(
-            taxonomy_input,
+            taxonomy_source,
             lineages,
             session,
         )
@@ -86,6 +89,7 @@ def add_collection_release(
         collection_release = create_collection_release(
             collection_input=collection_input,
             collection_release_input=collection_release_input,
+            taxonomy_source=taxonomy_source,
             session=session,
         )
 
