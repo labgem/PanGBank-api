@@ -166,7 +166,8 @@ class CollectionReleaseBase(SQLModel):
         default=None, foreign_key="collection.id", ondelete="CASCADE"
     )
 
-    # RESTRICT: Prevent the deletion of this record (CollectionReleaseBase) if there is a foreign key value by raising an error.
+    # RESTRICT: Prevent the deletion of this record (CollectionReleaseBase)
+    # if there is a foreign key value by raising an error.
     taxonomy_source_id: int | None = Field(
         default=None, foreign_key="taxonomysource.id", ondelete="RESTRICT"
     )
@@ -234,7 +235,8 @@ class Genome(GenomeBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     # version : str | None = None
-    # collection_releases : list[CollectionRelease] = Relationship(back_populates="genomes", link_model=GenomeCollectionReleaseLink)
+    # collection_releases : list[CollectionRelease] = Relationship(back_populates="genomes",
+    # link_model=GenomeCollectionReleaseLink)
 
     taxa: list[Taxon] = Relationship(
         back_populates="genomes", link_model=GenomeTaxonLink

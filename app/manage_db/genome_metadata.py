@@ -27,7 +27,7 @@ app = typer.Typer(no_args_is_help=True)
 def parse_metadata_table(
     file_path: Path,
     disable_track: bool = False,
-) -> Generator[tuple[str, list[MetadataBase]], None, None]:
+) -> Generator[tuple[str, List[MetadataBase]], None, None]:
     """Parse a gzip-compressed TSV and yield rows as dictionaries."""
     proper_open = gzip.open if file_path.name.endswith("gz") else open
     with proper_open(file_path, mode="rt") as tsvfile:
@@ -54,7 +54,7 @@ def parse_metadata_table(
 
 def create_metadata(
     genome_id: int,
-    metadata_list: list[MetadataBase],
+    metadata_list: List[MetadataBase],
     source: GenomeMetadataSource,
 ):
     """ """
@@ -100,7 +100,8 @@ def add_genome_source_to_db(metadata_source: GenomeMetadataSource, session: Sess
 
     if metadata_source_in_db is not None:
         raise ValueError(
-            f"Genome Metadata Source '{metadata_source.name}' version: '{metadata_source.version}' already exists in the database."
+            f"Genome Metadata Source '{metadata_source.name}' "
+            f"version: '{metadata_source.version}' already exists in the database."
         )
 
     session.add(metadata_source)
@@ -187,7 +188,7 @@ def add(
                 session.add_all(metadada_list)
                 session.commit()
                 genome_processed_count = 0
-                metadada_list: List[GenomeMetadata] = []
+                metadada_list = []
 
         logging.info(
             f"Adding final {len(metadada_list)} metadata to the database describing {genome_processed_count} genomes."

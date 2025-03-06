@@ -54,7 +54,8 @@ def create_taxonomy_source(
 
     if taxonomy_source is None:
         logging.info(
-            f"Taxonomy source '{taxonomy_source_input.name}' (version {taxonomy_source_input.version}) not found in the database. Adding it now."
+            f"Taxonomy source '{taxonomy_source_input.name}' "
+            f"(version {taxonomy_source_input.version}) not found in the database. Adding it now."
         )
         taxonomy_source = TaxonomySource.model_validate(taxonomy_source_input)
 
@@ -72,7 +73,8 @@ def create_taxonomy_source(
         ):
             raise ValueError(
                 f"Discrepancy in ranks for taxonomy_source {taxonomy_source}. "
-                f"Existing ranks : {parse_ranks_str(taxonomy_source.ranks)} vs given ranks {parse_ranks_str(taxonomy_source_input.ranks)}"
+                f"Existing ranks : {parse_ranks_str(taxonomy_source.ranks)} "
+                f"vs given ranks {parse_ranks_str(taxonomy_source_input.ranks)}"
             )
 
         logging.info(
