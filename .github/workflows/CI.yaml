@@ -41,7 +41,7 @@ jobs:
           key: venv-${{ hashFiles('poetry.lock') }}
 
       - name: Install the project dependencies
-        run: poetry install
+        run: poetry install --extras=dev
 
       - name: Run flake8 (code style and linting)
         run: |
