@@ -29,7 +29,7 @@ def metadata_source_file():
 @pytest.fixture
 def metadata_file():
     """Creates a temporary TSV metadata file for testing."""
-    header = "Genome\tFeature1\tFeature2\n"
+    header = "genomes\tFeature1\tFeature2\n"
     rows = [
         f"Genome_{i}\t{round(random.uniform(1, 10), 2)}\t{round(random.uniform(10, 20), 2)}\n"
         for i in range(1, 6)

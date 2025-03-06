@@ -118,8 +118,9 @@ name\tfile_name\tmd5_sum
 GenomeA\tgenomic.gbff.gz\t3e8884a3ecbd47ab0573ba68257dcdb0
 GenomeB\tgenomic.gbff.gz\td0365cda22933ded5864dddfd2aed96f
 """
-    genomes_md5sum = pangenome_dir / "genomes_md5sum.tsv"
-    genomes_md5sum.write_text(genomes_md5sum_content)
+    genomes_md5sum = pangenome_dir / "genomes_md5sum.tsv.gz"
+    with gzip.open(genomes_md5sum, "wt", encoding="utf-8") as f:
+        f.write(genomes_md5sum_content)
 
     # Create and write to `genomes_statistics.tsv.gz`
     genomes_statistics_content = """\
