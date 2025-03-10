@@ -66,19 +66,17 @@ def test_get_collections(
     assert data[0]["name"] == collection_1.name
     assert data[1]["name"] == collection_2.name
 
-    assert len(data[0]["collection_releases"]) == 1
-    assert len(data[1]["collection_releases"]) == 1
+    assert len(data[0]["releases"]) == 1
+    assert len(data[1]["releases"]) == 1
 
-    assert data[0]["collection_releases"][0]["version"] == release1.version
-    assert data[1]["collection_releases"][0]["version"] == release2.version
+    assert data[0]["releases"][0]["version"] == release1.version
+    assert data[1]["releases"][0]["version"] == release2.version
 
     assert (
-        data[0]["collection_releases"][0]["pangenomes_directory"]
-        == release1.pangenomes_directory
+        data[0]["releases"][0]["pangenomes_directory"] == release1.pangenomes_directory
     )
     assert (
-        data[1]["collection_releases"][0]["pangenomes_directory"]
-        == release2.pangenomes_directory
+        data[1]["releases"][0]["pangenomes_directory"] == release2.pangenomes_directory
     )
 
 

@@ -556,7 +556,7 @@ def print_collections():
             table.add_column("Pangenomes", justify="right")
             table.add_column("Note", style="dim")
 
-            for collection_release in collection.collection_releases:
+            for collection_release in collection.releases:
                 table.add_row(
                     str(collection_release.version),
                     str(len(collection_release.pangenomes)),

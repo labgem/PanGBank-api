@@ -2,6 +2,8 @@ from typing import List, Sequence
 
 from sqlmodel import Session, select
 
+from packaging.version import parse
+
 from app.crud.common import FilterCollection
 from app.models import (
     Collection,
@@ -30,8 +32,7 @@ def get_collections(
     for collection in collections:
 
         public_releases: List[CollectionReleasePublicWithCount] = []
-        for release in collection.collection_releases:
-            print(release.pangenomes)
+        for release in collection.releases:
 
             release_public = CollectionReleasePublicWithCount.model_validate(
                 release,
@@ -40,10 +41,19 @@ def get_collections(
             )
             public_releases.append(release_public)
 
+        # Sort using semantic versioning
+        public_releases = sorted(
+            public_releases, key=lambda x: parse(x.version), reverse=True
+        )
+
+        # Mark the latest release
+        if public_releases:
+            public_releases[0].latest = True
+
         collection_public = CollectionPublicWithReleases.model_validate(
             collection,
             from_attributes=True,
-            update={"collection_releases": public_releases},
+            update={"releases": public_releases},
         )
 
         public_collections.append(collection_public)

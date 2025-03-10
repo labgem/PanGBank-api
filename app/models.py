@@ -90,7 +90,7 @@ class CollectionBase(SQLModel):
 class Collection(CollectionBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    collection_releases: list["CollectionRelease"] = Relationship(
+    releases: list["CollectionRelease"] = Relationship(
         back_populates="collection", cascade_delete=True
     )
 
@@ -101,7 +101,7 @@ class CollectionPublic(CollectionBase):
 
 class CollectionPublicWithReleases(CollectionPublic):
 
-    collection_releases: list["CollectionReleasePublicWithCount"]
+    releases: list["CollectionReleasePublicWithCount"]
 
 
 class TaxonomySourceBase(SQLModel):
@@ -176,7 +176,7 @@ class CollectionReleaseBase(SQLModel):
 class CollectionRelease(CollectionReleaseBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    collection: "Collection" = Relationship(back_populates="collection_releases")
+    collection: "Collection" = Relationship(back_populates="releases")
 
     taxonomy_source: "TaxonomySource" = Relationship(
         back_populates="collection_releases"
@@ -193,6 +193,7 @@ class CollectionReleasePublic(CollectionReleaseBase):
 
 class CollectionReleasePublicWithCount(CollectionReleasePublic):
     pangenome_count: int
+    latest: bool = False
 
 
 class TaxonBase(SQLModel):
