@@ -7,7 +7,7 @@ from httpx import Response
 from sqlmodel import Session
 
 
-from app.models import Collection, CollectionRelease
+from app.models import Collection, CollectionRelease, TaxonomySource
 from tests.mock_session import session_fixture, client_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
@@ -41,13 +41,24 @@ def create_collection_release(
 def test_get_collections(
     session: Session, client: TestClient, collection_release_data: dict[str, Any]
 ):
-
+    taxonomy_source = TaxonomySource(
+        name="Taxonomy Source 1",
+        ranks="Domain; Phylum; Class; Order; Family; Genus; Species",
+    )
     collection_1 = Collection(name="Collection 1")
     collection_2 = Collection(name="Collection 2")
 
-    release1 = CollectionRelease(**collection_release_data, collection=collection_1)
+    release1 = CollectionRelease(
+        **collection_release_data,
+        collection=collection_1,
+        taxonomy_source=taxonomy_source,
+    )
 
-    release2 = CollectionRelease(**collection_release_data, collection=collection_2)
+    release2 = CollectionRelease(
+        **collection_release_data,
+        collection=collection_2,
+        taxonomy_source=taxonomy_source,
+    )
 
     session.add(release1)
     session.add(release2)
