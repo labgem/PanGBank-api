@@ -307,7 +307,7 @@ def test_print_collections(
     """Tests if the collection name appears in console output."""
     create_collection_release(collection, collection_release, taxonomy_source, session)
 
-    with patch("app.manage_db.collections.Session", return_value=session):
+    with patch("pangbank_api.manage_db.collections.Session", return_value=session):
         print_collections()
 
     captured = capsys.readouterr()  # type: ignore

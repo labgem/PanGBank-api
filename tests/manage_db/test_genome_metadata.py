@@ -54,20 +54,24 @@ def test_add_genome_metadata(
 
     # Mock get_all_genomes_in_pangenome to return the same genomes we inserted
     with patch(
-        "app.manage_db.genome_metadata.get_all_genomes_in_pangenome",
+        "pangbank_api.manage_db.genome_metadata.get_all_genomes_in_pangenome",
         return_value=genomes,
     ):
-        with patch("app.manage_db.genome_metadata.Session", return_value=session):
-            with patch("app.manage_db.genome_metadata.create_db_and_tables"):
+        with patch(
+            "pangbank_api.manage_db.genome_metadata.Session", return_value=session
+        ):
+            with patch("pangbank_api.manage_db.genome_metadata.create_db_and_tables"):
                 add(Path(metadata_source_file), Path(metadata_file))
 
     # Try adding the same metadata source again
     with patch(
-        "app.manage_db.genome_metadata.get_all_genomes_in_pangenome",
+        "pangbank_api.manage_db.genome_metadata.get_all_genomes_in_pangenome",
         return_value=genomes,
     ):
-        with patch("app.manage_db.genome_metadata.Session", return_value=session):
-            with patch("app.manage_db.genome_metadata.create_db_and_tables"):
+        with patch(
+            "pangbank_api.manage_db.genome_metadata.Session", return_value=session
+        ):
+            with patch("pangbank_api.manage_db.genome_metadata.create_db_and_tables"):
                 with pytest.raises(ValueError):
                     add(Path(metadata_source_file), Path(metadata_file))
 
@@ -78,8 +82,8 @@ def test_add_genome_metadata(
     metadata = session.exec(select(GenomeMetadataSource)).all()
     assert len(metadata) == 1
 
-    with patch("app.manage_db.genome_metadata.Session", return_value=session):
-        with patch("app.manage_db.genome_metadata.create_db_and_tables"):
+    with patch("pangbank_api.manage_db.genome_metadata.Session", return_value=session):
+        with patch("pangbank_api.manage_db.genome_metadata.create_db_and_tables"):
             delete("DB_A", "2.6.0")
 
     metadata = session.exec(select(GenomeMetadataSource)).all()
@@ -87,8 +91,8 @@ def test_add_genome_metadata(
 
 
 def test_delete_unexisiting_genome_metadata(session: Session):
-    with patch("app.manage_db.genome_metadata.Session", return_value=session):
-        with patch("app.manage_db.genome_metadata.create_db_and_tables"):
+    with patch("pangbank_api.manage_db.genome_metadata.Session", return_value=session):
+        with patch("pangbank_api.manage_db.genome_metadata.create_db_and_tables"):
             with pytest.raises(ValueError):
                 delete("UNEXISTING_SOURCE")
 
@@ -101,7 +105,7 @@ def test_list_metadata_source(
     session.add(source)
     session.commit()
 
-    with patch("app.manage_db.genome_metadata.Session", return_value=session):
+    with patch("pangbank_api.manage_db.genome_metadata.Session", return_value=session):
         list()
 
     captured = capsys.readouterr()  # type: ignore
@@ -113,7 +117,7 @@ def test_list_metadata_source_empty_db(
     session: Session, capsys: pytest.CaptureFixture  # type: ignore
 ):
 
-    with patch("app.manage_db.genome_metadata.Session", return_value=session):
+    with patch("pangbank_api.manage_db.genome_metadata.Session", return_value=session):
         list()
 
     captured = capsys.readouterr()  # type: ignore
