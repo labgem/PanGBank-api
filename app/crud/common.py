@@ -11,7 +11,7 @@ class PaginationParams(BaseModel):
 
 
 class FilterCollection(BaseModel):
-    collection_release_id: int | None = None
+    collection_id: int | None = None
 
 
 class FilterGenome(BaseModel):

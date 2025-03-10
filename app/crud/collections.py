@@ -1,15 +1,16 @@
 from typing import List, Sequence
 
 from sqlmodel import Session, select
-
+from sqlalchemy.orm import joinedload, selectinload
 from packaging.version import parse
 
 from app.crud.common import FilterCollection
 from app.models import (
     Collection,
-    CollectionRelease,
     CollectionReleasePublicWithCount,
     CollectionPublicWithReleases,
+    TaxonomySource,
+    CollectionRelease,
 )
 
 
@@ -20,11 +21,9 @@ def get_collections(
     query = select(Collection)
 
     # Check if filter_params.collection_release_id is provided
-    if filter_params.collection_release_id is not None:
+    if filter_params.collection_id is not None:
 
-        query = query.join(CollectionRelease).where(
-            CollectionRelease.id == filter_params.collection_release_id
-        )
+        query = query.where(Collection.id == filter_params.collection_id)
 
     collections = session.exec(query).all()
 

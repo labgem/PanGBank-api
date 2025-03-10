@@ -189,6 +189,7 @@ class CollectionRelease(CollectionReleaseBase, table=True):
 
 class CollectionReleasePublic(CollectionReleaseBase):
     id: int
+    taxonomy_source: TaxonomySourcePublic
 
 
 class CollectionReleasePublicWithCount(CollectionReleasePublic):
