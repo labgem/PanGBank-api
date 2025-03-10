@@ -261,7 +261,11 @@ def add_pangenomes_to_db(
     ):
 
         pangenome_file = pangenome_dir / "pangenome.h5"
-        genomes_md5sum_file = pangenome_dir / "genomes_md5sum.tsv.gz"
+        genomes_md5sum_file = (
+            pangenome_dir / "genomes_md5sum.tsv.gz"
+            if (pangenome_dir / "genomes_md5sum.tsv.gz").exists()
+            else pangenome_dir / "genomes_md5sum.tsv"
+        )
         pangenome_info_file = pangenome_dir / "info.yaml"
         genomes_statistics_file = pangenome_dir / "genomes_statistics.tsv.gz"
 
