@@ -11,9 +11,9 @@ from rich.progress import track
 from sqlmodel import Session, select
 from typing_extensions import Annotated
 
-from app.database import create_db_and_tables, engine
-from app.manage_db.utils import check_and_read_json_file, set_up_logging_config
-from app.models import (
+from pangbank_api.database import create_db_and_tables, engine
+from pangbank_api.manage_db.utils import check_and_read_json_file, set_up_logging_config
+from pangbank_api.models import (
     Genome,
     GenomeMetadata,
     MetadataBase,

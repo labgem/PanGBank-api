@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from app.models import (
+from pangbank_api.models import (
     Genome,
     GenomeInPangenomeMetadata,
     GenomeInPangenomeMetadataSource,
@@ -95,4 +95,3 @@ def test_genome_in_pangenome_uniqness(
     session.add(genome_pangenome_link_duplicate)
     with pytest.raises(Exception):
         session.commit()
-        

@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 import pytest
-from app.manage_db.collections import (
+from pangbank_api.manage_db.collections import (
     create_collection_release,
     add_pangenomes_to_db,
     delete_full_collection,
@@ -9,7 +9,13 @@ from app.manage_db.collections import (
     print_collections,
 )
 
-from app.models import CollectionRelease, Collection, Genome, Pangenome, TaxonomySource
+from pangbank_api.models import (
+    CollectionRelease,
+    Collection,
+    Genome,
+    Pangenome,
+    TaxonomySource,
+)
 from sqlmodel import Session, select
 from unittest.mock import patch
 

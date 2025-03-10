@@ -6,7 +6,7 @@ import typer
 from rich.progress import Progress, track
 from sqlmodel import Session, select
 
-from app.models import (
+from pangbank_api.models import (
     Genome,
     GenomeTaxonLink,
     Taxon,

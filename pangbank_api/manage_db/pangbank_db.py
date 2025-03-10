@@ -6,23 +6,23 @@ import typer
 from sqlmodel import Session
 from typing_extensions import Annotated
 
-from app.database import create_db_and_tables, engine
-from app.manage_db.collections import (
+from pangbank_api.database import create_db_and_tables, engine
+from pangbank_api.manage_db.collections import (
     add_pangenomes_to_db,
     create_collection_release,
     delete_collection_release,
     delete_full_collection,
     print_collections,
 )
-from app.manage_db.genome_metadata import app as genome_metadata_app
-from app.manage_db.genomes import add_genomes_to_db
-from app.manage_db.taxonomy import (
+from pangbank_api.manage_db.genome_metadata import app as genome_metadata_app
+from pangbank_api.manage_db.genomes import add_genomes_to_db
+from pangbank_api.manage_db.taxonomy import (
     add_taxon_to_db,
     link_genomes_and_taxa,
     parse_taxonomy_file,
     create_taxonomy_source,
 )
-from app.manage_db.utils import (
+from pangbank_api.manage_db.utils import (
     parse_collection_release_input_json,
     set_up_logging_config,
 )

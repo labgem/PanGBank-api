@@ -5,7 +5,7 @@ from pathlib import Path
 import typer
 from rich.logging import RichHandler
 
-from app.models import CollectionReleaseInput
+from pangbank_api.models import CollectionReleaseInput
 
 
 def check_and_read_json_file(input_json_file: Path):

@@ -3,7 +3,7 @@ from typing import Any, Dict
 import pytest
 from sqlmodel import Session
 
-from app.models import (
+from pangbank_api.models import (
     Genome,
     GenomePangenomeLink,
     Pangenome,

@@ -4,14 +4,15 @@ from typing import Iterator, Sequence
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from app.crud.common import FilterPangenome, PaginationParams, get_taxonomies_from_taxa
-from app.models import (
+from pangbank_api.crud.common import FilterPangenome, PaginationParams, get_taxonomies_from_taxa
+from pangbank_api.models import (
     Genome,
     GenomePangenomeLink,
     Pangenome,
     PangenomePublic,
     PangenomeTaxonLink,
     Taxon,
+    CollectionRelease,
 )
 
 
@@ -62,10 +63,10 @@ def get_pangenomes(
             Pangenome.collection_release_id == filter_params.collection_release_id
         )
 
-    # if filter_params.collection_id is not None:
-    #     query = query.join(CollectionRelease).where(
-    #         CollectionRelease.collection_id == filter_params.collection_id
-    #     )
+    if filter_params.collection_id is not None:
+        query = query.join(CollectionRelease).where(
+            CollectionRelease.collection_id == filter_params.collection_id
+        )
 
     if filter_params.genome_name is not None:
         query = (

@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.models import (
+from pangbank_api.models import (
     CollectionRelease,
     Pangenome,
     Taxon,

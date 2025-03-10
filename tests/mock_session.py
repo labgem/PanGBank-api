@@ -3,8 +3,8 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
-from app.dependencies import get_session
-from app.main import app
+from pangbank_api.dependencies import get_session
+from pangbank_api.main import app
 
 
 @pytest.fixture(name="session")

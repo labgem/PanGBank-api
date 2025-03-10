@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.crud import genomes as genomes_crud
-from app.crud.common import FilterGenome, PaginationParams
-from app.dependencies import SessionDep
-from app.models import GenomePublicWithTaxonomies
+from pangbank_api.crud import genomes as genomes_crud
+from pangbank_api.crud.common import FilterGenome, PaginationParams
+from pangbank_api.dependencies import SessionDep
+from pangbank_api.models import GenomePublicWithTaxonomies
 
 router = APIRouter(
     tags=["genomes"],

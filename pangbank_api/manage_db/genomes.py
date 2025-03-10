@@ -5,7 +5,7 @@ from typing import List
 from rich.progress import track
 from sqlmodel import Session, select
 
-from app.models import Genome, GenomeSource, GenomeSourceInput
+from pangbank_api.models import Genome, GenomeSource, GenomeSourceInput
 
 
 def create_genomes(

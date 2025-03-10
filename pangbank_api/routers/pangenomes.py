@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
-from app.crud import pangenomes as pangenomes_crud
-from app.crud.common import FilterPangenome, PaginationParams
+from pangbank_api.crud import pangenomes as pangenomes_crud
+from pangbank_api.crud.common import FilterPangenome, PaginationParams
 
 from ..dependencies import SessionDep
 from ..models import PangenomePublic

@@ -1,14 +1,14 @@
 import pytest
 import gzip
 from pathlib import Path
-from app.manage_db.taxonomy import (
+from pangbank_api.manage_db.taxonomy import (
     parse_taxonomy_file,
     add_taxon_to_db,
     link_genomes_and_taxa,
     get_common_taxa,
 )
 
-from app.models import TaxonomySource, Taxon, Genome
+from pangbank_api.models import TaxonomySource, Taxon, Genome
 from sqlmodel import Session, select
 
 

@@ -4,8 +4,8 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import joinedload, selectinload
 from packaging.version import parse
 
-from app.crud.common import FilterCollection
-from app.models import (
+from pangbank_api.crud.common import FilterCollection
+from pangbank_api.models import (
     Collection,
     CollectionReleasePublicWithCount,
     CollectionPublicWithReleases,

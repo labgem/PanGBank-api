@@ -1,8 +1,8 @@
 from sqlmodel import Session
 
-from app.crud.common import FilterPangenome, PaginationParams
-from app.crud.pangenomes import get_pangenomes
-from app.models import Pangenome
+from pangbank_api.crud.common import FilterPangenome, PaginationParams
+from pangbank_api.crud.pangenomes import get_pangenomes
+from pangbank_api.models import Pangenome
 from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 from tests.mock_data import mock_data, pangenome_metric_data, genome_in_pangenome_metric_data  # type: ignore # noqa: F401 # pylint: disable=unused-import
 

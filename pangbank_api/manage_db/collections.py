@@ -11,9 +11,9 @@ from rich.progress import track
 from rich.table import Table
 from sqlmodel import Session, select
 
-from app.database import engine
-from app.manage_db.taxonomy import get_common_taxa
-from app.models import (
+from pangbank_api.database import engine
+from pangbank_api.manage_db.taxonomy import get_common_taxa
+from pangbank_api.models import (
     Collection,
     CollectionRelease,
     Genome,
@@ -28,7 +28,7 @@ from app.models import (
     GenomeInPangenomeMetadata,
     TaxonomySource,
 )
-from app.manage_db.genome_metadata import parse_metadata_table
+from pangbank_api.manage_db.genome_metadata import parse_metadata_table
 
 
 logger = logging.getLogger(__name__)  # __name__ ensures uniqueness per module

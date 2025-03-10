@@ -3,7 +3,7 @@ import pytest
 import json
 from pathlib import Path
 import typer
-from app.manage_db.utils import parse_collection_release_input_json
+from pangbank_api.manage_db.utils import parse_collection_release_input_json
 
 
 @pytest.fixture

@@ -5,7 +5,8 @@ description = "Source code to PanGBank API"
 authors = ["JeanMainguy <jean.mainguy@outlook.fr>"]
 readme = "README.md"
 packages = [
-    { include = "app" }
+    { include = "pangbank_api" },
+    { include = "tests" }
 ]
 
 [tool.poetry.dependencies]

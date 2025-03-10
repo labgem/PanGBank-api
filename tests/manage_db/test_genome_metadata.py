@@ -1,5 +1,5 @@
-from app.manage_db.genome_metadata import add, delete, list
-from app.models import Genome, GenomeMetadata, GenomeMetadataSource
+from pangbank_api.manage_db.genome_metadata import add, delete, list
+from pangbank_api.models import Genome, GenomeMetadata, GenomeMetadataSource
 
 import pytest
 import tempfile

@@ -3,8 +3,8 @@ from sqlmodel import Session, select
 
 from pathlib import Path
 
-from app.manage_db.genomes import add_genomes_to_db
-from app.models import Genome, GenomeSourceInput
+from pangbank_api.manage_db.genomes import add_genomes_to_db
+from pangbank_api.models import Genome, GenomeSourceInput
 
 from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.crud import collections as collections_crud
-from app.crud.common import FilterCollection
+from pangbank_api.crud import collections as collections_crud
+from pangbank_api.crud.common import FilterCollection
 
 from ..dependencies import SessionDep
 from ..models import Collection, CollectionPublicWithReleases
