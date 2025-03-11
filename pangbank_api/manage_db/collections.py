@@ -1,4 +1,3 @@
-from calendar import c
 import csv
 import gzip
 import logging

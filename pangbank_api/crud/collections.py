@@ -1,7 +1,6 @@
 from typing import List, Sequence
 
 from sqlmodel import Session, select
-from sqlalchemy.orm import joinedload, selectinload
 from packaging.version import parse
 
 from pangbank_api.crud.common import FilterCollection
@@ -9,8 +8,6 @@ from pangbank_api.models import (
     Collection,
     CollectionReleasePublicWithCount,
     CollectionPublicWithReleases,
-    TaxonomySource,
-    CollectionRelease,
 )
 
 
@@ -36,7 +33,10 @@ def get_collections(
             release_public = CollectionReleasePublicWithCount.model_validate(
                 release,
                 from_attributes=True,
-                update={"pangenome_count": len(release.pangenomes)},
+                update={
+                    "pangenome_count": len(release.pangenomes),
+                    "collection_name": collection.name,
+                },
             )
             public_releases.append(release_public)
 

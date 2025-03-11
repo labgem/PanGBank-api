@@ -13,6 +13,7 @@ from pangbank_api.models import (
     PangenomeTaxonLink,
     Taxon,
     CollectionRelease,
+    CollectionReleasePublic,
 )
 
 
@@ -43,10 +44,21 @@ def get_public_pangenome(pangenome: Pangenome) -> PangenomePublic:
     taxonomies = get_taxonomies_from_taxa(pangenome.taxa)
     assert len(taxonomies) == 1
 
-    pangenome_public = PangenomePublic.model_validate(
-        pangenome, from_attributes=True, update={"taxonomy": taxonomies[0]}
+    collection_release_public = CollectionReleasePublic.model_validate(
+        pangenome.collection_release,
+        from_attributes=True,
+        update={
+            "collection_name": pangenome.collection_release.collection.name,
+        },
     )
-
+    pangenome_public = PangenomePublic.model_validate(
+        pangenome,
+        from_attributes=True,
+        update={
+            "taxonomy": taxonomies[0],
+            "collection_release": collection_release_public,
+        },
+    )
     return pangenome_public
 
 
