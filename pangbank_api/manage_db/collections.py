@@ -1,3 +1,4 @@
+from calendar import c
 import csv
 import gzip
 import logging
@@ -63,9 +64,7 @@ def create_collection_release(
         collection = collection_from_db
         logger.info(f"Collection {collection.name} already exists in DB")
 
-    collection_release = CollectionRelease.model_validate(
-        collection_release_input, update={"taxonomy_source": taxonomy_source}
-    )
+    collection_release = CollectionRelease.model_validate(collection_release_input)
 
     statement = (
         select(CollectionRelease)
@@ -84,6 +83,7 @@ def create_collection_release(
             f"Adding a new collection release to DB: {collection.name}:{collection_release.version}"
         )
         collection_release.collection = collection
+        collection_release.taxonomy_source = taxonomy_source
 
         session.add(collection_release)
         session.commit()

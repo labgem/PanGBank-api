@@ -198,14 +198,25 @@ def test_create_collection_release_ppanggo_version_mismatch(
     collection_release: CollectionRelease,
     taxonomy_source: TaxonomySource,
 ):
+    collection_release_with_version_mismatch = CollectionRelease(
+        version="1.0",
+        date=datetime(2021, 1, 1),
+        ppanggolin_version="4.0.0",
+        pangbank_wf_version="1.0.0",
+        release_note="This is the first release of the collection",
+        mash_sketch="mash_sketch/families_persistent_all.msh",
+        mash_version="2.3",
+        pangenomes_directory="pangenomes",
+    )
 
     create_collection_release(collection, collection_release, taxonomy_source, session)
 
-    collection_release.ppanggolin_version = "4.0.0"
-
     with pytest.raises(ValueError):
         collection_release = create_collection_release(
-            collection, collection_release, taxonomy_source, session
+            collection,
+            collection_release_with_version_mismatch,
+            taxonomy_source,
+            session,
         )
 
 
@@ -223,7 +234,7 @@ def test_add_pangenomes_to_db(
         "GenomeB": genome_b,
     }
 
-    session.add_all([genome_a, genome_b])
+    session.add_all([genome_a, genome_b, collection_release])
     session.commit()
 
     pangenomes = add_pangenomes_to_db(
