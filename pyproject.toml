@@ -6,7 +6,6 @@ authors = ["JeanMainguy <jean.mainguy@outlook.fr>"]
 readme = "README.md"
 packages = [
     { include = "pangbank_api" },
-    { include = "tests" }
 ]
 
 [tool.poetry.dependencies]
@@ -17,7 +16,7 @@ typer = "^0.15.1"
 pyyaml = "^6.0.2"
 
 [tool.poetry.scripts]
-pangbank_db = "app.manage_db.pangbank_db:cli"
+pangbank_db = "pangbank_api.manage_db.pangbank_db:cli"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"

@@ -49,9 +49,7 @@ def create_collection_release(
     - Validates version consistency between the input file and existing database records.
     """
 
-    collection = Collection.model_validate(
-        collection_input, update={"taxonomy_source": taxonomy_source}
-    )
+    collection = Collection.model_validate(collection_input)
 
     statement = select(Collection).where((Collection.name == collection.name))
 
@@ -65,7 +63,9 @@ def create_collection_release(
         collection = collection_from_db
         logger.info(f"Collection {collection.name} already exists in DB")
 
-    collection_release = CollectionRelease.model_validate(collection_release_input)
+    collection_release = CollectionRelease.model_validate(
+        collection_release_input, update={"taxonomy_source": taxonomy_source}
+    )
 
     statement = (
         select(CollectionRelease)
