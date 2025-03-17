@@ -19,9 +19,9 @@ PanGBank is an API designed to manage a database of pangenomes. Built with **Fas
    pip install -r requirements.txt
    ```
 
-3. Run the API:
+3. Run the API in development mode:
    ```bash
-   fastapi dev app/main.py
+   fastapi dev pangbank_api/main.py
    ```
 
 ### Manage the database
