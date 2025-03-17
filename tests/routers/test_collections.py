@@ -83,13 +83,7 @@ def test_get_collections(
     assert data[0]["releases"][0]["version"] == release1.version
     assert data[1]["releases"][0]["version"] == release2.version
 
-    assert (
-        data[0]["releases"][0]["pangenomes_directory"] == release1.pangenomes_directory
-    )
-    assert (
-        data[1]["releases"][0]["pangenomes_directory"] == release2.pangenomes_directory
-    )
-
+    assert "pangenomes_directory" not in data[0]["releases"][0]
 
 def test_get_collection(session: Session, client: TestClient):
 

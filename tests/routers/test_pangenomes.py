@@ -13,6 +13,7 @@ from pangbank_api.models import (
     Pangenome,
     Taxon,
     TaxonomySource,
+    Collection,
 )
 from tests.mock_session import session_fixture, client_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
@@ -38,7 +39,12 @@ def create_collection_release(
     session: Session, collection_release_data: dict[str, Any]
 ) -> CollectionRelease:
     release = CollectionRelease(**collection_release_data)
+    collection = Collection(
+        name="Collection 1",
+    )
+    release.collection = collection
     session.add(release)
+    session.add(collection)
     session.commit()
     session.refresh(release)
     return release
@@ -122,8 +128,7 @@ def test_get_pangenomes(client: TestClient, test_data: None):
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 2
-    assert data[0]["file_name"] == "PangenomeOne.h5"
-    assert data[1]["file_name"] == "PangenomeTwo.h5"
+    assert data[0]["genome_count"] == 50
 
 
 def test_get_existing_pangenome(client: TestClient, test_data: None):
@@ -132,7 +137,7 @@ def test_get_existing_pangenome(client: TestClient, test_data: None):
     response = client.get("/pangenomes/1")
     assert response.status_code == 200
     data = response.json()
-    assert data["file_name"] == "PangenomeOne.h5"
+    assert data["genome_count"] == 50
 
 
 def test_get_non_existing_pangenome(client: TestClient):
