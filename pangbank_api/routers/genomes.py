@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from pangbank_api.crud import genomes as genomes_crud
-from pangbank_api.crud.common import FilterGenome, PaginationParams
+from pangbank_api.crud.common import FilterGenomeTaxon, PaginationParams
 from pangbank_api.dependencies import SessionDep
 from pangbank_api.models import GenomePublicWithTaxonomies
 
@@ -14,7 +14,7 @@ router = APIRouter(
 @router.get("/genomes/", response_model=list[GenomePublicWithTaxonomies])
 async def read_genomes(
     session: SessionDep,
-    filter_params: FilterGenome = Depends(),
+    filter_params: FilterGenomeTaxon = Depends(),
     pagination_params: PaginationParams = Depends(),
 ):
 

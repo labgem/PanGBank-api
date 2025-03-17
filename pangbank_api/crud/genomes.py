@@ -1,7 +1,11 @@
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from pangbank_api.crud.common import FilterGenome, PaginationParams, get_taxonomies_from_taxa
+from pangbank_api.crud.common import (
+    FilterGenomeTaxon,
+    PaginationParams,
+    get_taxonomies_from_taxa,
+)
 from pangbank_api.models import Genome, GenomePublicWithTaxonomies, GenomeTaxonLink, Taxon
 
 
@@ -40,7 +44,7 @@ def get_genome_by_name(
 
 def get_genomes(
     session: Session,
-    filter_params: FilterGenome,
+    filter_params: FilterGenomeTaxon,
     pagination_params: PaginationParams | None,
 ) -> list[GenomePublicWithTaxonomies]:
 

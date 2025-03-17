@@ -15,16 +15,28 @@ class FilterCollection(BaseModel):
     collection_release_id: int | None = None
 
 
-class FilterGenome(BaseModel):
-
-    genome_name: str | None = None
+class FilterTaxon(BaseModel):
 
     taxon_name: str | None = None
 
     substring_match: bool = False
 
 
-class FilterPangenome(FilterGenome, FilterCollection):
+class FilterGenome(BaseModel):
+
+    genome_name: str | None = None
+
+
+class FilterGenomeTaxon(FilterGenome, FilterTaxon):
+
+    genome_name: str | None = None
+
+
+class FilterCollectionTaxonGenome(
+    FilterCollection,
+    FilterTaxon,
+    FilterGenome,
+):
     pass
 
 

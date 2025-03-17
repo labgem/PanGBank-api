@@ -4,7 +4,12 @@ from typing import Iterator, Sequence
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from pangbank_api.crud.common import FilterPangenome, PaginationParams, get_taxonomies_from_taxa
+from pangbank_api.crud.common import (
+    FilterCollectionTaxonGenome,
+    PaginationParams,
+    FilterGenome,
+    get_taxonomies_from_taxa,
+)
 from pangbank_api.models import (
     Genome,
     GenomePangenomeLink,
@@ -64,7 +69,7 @@ def get_public_pangenome(pangenome: Pangenome) -> PangenomePublic:
 
 def get_pangenomes(
     session: Session,
-    filter_params: FilterPangenome,
+    filter_params: FilterCollectionTaxonGenome,
     pagination_params: PaginationParams | None = None,
 ) -> Sequence[Pangenome]:
 
@@ -109,7 +114,7 @@ def get_pangenomes(
 
 def get_public_pangenomes(
     session: Session,
-    filter_params: FilterPangenome,
+    filter_params: FilterCollectionTaxonGenome,
     pagination_params: PaginationParams | None = None,
 ) -> Iterator[PangenomePublic]:
 
@@ -118,3 +123,25 @@ def get_public_pangenomes(
     public_pangenomes = (get_public_pangenome(pangenome) for pangenome in pangenomes)
 
     return public_pangenomes
+
+
+def get_pangenome_with_genomes_info(
+    session: Session,
+    pangenome_id: int,
+    filter_params: FilterGenome,
+    pagination_params: PaginationParams | None = None,
+):
+
+    query = (
+        select(GenomePangenomeLink)
+        .distinct()
+        .join(Pangenome)
+        .where(Pangenome.id == pangenome_id)
+    )
+
+    if pagination_params:
+        query = query.offset(pagination_params.offset).limit(pagination_params.limit)
+
+    pangenome_genomes_links = session.exec(query).all()
+
+    return pangenome_genomes_links

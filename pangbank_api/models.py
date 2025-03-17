@@ -435,3 +435,11 @@ class CollectionReleaseInput(BaseModel):
     release: CollectionRelease
     taxonomy: TaxonomySourceInput
     genome_sources: list[GenomeSourceInput] = Field(default_factory=list)
+
+
+class GenomePangenomeLinkPublic(GenomeInPangenomeMetric):
+    genome_id: int
+    pangenome_id: int
+
+    genome_file_md5sum: str
+    genome_file_name: str
