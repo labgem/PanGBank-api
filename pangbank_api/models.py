@@ -155,10 +155,9 @@ class CollectionReleaseBase(SQLModel):
 
     ppanggolin_version: str
     pangbank_wf_version: str
-    pangenomes_directory: str
+
     release_note: str
 
-    mash_sketch: str
     mash_version: str
 
     date: datetime
@@ -176,6 +175,8 @@ class CollectionReleaseBase(SQLModel):
 class CollectionRelease(CollectionReleaseBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
+    mash_sketch: str
+    pangenomes_directory: str
     collection: "Collection" = Relationship(back_populates="releases")
 
     taxonomy_source: "TaxonomySource" = Relationship(
@@ -261,7 +262,7 @@ class GenomePublic(GenomeBase):
 
 
 class GenomePublicWithTaxonomies(GenomePublic):
-    taxonomies: list["Taxonomy"]
+    taxonomies: list["TaxonomyPublic"]
 
 
 class PangenomeMetric(SQLModel):
@@ -303,13 +304,14 @@ class PangenomeMetric(SQLModel):
 
 
 class PangenomeBase(PangenomeMetric):
-    file_name: str
     annotation_source: str | None = None
 
 
 class Pangenome(PangenomeBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
+
+    file_name: str
 
     collection_release_id: int | None = Field(
         default=None, foreign_key="collectionrelease.id"
@@ -331,7 +333,7 @@ class PangenomePublic(PangenomeBase):
 
     collection_release: CollectionReleasePublic
 
-    taxonomy: "Taxonomy"
+    taxonomy: "TaxonomyPublic"
 
     genome_count: int
 
