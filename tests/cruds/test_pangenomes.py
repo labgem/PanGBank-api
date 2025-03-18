@@ -4,7 +4,11 @@ from pangbank_api.crud.common import FilterCollectionTaxonGenome, PaginationPara
 from pangbank_api.crud.pangenomes import get_pangenomes
 from pangbank_api.models import Pangenome
 from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
-from tests.mock_data import mock_data, pangenome_metric_data, genome_in_pangenome_metric_data  # type: ignore # noqa: F401 # pylint: disable=unused-import
+from tests.mock_data import (
+    mock_data,  # type: ignore # noqa: F401 # pylint: disable=unused-import
+    pangenome_metric_data,  # type: ignore # noqa: F401 # pylint: disable=unused-import
+    genome_in_pangenome_metric_data,  # type: ignore # noqa: F401 # pylint: disable=unused-import
+)
 
 
 def test_get_pangenomes_no_filters(session: Session, mock_data: None):

@@ -22,7 +22,6 @@ async def get_pangenomes(
     filter_params: FilterCollectionTaxonGenome = Depends(),
     pagination_params: PaginationParams = Depends(),
 ):
-
     pangenomes = pangenomes_crud.get_public_pangenomes(
         session, filter_params, pagination_params
     )
@@ -32,7 +31,6 @@ async def get_pangenomes(
 
 @router.get("/pangenomes/{pangenome_id}", response_model=PangenomePublic)
 async def get_pangenome(pangenome_id: int, session: SessionDep):
-
     pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
 
     if not pangenome:
@@ -44,14 +42,12 @@ async def get_pangenome(pangenome_id: int, session: SessionDep):
     "/pangenomes/{pangenome_id}/file", response_model=str, response_class=FileResponse
 )
 async def get_pangenome_file(pangenome_id: int, session: SessionDep):
-
     pangenome_file = pangenomes_crud.get_pangenome_file(session, pangenome_id)
 
     if not pangenome_file:
         raise HTTPException(status_code=404, detail="Pangenome not found")
 
     if not pangenome_file.exists():
-
         raise HTTPException(
             status_code=404, detail=f"Pangenome file {pangenome_file} does not exists"
         )
@@ -69,7 +65,6 @@ async def getègenomes_in_pangenomes(
     filter_params: FilterGenome = Depends(),
     pagination_params: PaginationParams = Depends(),
 ):
-
     pangenome_with_genomes_stat = pangenomes_crud.get_pangenome_with_genomes_info(
         session,
         pangenome_id,
@@ -86,7 +81,6 @@ async def getègenomes_in_pangenomes(
 async def get_pangenome_count(
     session: SessionDep, filter_params: FilterCollectionTaxonGenome = Depends()
 ):
-
     pangenomes = pangenomes_crud.get_pangenomes(session, filter_params)
 
     return len(pangenomes)

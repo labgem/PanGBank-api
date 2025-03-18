@@ -5,11 +5,10 @@ from pathlib import Path
 import typer
 from rich.logging import RichHandler
 
-from pangbank_api.models import CollectionReleaseInput
+from pangbank_api.manage_db.input_models import CollectionReleaseInput
 
 
 def check_and_read_json_file(input_json_file: Path):
-
     if not input_json_file.exists():
         typer.echo(
             f"[bold red]Error:[/bold red] JSON file '{input_json_file}' does not exist.",
@@ -29,7 +28,6 @@ def check_and_read_json_file(input_json_file: Path):
 
 
 def parse_collection_release_input_json(collection_release_json: Path):
-
     json_content = check_and_read_json_file(collection_release_json)
     # Validate JSON structure using Pydantic
     data_input = CollectionReleaseInput.model_validate(json_content)

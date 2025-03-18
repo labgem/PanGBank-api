@@ -4,14 +4,15 @@ from sqlmodel import Session, select
 from pathlib import Path
 
 from pangbank_api.manage_db.genomes import add_genomes_to_db
-from pangbank_api.models import Genome, GenomeSourceInput
+from pangbank_api.models import Genome
+from pangbank_api.manage_db.input_models import GenomeSourceInput
+
 
 from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture
 def genome_source_info(tmp_path: Path):
-
     genome_source_file = tmp_path / "RefSeq.list"
     genome_source_file.write_text("Genome1\nGenome2\nGenome3\n")
 
@@ -21,7 +22,6 @@ def genome_source_info(tmp_path: Path):
 
 
 def test_add_genomes_to_db(session: Session, genome_source_info: GenomeSourceInput):
-
     add_genomes_to_db([genome_source_info], session)
 
     genomes = session.exec(select(Genome)).all()

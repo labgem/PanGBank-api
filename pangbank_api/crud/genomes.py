@@ -6,11 +6,15 @@ from pangbank_api.crud.common import (
     PaginationParams,
     get_taxonomies_from_taxa,
 )
-from pangbank_api.models import Genome, GenomePublicWithTaxonomies, GenomeTaxonLink, Taxon
+from pangbank_api.models import (
+    Genome,
+    GenomePublicWithTaxonomies,
+    GenomeTaxonLink,
+    Taxon,
+)
 
 
 def get_genome_public(genome: Genome) -> GenomePublicWithTaxonomies:
-
     taxonomies = get_taxonomies_from_taxa(genome.taxa)
     genome_public = GenomePublicWithTaxonomies.model_validate(
         genome, from_attributes=True, update={"taxonomies": taxonomies}
@@ -22,7 +26,6 @@ def get_genome_public(genome: Genome) -> GenomePublicWithTaxonomies:
 def get_genome_by_id(
     session: Session, genome_id: int
 ) -> GenomePublicWithTaxonomies | None:
-
     genome = session.get(Genome, genome_id)
     if genome is None:
         return None
@@ -33,7 +36,6 @@ def get_genome_by_id(
 def get_genome_by_name(
     session: Session, genome_name: str
 ) -> GenomePublicWithTaxonomies | None:
-
     genome = session.exec(select(Genome).where(Genome.name == genome_name)).first()
 
     if genome is None:
@@ -47,7 +49,6 @@ def get_genomes(
     filter_params: FilterGenomeTaxon,
     pagination_params: PaginationParams | None,
 ) -> list[GenomePublicWithTaxonomies]:
-
     query = select(Genome).distinct()
 
     if filter_params.genome_name is not None:
@@ -59,7 +60,6 @@ def get_genomes(
         query = query.join(GenomeTaxonLink).join(Taxon)
 
         if filter_params.substring_match:
-
             query = query.where(
                 func.lower(Taxon.name).like(f"%{filter_params.taxon_name.lower()}%")
             )

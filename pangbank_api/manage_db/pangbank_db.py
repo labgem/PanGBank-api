@@ -68,7 +68,6 @@ def add_collection_release(
     create_db_and_tables()
 
     with Session(engine) as session:
-
         genome_name_to_genome = add_genomes_to_db(genome_sources, session)
 
         taxonomy_source = create_taxonomy_source(taxonomy_input, session=session)
@@ -103,7 +102,6 @@ def add_collection_release(
 
 @cli.command()
 def list_collections():
-
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
@@ -132,7 +130,6 @@ def delete_collection(
     create_db_and_tables()
 
     with Session(engine) as session:
-
         if release_version:
             delete_collection_release(session, collection_name, release_version)
 
@@ -141,5 +138,4 @@ def delete_collection(
 
 
 if __name__ == "__main__":
-
     cli()

@@ -46,7 +46,6 @@ def metadata_file():
 def test_add_genome_metadata(
     session: Session, metadata_source_file: str, metadata_file: str
 ):
-
     genomes = [Genome(name=f"Genome_{i}") for i in range(1, 6)]
 
     session.add_all(genomes)
@@ -98,9 +97,9 @@ def test_delete_unexisiting_genome_metadata(session: Session):
 
 
 def test_list_metadata_source(
-    session: Session, capsys: pytest.CaptureFixture  # type: ignore
+    session: Session,
+    capsys: pytest.CaptureFixture,  # type: ignore
 ):
-
     source = GenomeMetadataSource(name="DB_A", version="2.6.0")
     session.add(source)
     session.commit()
@@ -114,9 +113,9 @@ def test_list_metadata_source(
 
 
 def test_list_metadata_source_empty_db(
-    session: Session, capsys: pytest.CaptureFixture  # type: ignore
+    session: Session,
+    capsys: pytest.CaptureFixture,  # type: ignore
 ):
-
     with patch("pangbank_api.manage_db.genome_metadata.Session", return_value=session):
         list()
 

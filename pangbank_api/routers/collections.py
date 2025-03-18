@@ -16,7 +16,6 @@ router = APIRouter(
 def get_collections(
     session: SessionDep, filter_params: FilterCollection = Depends()
 ):  # offset: int = 0, limit: int = Query(default=100, le=100)
-
     collections = collections_crud.get_collections(session, filter_params)
 
     return collections
@@ -24,7 +23,6 @@ def get_collections(
 
 @router.get("/collections/{collection_id}", response_model=CollectionPublicWithReleases)
 def get_collection(collection_id: int, session: SessionDep):
-
     collection = session.get(Collection, collection_id)
 
     if not collection:

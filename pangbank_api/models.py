@@ -1,5 +1,4 @@
 from datetime import datetime
-from pathlib import Path
 
 from pydantic import BaseModel
 from sqlalchemy import UniqueConstraint
@@ -64,7 +63,6 @@ class GenomeInPangenomeMetric(SQLModel):
 
 
 class GenomePangenomeLink(GenomeInPangenomeMetric, table=True):
-
     __table_args__ = (UniqueConstraint("genome_id", "pangenome_id"),)
 
     id: int | None = Field(default=None, primary_key=True)
@@ -100,7 +98,6 @@ class CollectionPublic(CollectionBase):
 
 
 class CollectionPublicWithReleases(CollectionPublic):
-
     releases: list["CollectionReleasePublicWithCount"]
 
 
@@ -114,7 +111,6 @@ class TaxonomySourceBase(SQLModel):
 
 
 class TaxonomySource(TaxonomySourceBase, table=True):
-
     __table_args__ = (UniqueConstraint("name", "version", name="uq_name_version"),)
 
     id: int | None = Field(default=None, primary_key=True)
@@ -150,7 +146,6 @@ class GenomeSourcePublic(GenomeSourceBase):
 
 
 class CollectionReleaseBase(SQLModel):
-
     version: str
 
     ppanggolin_version: str
@@ -200,7 +195,6 @@ class CollectionReleasePublicWithCount(CollectionReleasePublic):
 
 
 class TaxonBase(SQLModel):
-
     name: str = Field(index=True)
     rank: str
     depth: int
@@ -230,13 +224,11 @@ class TaxonPublic(TaxonBase):
 
 
 class GenomeBase(SQLModel):
-
     name: str = Field(unique=True, index=True)
     genome_source_id: int | None = Field(default=None, foreign_key="genomesource.id")
 
 
 class Genome(GenomeBase, table=True):
-
     id: int | None = Field(default=None, primary_key=True)
     # version : str | None = None
     # collection_releases : list[CollectionRelease] = Relationship(back_populates="genomes",
@@ -256,7 +248,6 @@ class Genome(GenomeBase, table=True):
 
 
 class GenomePublic(GenomeBase):
-
     id: int
     genome_source: GenomeSourcePublic
 
@@ -266,7 +257,6 @@ class GenomePublicWithTaxonomies(GenomePublic):
 
 
 class PangenomeMetric(SQLModel):
-
     # Metrics
     gene_count: int
     genome_count: int
@@ -308,7 +298,6 @@ class PangenomeBase(PangenomeMetric):
 
 
 class Pangenome(PangenomeBase, table=True):
-
     id: int | None = Field(default=None, primary_key=True)
 
     file_name: str
@@ -396,7 +385,6 @@ class GenomeInPangenomeMetadata(MetadataBase, table=True):
 
 
 class MetadataSourceBase(SQLModel):
-
     __table_args__ = (UniqueConstraint("name", "version", name="uq_name_version"),)
 
     id: int | None = Field(default=None, primary_key=True)
@@ -407,34 +395,17 @@ class MetadataSourceBase(SQLModel):
 
 
 class GenomeMetadataSource(MetadataSourceBase, table=True):
-
     genome_metadata: list[GenomeMetadata] = Relationship(
         back_populates="source", cascade_delete=True
     )
 
 
 class GenomeInPangenomeMetadataSource(SQLModel, table=True):
-
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(unique=True)
     genome_metadata: list[GenomeInPangenomeMetadata] = Relationship(
         back_populates="source", cascade_delete=True
     )
-
-
-class GenomeSourceInput(GenomeSourceBase):
-    file: Path
-
-
-class TaxonomySourceInput(TaxonomySourceBase):
-    file: Path
-
-
-class CollectionReleaseInput(BaseModel):
-    collection: Collection
-    release: CollectionRelease
-    taxonomy: TaxonomySourceInput
-    genome_sources: list[GenomeSourceInput] = Field(default_factory=list)
 
 
 class GenomePangenomeLinkPublic(GenomeInPangenomeMetric):

@@ -11,14 +11,14 @@ from pangbank_api.models import (
     GenomeTaxonLink,
     Taxon,
     TaxonomySource,
-    TaxonomySourceInput,
 )
+
+from pangbank_api.manage_db.input_models import TaxonomySourceInput
 
 app = typer.Typer(no_args_is_help=True)
 
 
 def parse_taxonomy_file(taxonomy_file: Path) -> dict[str, tuple[str, ...]]:
-
     genome_to_lineage: dict[str, tuple[str, ...]] = {}
 
     proper_open = gzip.open if taxonomy_file.suffix == ".gz" else open
@@ -34,7 +34,6 @@ def parse_taxonomy_file(taxonomy_file: Path) -> dict[str, tuple[str, ...]]:
 
 
 def parse_ranks_str(ranks_str: str) -> list[str]:
-
     ranks = [rank.strip().title() for rank in ranks_str.split(";")]
 
     return ranks
@@ -43,7 +42,6 @@ def parse_ranks_str(ranks_str: str) -> list[str]:
 def create_taxonomy_source(
     taxonomy_source_input: TaxonomySourceInput, session: Session
 ) -> TaxonomySource:
-
     # Check if taxonomy release already exists in DB
     statement = select(TaxonomySource).where(
         (TaxonomySource.name == taxonomy_source_input.name)
@@ -85,7 +83,6 @@ def create_taxonomy_source(
 
 
 def get_common_taxa(taxa_A: list[Taxon], taxa_B: list[Taxon]) -> list[Taxon]:
-
     common_taxa: list[Taxon] = []
     for taxon in taxa_A:
         if taxon in taxa_B:
@@ -95,7 +92,6 @@ def get_common_taxa(taxa_A: list[Taxon], taxa_B: list[Taxon]) -> list[Taxon]:
 
 
 def get_taxa_by_depth(depth: int, taxonomy_source: TaxonomySource, session: Session):
-
     statement = select(Taxon).where(
         (Taxon.depth == depth) & (Taxon.taxonomy_source == taxonomy_source)
     )
@@ -110,7 +106,6 @@ def create_taxon_from_lineages(
     taxonomy_source: TaxonomySource,
     session: Session,
 ):
-
     taxon_names_by_depths: list[set[str]] = [set() for _ in range(len(ranks))]
     new_taxa: list[Taxon] = []
     taxa: list[Taxon] = []
@@ -124,11 +119,9 @@ def create_taxon_from_lineages(
     name_to_taxon_by_depth: list[dict[str, Taxon]] = []
 
     with Progress() as progress:
-
         progress_task = progress.add_task("Creating taxa", total=taxa_count)
 
         for depth, taxon_set in enumerate(taxon_names_by_depths):
-
             taxon_name_to_taxon: dict[str, Taxon] = {}
             name_to_taxon_by_depth.append(taxon_name_to_taxon)
 
@@ -138,12 +131,9 @@ def create_taxon_from_lineages(
             }
 
             for taxon_name in taxon_set:
-
                 try:
-
                     taxon = name_to_taxon_at_depth[taxon_name]
                 except KeyError:
-
                     taxon = Taxon(
                         name=taxon_name,
                         rank=ranks[depth],
@@ -177,7 +167,6 @@ def link_genomes_and_taxa(
     name_to_taxon_by_depth: list[dict[str, Taxon]],
     session: Session,
 ):
-
     new_genome_taxon_links: list[GenomeTaxonLink] = []
     logging.info(f"Linking {len(genome_name_to_genome)} genomes.")
 
@@ -186,7 +175,6 @@ def link_genomes_and_taxa(
     for genome_name, genome in track(
         genome_name_to_genome.items(), "Linking genomes to taxa"
     ):
-
         lineage = genome_name_to_lineage[genome_name]
 
         taxon_name = lineage[0]
@@ -196,7 +184,6 @@ def link_genomes_and_taxa(
         if existing_link is None:
             unlinked_genomes_count += 1
             for depth, taxon_name in enumerate(lineage):
-
                 taxon = name_to_taxon_by_depth[depth][taxon_name]
 
                 new_genome_taxon_links.append(
@@ -224,7 +211,6 @@ def add_taxon_to_db(
     lineages: set[tuple[str, ...]],
     session: Session,
 ):
-
     ranks = [rank.strip() for rank in taxonomy_source.ranks.split(";")]
 
     logging.info(

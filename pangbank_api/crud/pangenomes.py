@@ -23,7 +23,6 @@ from pangbank_api.models import (
 
 
 def get_pangenome_file(session: Session, pangenome_id: int) -> Path | None:
-
     pangenome = session.get(Pangenome, pangenome_id)
 
     if not pangenome:
@@ -36,7 +35,6 @@ def get_pangenome_file(session: Session, pangenome_id: int) -> Path | None:
 
 
 def get_pangenome(session: Session, pangenome_id: int) -> PangenomePublic | None:
-
     pangenome = session.get(Pangenome, pangenome_id)
     if pangenome is None:
         return None
@@ -45,7 +43,6 @@ def get_pangenome(session: Session, pangenome_id: int) -> PangenomePublic | None
 
 
 def get_public_pangenome(pangenome: Pangenome) -> PangenomePublic:
-
     taxonomies = get_taxonomies_from_taxa(pangenome.taxa)
     assert len(taxonomies) == 1
 
@@ -72,7 +69,6 @@ def get_pangenomes(
     filter_params: FilterCollectionTaxonGenome,
     pagination_params: PaginationParams | None = None,
 ) -> Sequence[Pangenome]:
-
     query = select(Pangenome).distinct()
 
     if filter_params.collection_release_id is not None:
@@ -117,7 +113,6 @@ def get_public_pangenomes(
     filter_params: FilterCollectionTaxonGenome,
     pagination_params: PaginationParams | None = None,
 ) -> Iterator[PangenomePublic]:
-
     pangenomes = get_pangenomes(session, filter_params, pagination_params)
 
     public_pangenomes = (get_public_pangenome(pangenome) for pangenome in pangenomes)
@@ -131,7 +126,6 @@ def get_pangenome_with_genomes_info(
     filter_params: FilterGenome,
     pagination_params: PaginationParams | None = None,
 ):
-
     query = (
         select(GenomePangenomeLink)
         .distinct()

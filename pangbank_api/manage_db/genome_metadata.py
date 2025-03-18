@@ -70,7 +70,6 @@ def create_metadata(
 
 
 def parse_metadata_source_file(metadata_source_file: Path):
-
     json_content = check_and_read_json_file(metadata_source_file)
 
     metadata_source = GenomeMetadataSource.model_validate(json_content)
@@ -79,7 +78,6 @@ def parse_metadata_source_file(metadata_source_file: Path):
 
 
 def get_all_genomes_in_pangenome(session: Session):
-
     genomes_statement = (
         select(Genome)
         .join(GenomePangenomeLink)
@@ -124,7 +122,6 @@ def add(
         ),
     ],
 ):
-
     set_up_logging_config()
 
     metadata_source = parse_metadata_source_file(metadata_source_file)
@@ -139,7 +136,6 @@ def add(
     create_db_and_tables()
 
     with Session(engine) as session:
-
         add_genome_source_to_db(metadata_source, session)
 
         # we could add more filter to add metadata to only genomes of interest
@@ -169,7 +165,6 @@ def add(
             description="Processing metadata",
             total=len(genome_to_metadata),
         ):
-
             genome_id = genome_name_to_genome_id.get(genome_name)
 
             if genome_id is not None:
@@ -228,7 +223,6 @@ def delete(
     create_db_and_tables()
 
     with Session(engine) as session:
-
         if metadata_source_version is None:
             # Query the database to find the collection with the specified name
             statement = select(GenomeMetadataSource).where(
@@ -281,7 +275,6 @@ def list():
     console = Console()
 
     with Session(engine) as session:
-
         metadata_sources = session.exec(select(GenomeMetadataSource)).all()
 
         if not metadata_sources:

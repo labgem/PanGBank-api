@@ -5,7 +5,6 @@ from pangbank_api.models import Taxon, Taxonomy
 
 
 class PaginationParams(BaseModel):
-
     offset: int = 0
     limit: int = Query(default=20, le=100)
 
@@ -16,19 +15,16 @@ class FilterCollection(BaseModel):
 
 
 class FilterTaxon(BaseModel):
-
     taxon_name: str | None = None
 
     substring_match: bool = False
 
 
 class FilterGenome(BaseModel):
-
     genome_name: str | None = None
 
 
 class FilterGenomeTaxon(FilterGenome, FilterTaxon):
-
     genome_name: str | None = None
 
 
@@ -41,7 +37,6 @@ class FilterCollectionTaxonGenome(
 
 
 def get_taxonomies_from_taxa(taxa: list[Taxon]) -> list[Taxonomy]:
-
     taxonomy_source_to_taxonomy: dict[int, Taxonomy] = {}
 
     for taxon in taxa:

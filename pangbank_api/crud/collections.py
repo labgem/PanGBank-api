@@ -14,22 +14,18 @@ from pangbank_api.models import (
 def get_collections(
     session: Session, filter_params: FilterCollection
 ) -> Sequence[CollectionPublicWithReleases]:
-
     query = select(Collection)
 
     # Check if filter_params.collection_release_id is provided
     if filter_params.collection_id is not None:
-
         query = query.where(Collection.id == filter_params.collection_id)
 
     collections = session.exec(query).all()
 
     public_collections: List[CollectionPublicWithReleases] = []
     for collection in collections:
-
         public_releases: List[CollectionReleasePublicWithCount] = []
         for release in collection.releases:
-
             release_public = CollectionReleasePublicWithCount.model_validate(
                 release,
                 from_attributes=True,

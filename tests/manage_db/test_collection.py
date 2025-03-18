@@ -62,7 +62,6 @@ def collection_release2():
 
 @pytest.fixture()
 def collection():
-
     collection = Collection(
         name="collection_A",
     )
@@ -156,7 +155,6 @@ def test_create_collection_release(
     collection_release2: CollectionRelease,
     taxonomy_source: TaxonomySource,
 ):
-
     collection_release = create_collection_release(
         collection, collection_release, taxonomy_source, session
     )
@@ -223,7 +221,6 @@ def test_create_collection_release_ppanggo_version_mismatch(
 def test_add_pangenomes_to_db(
     pangenome_dir: Path, collection_release: CollectionRelease, session: Session
 ):
-
     pangenome_main_dir = pangenome_dir.parent
 
     genome_a = Genome(name="GenomeA")
@@ -260,7 +257,6 @@ def test_delete_full_collection(
     collection_release: CollectionRelease,
     taxonomy_source: TaxonomySource,
 ):
-
     create_collection_release(collection, collection_release, taxonomy_source, session)
 
     delete_full_collection(session, collection.name)
@@ -272,7 +268,6 @@ def test_delete_full_collection(
 
 
 def test_delete_unexisting_collection(session: Session):
-
     with pytest.raises(ValueError):
         delete_full_collection(session, "unexisting_collection")
 
@@ -283,7 +278,6 @@ def test_delete_unexisting_collection_release(
     collection_release: CollectionRelease,
     taxonomy_source: TaxonomySource,
 ):
-
     create_collection_release(collection, collection_release, taxonomy_source, session)
 
     with pytest.raises(ValueError):
@@ -296,7 +290,6 @@ def test_delete_collection_release(
     collection_release: CollectionRelease,
     taxonomy_source: TaxonomySource,
 ):
-
     create_collection_release(collection, collection_release, taxonomy_source, session)
 
     delete_collection_release(session, collection.name, collection_release.version)

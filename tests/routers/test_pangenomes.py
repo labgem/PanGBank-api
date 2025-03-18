@@ -122,7 +122,6 @@ def test_data(
 
 
 def test_get_pangenomes(client: TestClient, test_data: None):
-
     response = client.get("/pangenomes/")
 
     assert response.status_code == 200
@@ -132,7 +131,6 @@ def test_get_pangenomes(client: TestClient, test_data: None):
 
 
 def test_get_existing_pangenome(client: TestClient, test_data: None):
-
     # Existing pangenome
     response = client.get("/pangenomes/1")
     assert response.status_code == 200

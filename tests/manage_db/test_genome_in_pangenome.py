@@ -10,7 +10,11 @@ from pangbank_api.models import (
 import pytest
 from sqlmodel import Session, select
 from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
-from tests.mock_data import mock_data, pangenome_metric_data, genome_in_pangenome_metric_data  # type: ignore # noqa: F401 # pylint: disable=unused-import
+from tests.mock_data import (
+    mock_data,  # type: ignore # noqa: F401 # pylint: disable=unused-import
+    pangenome_metric_data,  # type: ignore # noqa: F401 # pylint: disable=unused-import
+    genome_in_pangenome_metric_data,  # type: ignore # noqa: F401 # pylint: disable=unused-import
+)
 
 
 def test_add_genome_in_pangenome_metadata(session: Session, mock_data: None):
@@ -70,18 +74,16 @@ def test_genome_in_pangenome_uniqness(
         genome_file_name="genomeA.fasta",
     )
 
-
     session.add(genome)
     session.add(genome_pangenome_link)
     session.commit()
 
     session.refresh(genome)
 
-    genome_pangenome_link = session.exec(select(GenomePangenomeLink)
-        .join(Genome)
-        .where(Genome.name == "GenomeX")
-        ).one()
-    
+    genome_pangenome_link = session.exec(
+        select(GenomePangenomeLink).join(Genome).where(Genome.name == "GenomeX")
+    ).one()
+
     assert genome_pangenome_link is not None
 
     genome_pangenome_link_duplicate = GenomePangenomeLink(

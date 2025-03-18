@@ -71,7 +71,6 @@ def test_parse_taxonomy_malformed(malformed_taxonomy_file: Path):
 
 
 def test_add_taxon_to_db(session: Session):
-
     taxonomy_source = TaxonomySource(
         name="GTDB",
         version="24.1",
@@ -109,7 +108,6 @@ def test_add_taxon_to_db(session: Session):
 
 
 def test_link_genomes_and_taxa(session: Session):
-
     genome_a = Genome(name="GenomeA")
     genome_b = Genome(name="GenomeB")
 

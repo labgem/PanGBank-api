@@ -5,7 +5,9 @@ from typing import List
 from rich.progress import track
 from sqlmodel import Session, select
 
-from pangbank_api.models import Genome, GenomeSource, GenomeSourceInput
+from pangbank_api.models import Genome, GenomeSource
+
+from pangbank_api.manage_db.input_models import GenomeSourceInput
 
 
 def create_genomes(
@@ -24,7 +26,6 @@ def create_genomes(
     genome_name_to_genomes: dict[str, Genome] = {}
 
     for genome_source in genome_sources:
-
         new_genomes: list[Genome] = []
 
         name_to_existing_genome = {
@@ -79,11 +80,9 @@ def parse_genome_to_source_files(
     source_to_genomes: dict[str, list[str]] = {}
 
     for genome_source_input in genome_source_inputs:
-
         open_func = gzip.open if genome_source_input.file.suffix == ".gz" else open
 
         with open_func(genome_source_input.file, "rt") as fl:
-
             source_to_genomes[genome_source_input.name] = [line.strip() for line in fl]
 
     return source_to_genomes

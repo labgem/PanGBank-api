@@ -85,8 +85,8 @@ def test_get_collections(
 
     assert "pangenomes_directory" not in data[0]["releases"][0]
 
-def test_get_collection(session: Session, client: TestClient):
 
+def test_get_collection(session: Session, client: TestClient):
     collection_1 = Collection(name="Collection 1")
 
     session.add(collection_1)

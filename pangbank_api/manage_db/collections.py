@@ -77,7 +77,6 @@ def create_collection_release(
     collection_release_from_db = session.exec(statement).first()
 
     if collection_release_from_db is None:
-
         logger.info(
             f"Adding a new collection release to DB: {collection.name}:{collection_release.version}"
         )
@@ -258,7 +257,6 @@ def add_pangenomes_to_db(
         pangenome_dirs,
         description="Parsing pangenome directories",
     ):
-
         pangenome_file = pangenome_dir / "pangenome.h5"
         genomes_md5sum_file = (
             pangenome_dir / "genomes_md5sum.tsv.gz"
@@ -276,7 +274,6 @@ def add_pangenomes_to_db(
             pangenome_local_path.as_posix(), None
         )
         if pangenome is None:
-
             pangenome_metric = get_pangenome_metrics_from_info_file(pangenome_info_file)
             pangenome = Pangenome.model_validate(
                 pangenome_metric,
@@ -327,7 +324,6 @@ def add_metadata_to_genome_pangenome_links(
     genome_name_to_link = {link.genome.name: link for link in pangenome_genome_links}
 
     for metadata_file in metadata_files:
-
         source_name = extract_source_from_metadata_file(metadata_file)
 
         metadata_source = add_metadata_source_to_db(source_name, session)
@@ -348,7 +344,6 @@ def add_metadata_to_genome_pangenome_links(
 
 
 def add_metadata_source_to_db(metadata_source_name: str, session: Session):
-
     metadata_source = session.exec(
         select(GenomeInPangenomeMetadataSource).where(
             (GenomeInPangenomeMetadataSource.name == metadata_source_name)
@@ -423,7 +418,6 @@ def extract_source_from_metadata_file(metadata_file: Path) -> str:
 def link_pangenome_and_genome_taxa(
     pangenome: Pangenome, genomes: list[Genome], session: Session
 ):
-
     pangenome_taxa: List[Taxon] = []
 
     for genome in genomes:
@@ -451,7 +445,6 @@ def link_pangenome_and_genomes(
     # pangenome_taxa: List[Taxon] = []
     genomes: List[Genome] = []
     for genome_metric in parse_genome_metrics_file(genomes_statistics_file):
-
         genome = genome_name_to_genome[genome_metric.genome_name]
 
         genome_file_info = genome_name_to_md5sum_info[genome_metric.genome_name]
