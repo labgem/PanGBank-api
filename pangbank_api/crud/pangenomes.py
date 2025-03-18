@@ -172,19 +172,16 @@ def get_genomes_in_pangenome(
     return pangenome_genomes_links
 
 
-def get_pangenome_with_genomes_info_and_metadata(
-    session: Session,
-    pangenome_id: int,
-    filter_genome: FilterGenome,
-    filter_metadata: FilterGenomeMetadata | None = None,
-    pagination_params: PaginationParams | None = None,
-):
+def get_genome_in_pangenome(session: Session, pangenome_id: int, genome_id: int):
 
-    pangenome_genomes_links = get_genomes_in_pangenome(
-        session,
-        pangenome_id,
-        filter_genome=filter_genome,
-        filter_metadata=filter_metadata,
-        pagination_params=pagination_params,
+    query = (
+        select(GenomePangenomeLink)
+        .distinct()
+        .where(
+            (GenomePangenomeLink.pangenome_id == pangenome_id)
+            & (GenomePangenomeLink.genome_id == genome_id)
+        )
     )
-    return pangenome_genomes_links
+
+    pangenome_genome_link = session.exec(query).first()
+    return pangenome_genome_link
