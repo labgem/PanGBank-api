@@ -6,10 +6,15 @@ from pangbank_api.crud.common import (
     FilterCollectionTaxonGenome,
     PaginationParams,
     FilterGenome,
+    FilterGenomeMetadata,
 )
 
-from ..dependencies import SessionDep
-from ..models import PangenomePublic, GenomePangenomeLinkPublic
+from pangbank_api.dependencies import SessionDep
+from pangbank_api.models import (
+    PangenomePublic,
+    GenomePangenomeLinkPublic,
+    GenomePangenomeLinkWithMetadataPublic,
+)
 
 router = APIRouter(
     tags=["pangenomes"],
@@ -31,7 +36,7 @@ async def get_pangenomes(
 
 @router.get("/pangenomes/{pangenome_id}", response_model=PangenomePublic)
 async def get_pangenome(pangenome_id: int, session: SessionDep):
-    pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
+    pangenome = pangenomes_crud.get_public_pangenome(session, pangenome_id)
 
     if not pangenome:
         raise HTTPException(status_code=404, detail="Pangenome not found")
@@ -59,22 +64,79 @@ async def get_pangenome_file(pangenome_id: int, session: SessionDep):
     "/pangenomes/{pangenome_id}/genomes",
     response_model=list[GenomePangenomeLinkPublic],
 )
-async def getègenomes_in_pangenomes(
+async def get_genomes_in_pangenome(
     pangenome_id: int,
     session: SessionDep,
-    filter_params: FilterGenome = Depends(),
+    filter_genome: FilterGenome = Depends(),
     pagination_params: PaginationParams = Depends(),
 ):
-    pangenome_with_genomes_stat = pangenomes_crud.get_pangenome_with_genomes_info(
+    pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
+    if not pangenome:
+        raise HTTPException(status_code=404, detail="Pangenome not found")
+
+    pangenome_with_genomes_stat = pangenomes_crud.get_genomes_in_pangenome(
         session,
         pangenome_id,
-        filter_params=filter_params,
+        filter_genome=filter_genome,
         pagination_params=pagination_params,
     )
 
-    if not pangenome_with_genomes_stat:
-        raise HTTPException(status_code=404, detail="Pangenome not found")
     return pangenome_with_genomes_stat
+
+
+@router.get(
+    "/pangenomes/{pangenome_id}/genomes_metadata",
+    response_model=list[GenomePangenomeLinkWithMetadataPublic],
+)
+async def get_genomes_metadata_in_pangenome(
+    pangenome_id: int,
+    session: SessionDep,
+    filter_genome: FilterGenome = Depends(),
+    filter_metadata: FilterGenomeMetadata = Depends(),
+    pagination_params: PaginationParams = Depends(),
+):
+
+    pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
+    if not pangenome:
+        raise HTTPException(status_code=404, detail="Pangenome not found")
+
+    pangenome_with_genomes_stat = pangenomes_crud.get_genomes_in_pangenome(
+        session,
+        pangenome_id,
+        filter_genome=filter_genome,
+        filter_metadata=filter_metadata,
+        pagination_params=pagination_params,
+    )
+
+    return pangenome_with_genomes_stat
+
+
+# @router.get(
+#     "/pangenomes/{pangenome_id}/{genome_id}",
+#     response_model=list[GenomePangenomeLinkPublic],
+# )
+# async def get_genome_in_pangenome(
+#     pangenome_id: int,
+#     genome_id: int,
+#     session: SessionDep,
+#     filter_genome: FilterGenome = Depends(),
+#     filter_metadata: FilterGenomeMetadata = Depends(),
+#     pagination_params: PaginationParams = Depends(),
+# ):
+
+#     pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
+#     if not pangenome:
+#         raise HTTPException(status_code=404, detail="Pangenome not found")
+
+#     pangenome_with_genomes_stat = pangenomes_crud.get_genomes_in_pangenome(
+#         session,
+#         pangenome_id,
+#         filter_genome=filter_genome,
+#         filter_metadata=filter_metadata,
+#         pagination_params=pagination_params,
+#     )
+
+#     return pangenome_with_genomes_stat
 
 
 @router.get("/pangenomes/count/", response_model=int)

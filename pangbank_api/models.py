@@ -344,12 +344,14 @@ class TaxonomyPublic(TaxonomyBase):
 
 
 class MetadataBase(SQLModel):
-    id: int | None = Field(default=None, primary_key=True)
+
     key: str
     value: str
 
 
 class GenomeMetadata(MetadataBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+
     source_id: int | None = Field(
         foreign_key="genomemetadatasource.id", default=None, ondelete="CASCADE"
     )
@@ -363,6 +365,9 @@ class GenomeMetadata(MetadataBase, table=True):
 
 
 class GenomeInPangenomeMetadata(MetadataBase, table=True):
+
+    id: int | None = Field(default=None, primary_key=True)
+
     source_id: int | None = Field(
         foreign_key="genomeinpangenomemetadatasource.id",
         default=None,
@@ -382,7 +387,6 @@ class GenomeInPangenomeMetadata(MetadataBase, table=True):
     source: "GenomeInPangenomeMetadataSource" = Relationship(
         back_populates="genome_metadata"
     )
-
 
 class MetadataSourceBase(SQLModel):
     __table_args__ = (UniqueConstraint("name", "version", name="uq_name_version"),)
@@ -414,3 +418,7 @@ class GenomePangenomeLinkPublic(GenomeInPangenomeMetric):
 
     genome_file_md5sum: str
     genome_file_name: str
+
+
+class GenomePangenomeLinkWithMetadataPublic(GenomePangenomeLinkPublic):
+    genome_metadata: list[MetadataBase]

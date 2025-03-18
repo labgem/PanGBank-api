@@ -2,12 +2,16 @@ from pathlib import Path
 from typing import Iterator, Sequence
 
 from sqlalchemy import func
+
+from sqlalchemy.orm import aliased
+
 from sqlmodel import Session, select
 
 from pangbank_api.crud.common import (
     FilterCollectionTaxonGenome,
     PaginationParams,
     FilterGenome,
+    FilterGenomeMetadata,
     get_taxonomies_from_taxa,
 )
 from pangbank_api.models import (
@@ -19,6 +23,7 @@ from pangbank_api.models import (
     Taxon,
     CollectionRelease,
     CollectionReleasePublic,
+    GenomeInPangenomeMetadata,
 )
 
 
@@ -34,16 +39,18 @@ def get_pangenome_file(session: Session, pangenome_id: int) -> Path | None:
     return pangenome_file
 
 
-def get_pangenome(session: Session, pangenome_id: int) -> PangenomePublic | None:
+def get_pangenome(session: Session, pangenome_id: int) -> Pangenome | None:
     pangenome = session.get(Pangenome, pangenome_id)
     if pangenome is None:
         return None
 
-    return get_public_pangenome(pangenome)
+    return pangenome
 
 
-def get_public_pangenome(pangenome: Pangenome) -> PangenomePublic:
+def make_pangenome_public(pangenome: Pangenome) -> PangenomePublic:
+
     taxonomies = get_taxonomies_from_taxa(pangenome.taxa)
+
     assert len(taxonomies) == 1
 
     collection_release_public = CollectionReleasePublic.model_validate(
@@ -62,6 +69,15 @@ def get_public_pangenome(pangenome: Pangenome) -> PangenomePublic:
         },
     )
     return pangenome_public
+
+
+def get_public_pangenome(session: Session, pangenome_id: int) -> PangenomePublic | None:
+
+    pangenome = get_pangenome(session, pangenome_id)
+    if pangenome is None:
+        return None
+
+    return make_pangenome_public(pangenome)
 
 
 def get_pangenomes(
@@ -115,17 +131,21 @@ def get_public_pangenomes(
 ) -> Iterator[PangenomePublic]:
     pangenomes = get_pangenomes(session, filter_params, pagination_params)
 
-    public_pangenomes = (get_public_pangenome(pangenome) for pangenome in pangenomes)
+    public_pangenomes = (make_pangenome_public(pangenome) for pangenome in pangenomes)
 
     return public_pangenomes
 
 
-def get_pangenome_with_genomes_info(
+def get_genomes_in_pangenome(
     session: Session,
     pangenome_id: int,
-    filter_params: FilterGenome,
+    filter_genome: FilterGenome,
+    filter_metadata: FilterGenomeMetadata | None = None,
     pagination_params: PaginationParams | None = None,
 ):
+    # Alias for the metadata table
+    metadata_alias = aliased(GenomeInPangenomeMetadata)
+
     query = (
         select(GenomePangenomeLink)
         .distinct()
@@ -133,9 +153,38 @@ def get_pangenome_with_genomes_info(
         .where(Pangenome.id == pangenome_id)
     )
 
+    if filter_genome.genome_name is not None:
+        query = query.join(Genome).where(Genome.name == filter_genome.genome_name)
+
     if pagination_params:
         query = query.offset(pagination_params.offset).limit(pagination_params.limit)
 
-    pangenome_genomes_links = session.exec(query).all()
+    if filter_metadata:
+        if filter_metadata.metadata_key:
+            query = query.join(metadata_alias).where(
+                metadata_alias.key == filter_metadata.metadata_key
+            )
 
+        if filter_metadata.metadata_value is not None:
+            query = query.where(metadata_alias.value == filter_metadata.metadata_value)
+
+    pangenome_genomes_links = session.exec(query).all()
+    return pangenome_genomes_links
+
+
+def get_pangenome_with_genomes_info_and_metadata(
+    session: Session,
+    pangenome_id: int,
+    filter_genome: FilterGenome,
+    filter_metadata: FilterGenomeMetadata | None = None,
+    pagination_params: PaginationParams | None = None,
+):
+
+    pangenome_genomes_links = get_genomes_in_pangenome(
+        session,
+        pangenome_id,
+        filter_genome=filter_genome,
+        filter_metadata=filter_metadata,
+        pagination_params=pagination_params,
+    )
     return pangenome_genomes_links

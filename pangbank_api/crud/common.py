@@ -24,6 +24,12 @@ class FilterGenome(BaseModel):
     genome_name: str | None = None
 
 
+class FilterGenomeMetadata(BaseModel):
+    metadata_key: str | None = None
+    metadata_value: str | None = None
+    substring_match: bool = False
+
+
 class FilterGenomeTaxon(FilterGenome, FilterTaxon):
     genome_name: str | None = None
 
