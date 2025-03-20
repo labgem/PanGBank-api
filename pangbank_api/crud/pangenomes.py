@@ -87,10 +87,10 @@ def get_pangenomes(
 ) -> Sequence[Pangenome]:
     query = select(Pangenome).distinct()
 
-    if filter_params.collection_release_id is not None:
-        query = query.where(
-            Pangenome.collection_release_id == filter_params.collection_release_id
-        )
+    # if filter_params.collection_release_id is not None:
+    #     query = query.where(
+    #         Pangenome.collection_release_id == filter_params.collection_release_id
+    #     )
 
     if filter_params.collection_id is not None:
         query = query.join(CollectionRelease).where(

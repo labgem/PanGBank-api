@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 
 from pangbank_api.crud import collections as collections_crud
 from pangbank_api.crud.common import FilterCollection
 
 from ..dependencies import SessionDep
-from ..models import Collection, CollectionPublicWithReleases
+from ..models import CollectionPublicWithReleases
 
 router = APIRouter(
     tags=["collections"],
@@ -23,7 +24,8 @@ def get_collections(
 
 @router.get("/collections/{collection_id}", response_model=CollectionPublicWithReleases)
 def get_collection(collection_id: int, session: SessionDep):
-    collection = session.get(Collection, collection_id)
+
+    collection = collections_crud.get_collection(session, collection_id)
 
     if not collection:
         raise HTTPException(
@@ -31,3 +33,29 @@ def get_collection(collection_id: int, session: SessionDep):
         )
 
     return collection
+
+
+@router.get(
+    "/collections/{collection_id}/mash_sketch",
+    response_model=str,
+    response_class=FileResponse,
+)
+async def get_collection_mash_sketch(collection_id: int, session: SessionDep):
+
+    mash_sketch_file = collections_crud.get_collection_mash_sketch(
+        session, collection_id
+    )
+    print(mash_sketch_file)
+
+    if not mash_sketch_file:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Mash sketch of collection with id={collection_id} not found",
+        )
+
+    if not mash_sketch_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Pangenome file {mash_sketch_file.name} does not exists",
+        )
+    return FileResponse(path=mash_sketch_file.as_posix(), filename="mash_sketch.msh")

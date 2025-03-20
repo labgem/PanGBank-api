@@ -388,6 +388,7 @@ class GenomeInPangenomeMetadata(MetadataBase, table=True):
         back_populates="genome_metadata"
     )
 
+
 class MetadataSourceBase(SQLModel):
     __table_args__ = (UniqueConstraint("name", "version", name="uq_name_version"),)
 

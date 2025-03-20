@@ -48,7 +48,6 @@ async def get_pangenome(pangenome_id: int, session: SessionDep):
 )
 async def get_pangenome_file(pangenome_id: int, session: SessionDep):
     pangenome_file = pangenomes_crud.get_pangenome_file(session, pangenome_id)
-
     if not pangenome_file:
         raise HTTPException(status_code=404, detail="Pangenome not found")
 
