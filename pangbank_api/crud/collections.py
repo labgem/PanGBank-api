@@ -44,6 +44,8 @@ def get_collections(
         # Mark the latest release
         if public_releases:
             public_releases[0].latest = True
+        if filter_params.only_latest_release:
+            public_releases = public_releases[:1]
 
         collection_public = CollectionPublicWithReleases.model_validate(
             collection,
