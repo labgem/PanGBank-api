@@ -4,9 +4,8 @@ from pathlib import Path
 
 
 class Settings(BaseSettings):
-    app_name: str = "PanGBank API"
-    database_path: Path = Path("database/database.db")
-    data_dir: Path = Path("data/")
+    pangbank_db_path: Path = Path("database/database.db")
+    pangbank_data_dir: Path = Path("data/")
 
 
 @lru_cache
