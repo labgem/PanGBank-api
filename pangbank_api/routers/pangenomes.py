@@ -15,6 +15,7 @@ from pangbank_api.models import (
     GenomePangenomeLinkPublic,
     GenomePangenomeLinkWithMetadataPublic,
 )
+from pangbank_api.config import SettingsDep
 
 router = APIRouter(
     tags=["pangenomes"],
@@ -46,17 +47,21 @@ async def get_pangenome(pangenome_id: int, session: SessionDep):
 @router.get(
     "/pangenomes/{pangenome_id}/file", response_model=str, response_class=FileResponse
 )
-async def get_pangenome_file(pangenome_id: int, session: SessionDep):
+async def get_pangenome_file(
+    pangenome_id: int, session: SessionDep, settings: SettingsDep
+):
     pangenome_file = pangenomes_crud.get_pangenome_file(session, pangenome_id)
+
     if not pangenome_file:
         raise HTTPException(status_code=404, detail="Pangenome not found")
 
+    pangenome_path = settings.pangbank_data_dir / pangenome_file
     if not pangenome_file.exists():
         raise HTTPException(
             status_code=404, detail=f"Pangenome file {pangenome_file} does not exists"
         )
 
-    return FileResponse(path=pangenome_file.as_posix(), filename="pangenome.h5")
+    return FileResponse(path=pangenome_path.as_posix(), filename="pangenome.h5")
 
 
 @router.get(
