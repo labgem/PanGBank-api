@@ -181,6 +181,7 @@ class CollectionRelease(CollectionReleaseBase, table=True):
     pangenomes: list["Pangenome"] = Relationship(
         back_populates="collection_release", cascade_delete=True
     )
+    latest: bool = False
 
 
 class CollectionReleasePublic(CollectionReleaseBase):
@@ -191,7 +192,6 @@ class CollectionReleasePublic(CollectionReleaseBase):
 
 class CollectionReleasePublicWithCount(CollectionReleasePublic):
     pangenome_count: int
-    latest: bool = False
 
 
 class TaxonBase(SQLModel):

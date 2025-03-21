@@ -4,6 +4,8 @@ import logging
 from pathlib import Path
 from typing import Iterator, List
 
+from packaging.version import parse
+
 # import sys
 import yaml
 from rich.console import Console
@@ -110,10 +112,29 @@ def create_collection_release(
 
         collection_release = collection_release_from_db
 
+    set_latest_release_in_collection(collection, session)
+
     session.commit()
     session.refresh(collection)
 
     return collection_release
+
+
+def set_latest_release_in_collection(collection: Collection, session: Session):
+    """
+    Set the latest collection release for a collection.
+    """
+    releases = sorted(collection.releases, key=lambda x: parse(x.version), reverse=True)
+
+    # Mark the latest release
+    if releases:
+        releases[0].latest = True
+        logger.info(
+            f"Marked release {releases[0].version} as latest for collection {collection.name}"
+        )
+        for release in releases[1:]:
+            release.latest = False
+            session.add(release)
 
 
 def parse_genomes_hash_file(genomes_md5sum_file: Path) -> dict[str, dict[str, str]]:
@@ -242,10 +263,12 @@ def add_pangenomes_to_db(
         for pangenome_dir in pangenome_main_dir.iterdir()
         if pangenome_dir.is_dir()
     ]
+    logger.info(f"Found {len(pangenome_dirs)} pangenome directories")
 
     existing_pangenomes = session.exec(
         select(Pangenome).where(Pangenome.collection_release == collection_release)
     ).all()
+    logger.info(f"Found {len(existing_pangenomes)} existing pangenomes in the database")
 
     file_to_existing_pangenome = {
         pangenome.file_name: pangenome for pangenome in existing_pangenomes
@@ -284,7 +307,6 @@ def add_pangenomes_to_db(
                 },
             )
             new_pangenomes.append(pangenome)
-            # session.add(pangenome)
 
             genomes, pangenome_genome_links = link_pangenome_and_genomes(
                 pangenome=pangenome,
@@ -293,8 +315,6 @@ def add_pangenomes_to_db(
                 genomes_statistics_file=genomes_statistics_file,
                 session=session,
             )
-            # session.commit()
-            # session.refresh(pangenome)
 
             link_pangenome_and_genome_taxa(pangenome, genomes, session)
 
@@ -310,8 +330,9 @@ def add_pangenomes_to_db(
         pangenomes.append(pangenome)
 
     session.add_all(new_pangenomes)
-
     session.commit()
+
+    logger.info(f"Added {len(new_pangenomes)} new pangenomes to the database")
 
     return pangenomes
 
