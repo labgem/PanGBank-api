@@ -28,25 +28,24 @@ PanGBank is an API designed to manage a database of pangenomes. Built with **Fas
 
 ### Manage the database
 
-Interact with the database locally:
+Interact with the database locally. You need to define the environement variable `PANGBANK_DB_PATH`.
 
-   - Add a collection release to the database with 
+#### Add a collection release to the database with 
 
+```bash
+pangbank_db add-collection-release <collection_release_json>
+```
+#### List collections
 
-   ```bash
-   pangbank_db add-collection-release <collection_release_json>
-   ```
-   - List collections
+```bash
+pangbank_db list-collection
+```
 
-   ```bash
-   pangbank_db list-collection
-   ```
-   
-   - Delete a collection release
-  
-   ```bash
-   pangbank_db delete-collection <collection name> --release-version <release version>
-   ```
+#### Delete a collection release
+
+```bash
+pangbank_db delete-collection <collection name> --release-version <release version>
+```
 
 ### Docker Compose Setup
 
