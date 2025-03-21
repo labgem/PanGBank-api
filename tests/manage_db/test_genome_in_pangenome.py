@@ -9,8 +9,8 @@ from pangbank_api.models import (
 
 import pytest
 from sqlmodel import Session, select
-from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
-from tests.mock_data import (
+from ..mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
+from ..mock_data import (
     mock_data,  # type: ignore # noqa: F401 # pylint: disable=unused-import
     pangenome_metric_data,  # type: ignore # noqa: F401 # pylint: disable=unused-import
     genome_in_pangenome_metric_data,  # type: ignore # noqa: F401 # pylint: disable=unused-import

@@ -20,7 +20,7 @@ from sqlmodel import Session, select
 from unittest.mock import patch
 
 import gzip
-from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
+from ..mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture()

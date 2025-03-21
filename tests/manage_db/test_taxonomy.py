@@ -12,7 +12,7 @@ from pangbank_api.models import TaxonomySource, Taxon, Genome
 from sqlmodel import Session, select
 
 
-from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
+from ..mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture

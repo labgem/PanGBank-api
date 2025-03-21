@@ -5,7 +5,7 @@ from sqlmodel import Session
 
 
 from pangbank_api.models import GenomeSource, Taxon, Genome, TaxonomySource
-from tests.mock_session import session_fixture, client_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
+from ..mock_session import session_fixture, client_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture

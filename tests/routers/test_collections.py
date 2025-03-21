@@ -8,7 +8,7 @@ from sqlmodel import Session
 
 
 from pangbank_api.models import Collection, CollectionRelease, TaxonomySource
-from tests.mock_session import session_fixture, client_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
+from ..mock_session import session_fixture, client_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture

@@ -1,3 +1,4 @@
+import datetime
 from typing import Any, Dict
 
 import pytest
@@ -9,8 +10,10 @@ from pangbank_api.models import (
     Pangenome,
     Taxon,
     TaxonomySource,
+    Collection,
+    CollectionRelease,
 )
-from tests.mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
+from .mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture
@@ -95,6 +98,29 @@ def mock_data(
     genome_in_pangenome_metric_data: Dict[str, Any],
 ):
     # Create mock Pangenome and related models for the test
+    collection = Collection(name="Collection 1", description="Test Collection")
+    release1 = CollectionRelease(
+        version="1.0.0",
+        ppanggolin_version="2.3.4",
+        pangbank_wf_version="1.2.3",
+        pangenomes_directory="/path/to/pangenomes",
+        release_note="Initial release.",
+        mash_sketch="sketch/path",
+        mash_version="2.0",
+        date=datetime.datetime.now(),
+        collection=collection,
+    )
+    release2 = CollectionRelease(
+        version="2.0.0",
+        ppanggolin_version="2.3.4",
+        pangbank_wf_version="1.2.3",
+        pangenomes_directory="/path/to/pangenomes",
+        release_note="Initial release.",
+        mash_sketch="sketch/path",
+        mash_version="2.0",
+        date=datetime.datetime.now(),
+        collection=collection,
+    )
 
     taxonomy_source = TaxonomySource(name="TaxSouce", ranks="Domain;Family;Species")
 
@@ -119,19 +145,19 @@ def mock_data(
 
     pangenome1 = Pangenome(
         **pangenome_metric_data,
-        collection_release_id=1,
+        collection_release=release1,
         file_name="Pangenome One",
         taxa=[taxon_bact, taxon_actino],
     )
     pangenome2 = Pangenome(
         **pangenome_metric_data,
-        collection_release_id=1,
+        collection_release=release1,
         file_name="Pangenome Two",
         taxa=[taxon_archaea],
     )
     pangenome3 = Pangenome(
         **pangenome_metric_data,
-        collection_release_id=2,
+        collection_release=release2,
         file_name="Pangenome Three",
         taxa=[taxon_bact_2],
     )
@@ -156,6 +182,9 @@ def mock_data(
 
     session.add_all(
         [
+            collection,
+            release1,
+            release2,
             pangenome1,
             pangenome2,
             pangenome3,
