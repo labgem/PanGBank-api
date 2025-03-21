@@ -77,9 +77,8 @@ def test_get_pangenomes_with_combined_filters(session: Session, mock_data: None)
     )
 
     result = get_pangenomes(session=session, filter_params=filter_params)
-    print(result)
     assert len(result) == 1  # Only one result should match the combined filters
-    assert result[0].collection_release_id == 2
+    assert result[0].collection_release.latest is True
 
 
 def test_get_pangenomes_no_results(session: Session):

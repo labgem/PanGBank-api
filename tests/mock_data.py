@@ -120,6 +120,7 @@ def mock_data(
         mash_version="2.0",
         date=datetime.datetime.now(),
         collection=collection,
+        latest=True,
     )
 
     taxonomy_source = TaxonomySource(name="TaxSouce", ranks="Domain;Family;Species")

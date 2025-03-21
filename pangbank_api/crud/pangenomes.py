@@ -85,6 +85,7 @@ def get_pangenomes(
     filter_params: FilterCollectionTaxonGenome,
     pagination_params: PaginationParams | None = None,
 ) -> Sequence[Pangenome]:
+
     query = select(Pangenome).distinct()
 
     # if filter_params.collection_release_id is not None:
@@ -92,9 +93,16 @@ def get_pangenomes(
     #         Pangenome.collection_release_id == filter_params.collection_release_id
     #     )
 
+    collectionrelease_alias = aliased(CollectionRelease)
+
     if filter_params.collection_id is not None:
-        query = query.join(CollectionRelease).where(
-            CollectionRelease.collection_id == filter_params.collection_id
+        query = query.join(collectionrelease_alias).where(
+            collectionrelease_alias.collection_id == filter_params.collection_id
+        )
+
+    if filter_params.only_latest_release is True:
+        query = query.join(collectionrelease_alias).where(
+            collectionrelease_alias.latest
         )
 
     if filter_params.genome_name is not None:
