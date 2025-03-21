@@ -1,30 +1,34 @@
-[tool.poetry]
+[project]
 name = "pangbank-api"
 version = "0.1.0"
 description = "Source code to PanGBank API"
-authors = ["JeanMainguy <jean.mainguy@outlook.fr>"]
+authors = [
+    { name = "Jean Mainguy"}
+]
 readme = "README.md"
-packages = [
-    { include = "pangbank_api" },
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "fastapi[all]>=0.115.8",
+    "sqlmodel>=0.0.22",
+    "typer>=0.15.1",
+    "pyyaml>=6.0.2"
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.14"
-fastapi = "^0.115.8"
-sqlmodel = "^0.0.22"
-typer = "^0.15.1"
-pyyaml = "^6.0.2"
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.4",
+    "requests>=2.32.3",
+    "httpx>=0.28.1",
+    "pytest-cov>=6.0.0",
+    "flake8>=7.1.2"
+]
 
-[tool.poetry.scripts]
+[project.scripts]
 pangbank_db = "pangbank_api.manage_db.pangbank_db:cli"
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.4"
-requests = "^2.32.3"
-httpx = "^0.28.1"
-pytest-cov = "^6.0.0"
-flake8 = "^7.1.2"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["pangbank_api*"]

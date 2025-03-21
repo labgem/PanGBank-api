@@ -8,37 +8,33 @@ PanGBank is an API designed to manage a database of pangenomes. Built with **Fas
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/labgem/PanGBank_api.git
-   cd PanGBank_api
+   git clone https://github.com/labgem/PanGBank-api.git
+   cd PanGBank-api
    ```
 
 2. Create a virtual environment and install dependencies:
    ```bash
    python -m venv venv
-   source venv/bin/activate 
-   pip install -r requirements.txt
+   source venv/bin/activate
+   pip install .
    ```
 
 3. Run the API in development mode:
    ```bash
+   export PANGBANK_DB_PATH="<Path to the SQLlite database>"
+   export PANGBANK_DATA_DIR="<Path to the Directory containing Pangenomes>"
    fastapi dev pangbank_api/main.py
    ```
 
 ### Manage the database
 
-1. Install the CLI tool to manage the database with
+Interact with the database locally:
 
-```bash
-
-pip install .
-```
-
-2. Interact with the database:
    - Add a collection release to the database with 
 
 
    ```bash
-   pangbank_db add-collection <collection release dir>
+   pangbank_db add-collection-release <collection_release_json>
    ```
    - List collections
 
@@ -51,14 +47,7 @@ pip install .
    ```bash
    pangbank_db delete-collection <collection name> --release-version <release version>
    ```
-   - Add genome metadata 
 
-   ```bash
-   pangbank_db add-genome-metadata  <genome-metadata file >
-   ```
-
-
-3. 
 ### Docker Compose Setup
 
 1. Build and run the Docker image:
