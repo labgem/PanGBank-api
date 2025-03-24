@@ -27,7 +27,9 @@ def check_and_read_json_file(input_json_file: Path):
     return json_content
 
 
-def parse_collection_release_input_json(collection_release_json: Path):
+def parse_collection_release_input_json(
+    collection_release_json: Path, pangbank_data_dir: Path
+):
     json_content = check_and_read_json_file(collection_release_json)
     # Validate JSON structure using Pydantic
     data_input = CollectionReleaseInput.model_validate(json_content)
@@ -37,9 +39,8 @@ def parse_collection_release_input_json(collection_release_json: Path):
     for genome_source in data_input.genome_sources:
         genome_source.file = collection_release_json.parent / genome_source.file
 
-    pangenomes_directory = (
-        collection_release_json.parent / data_input.release.pangenomes_directory
-    )
+    pangenomes_directory = pangbank_data_dir / data_input.release.pangenomes_directory
+
     data_input.release.pangenomes_directory = str(pangenomes_directory)
 
     # Check if paths exist

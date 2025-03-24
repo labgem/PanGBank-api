@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+
 from typing import Optional
 
 import typer
@@ -48,10 +49,20 @@ def add_collection_release(
         exists=True,
         dir_okay=True,
     ),
+    pangbank_data_dir: Annotated[
+        Path,
+        typer.Option(
+            envvar="PANGBANK_DATA_DIR",
+            help="Path to the pangbank data directory.",
+            exists=True,
+        ),
+    ] = Path("./"),
 ):
     set_up_logging_config()
 
-    data_input = parse_collection_release_input_json(collection_release_json)
+    data_input = parse_collection_release_input_json(
+        collection_release_json, pangbank_data_dir
+    )
 
     collection_input = data_input.collection
     collection_release_input = data_input.release
@@ -62,6 +73,7 @@ def add_collection_release(
     genome_sources = data_input.genome_sources
 
     pangenome_dir = Path(collection_release_input.pangenomes_directory)
+
     genome_name_to_lineage = parse_taxonomy_file(taxonomy_file)
     lineages = set(genome_name_to_lineage.values())
 

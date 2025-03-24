@@ -55,9 +55,9 @@ def temp_json_file(tmp_path: Path):
     return json_file
 
 
-def test_parse_collection_release_input_json(temp_json_file: Path):
+def test_parse_collection_release_input_json(temp_json_file: Path, tmp_path: Path):
     """Test that the function correctly parses and validates the input JSON."""
-    data = parse_collection_release_input_json(temp_json_file)
+    data = parse_collection_release_input_json(temp_json_file, tmp_path)
 
     # Validate key data points
     assert data.release.version == "0.0.1"
@@ -73,7 +73,7 @@ def test_parse_collection_release_input_json_no_input(tmp_path: Path):
     """Test that the function correctly parses and validates the input JSON."""
     no_existing_path = tmp_path / "no_existing.json"
     with pytest.raises(typer.Exit):
-        parse_collection_release_input_json(no_existing_path)
+        parse_collection_release_input_json(no_existing_path, tmp_path)
 
 
 def test_parse_collection_release_input_json_invalid_json(tmp_path: Path):
@@ -82,4 +82,4 @@ def test_parse_collection_release_input_json_invalid_json(tmp_path: Path):
     invalid_json_path.write_text("this is not a json")
 
     with pytest.raises(typer.Exit):
-        parse_collection_release_input_json(invalid_json_path)
+        parse_collection_release_input_json(invalid_json_path, tmp_path)
