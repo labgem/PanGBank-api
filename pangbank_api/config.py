@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Annotated
 from fastapi import Depends
 
+
 class Settings(BaseSettings):
     pangbank_db_path: Path = Path("database/database.db")
     pangbank_data_dir: Path = Path("data/")

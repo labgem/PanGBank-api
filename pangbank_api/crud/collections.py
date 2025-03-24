@@ -12,6 +12,7 @@ from pangbank_api.models import (
     CollectionPublicWithReleases,
 )
 
+
 def get_collections(
     session: Session, filter_params: FilterCollection
 ) -> Sequence[CollectionPublicWithReleases]:
