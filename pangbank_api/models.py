@@ -154,7 +154,7 @@ class CollectionReleaseBase(SQLModel):
     release_note: str
 
     mash_version: str
-
+    latest: bool = False
     date: datetime
     collection_id: int | None = Field(
         default=None, foreign_key="collection.id", ondelete="CASCADE"
@@ -181,14 +181,13 @@ class CollectionRelease(CollectionReleaseBase, table=True):
     pangenomes: list["Pangenome"] = Relationship(
         back_populates="collection_release", cascade_delete=True
     )
-    latest: bool = False
 
 
 class CollectionReleasePublic(CollectionReleaseBase):
     id: int
     taxonomy_source: TaxonomySourcePublic
     collection_name: str
-
+    collection: CollectionPublic
 
 class CollectionReleasePublicWithCount(CollectionReleasePublic):
     pangenome_count: int
