@@ -2,7 +2,8 @@ from fastapi import Query
 from pydantic import BaseModel
 
 from pangbank_api.models import Taxon, Taxonomy
-
+from fastapi import Query
+from typing import Annotated
 
 class PaginationParams(BaseModel):
     offset: int = 0
@@ -15,8 +16,7 @@ class FilterCollection(BaseModel):
 
 
 class FilterTaxon(BaseModel):
-    taxon_name: str | None = None
-
+    taxon_name: Annotated[str | None, Query(min_length=3)] = None
     substring_match: bool = False
 
 
