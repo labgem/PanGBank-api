@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from pydantic import BaseModel
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel  # type: ignore
 
@@ -99,6 +98,7 @@ class CollectionPublic(CollectionBase):
 
 class CollectionPublicWithReleases(CollectionPublic):
     releases: list["CollectionReleasePublicWithCount"]
+    latest_release: "CollectionReleasePublicWithCount"
 
 
 class TaxonomySourceBase(SQLModel):
@@ -328,7 +328,7 @@ class PangenomePublic(PangenomeBase):
     collection_release_id: int
 
 
-class TaxonomyBase(BaseModel):
+class TaxonomyBase(SQLModel):
     pass
 
 
