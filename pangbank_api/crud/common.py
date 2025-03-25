@@ -11,7 +11,7 @@ class PaginationParams(BaseModel):
 
 
 class FilterCollection(BaseModel):
-    collection_id: int | None = None
+    collection_name: str | None = None
     only_latest_release: bool | None = None
 
 

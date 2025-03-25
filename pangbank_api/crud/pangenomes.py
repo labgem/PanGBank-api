@@ -24,6 +24,7 @@ from pangbank_api.models import (
     CollectionRelease,
     CollectionReleasePublic,
     GenomeInPangenomeMetadata,
+    Collection,
 )
 
 
@@ -97,9 +98,11 @@ def get_pangenomes(
 
     collectionrelease_alias = aliased(CollectionRelease)
 
-    if filter_params.collection_id is not None:
-        query = query.join(collectionrelease_alias).where(
-            collectionrelease_alias.collection_id == filter_params.collection_id
+    if filter_params.collection_name is not None:
+        query = (
+            query.join(collectionrelease_alias)
+            .join(Collection)
+            .where(Collection.name == filter_params.collection_name)
         )
 
     if filter_params.only_latest_release is True:

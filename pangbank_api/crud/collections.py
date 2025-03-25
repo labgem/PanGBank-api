@@ -19,8 +19,8 @@ def get_collections(
     query = select(Collection)
 
     # Check if filter_params.collection_release_id is provided
-    if filter_params.collection_id is not None:
-        query = query.where(Collection.id == filter_params.collection_id)
+    if filter_params.collection_name is not None:
+        query = query.where(Collection.name == filter_params.collection_name)
 
     collections = session.exec(query).all()
 
