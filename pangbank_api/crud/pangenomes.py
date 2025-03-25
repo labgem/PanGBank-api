@@ -51,7 +51,9 @@ def make_pangenome_public(pangenome: Pangenome) -> PangenomePublic:
 
     taxonomies = get_taxonomies_from_taxa(pangenome.taxa)
 
-    assert len(taxonomies) == 1
+    assert (
+        len(taxonomies) == 1
+    ), f"{pangenome.file_name} {pangenome.id} have an issue with its taxonomies. Found {len(taxonomies)} taxonomies"
 
     collection_release_public = CollectionReleasePublic.model_validate(
         pangenome.collection_release,
