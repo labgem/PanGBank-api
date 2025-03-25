@@ -2,7 +2,6 @@ from fastapi import Query
 from pydantic import BaseModel
 
 from pangbank_api.models import Taxon, Taxonomy
-from fastapi import Query
 from typing import Annotated
 
 class PaginationParams(BaseModel):
@@ -12,6 +11,7 @@ class PaginationParams(BaseModel):
 
 class FilterCollection(BaseModel):
     collection_name: str | None = None
+    collection_id: int | None = None
     only_latest_release: bool | None = None
 
 

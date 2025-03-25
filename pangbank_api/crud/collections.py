@@ -41,8 +41,13 @@ def make_collection_public_with_releases(
 
     public_releases: List[CollectionReleasePublicWithCount] = []
 
+    latest_release = max(collection.releases, key=lambda x: parse(x.version))
+    assert (
+        latest_release.latest
+    ), f"Latest release {latest_release} is not marked as latest"
+
     if only_latest_release:
-        releases = [release for release in collection.releases if release.latest]
+        releases = [latest_release]
     else:
         releases = collection.releases
 
@@ -54,6 +59,7 @@ def make_collection_public_with_releases(
             update={
                 "pangenome_count": len(release.pangenomes),
                 "collection_name": collection.name,
+                "latest_release": latest_release,
             },
         )
         public_releases.append(release_public)
