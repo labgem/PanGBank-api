@@ -316,7 +316,9 @@ def add_pangenomes_to_db(
                 session=session,
             )
 
-            link_pangenome_and_genome_taxa(pangenome, genomes, session)
+            link_pangenome_and_genome_taxa(
+                pangenome, genomes, collection_release.taxonomy_source, session
+            )
 
             metadata_files = list(
                 genomes_metadata_dir.glob("genomes_metadata_from_*.tsv*")
@@ -437,15 +439,21 @@ def extract_source_from_metadata_file(metadata_file: Path) -> str:
 
 
 def link_pangenome_and_genome_taxa(
-    pangenome: Pangenome, genomes: list[Genome], session: Session
+    pangenome: Pangenome,
+    genomes: list[Genome],
+    taxonomy_source: TaxonomySource,
+    session: Session,
 ):
     pangenome_taxa: List[Taxon] = []
 
     for genome in genomes:
+        genome_taxa = [
+            taxon for taxon in genome.taxa if taxon.taxonomy_source == taxonomy_source
+        ]
         if not pangenome_taxa:
-            pangenome_taxa = genome.taxa
+            pangenome_taxa = genome_taxa
         else:
-            pangenome_taxa = get_common_taxa(genome.taxa, pangenome_taxa)
+            pangenome_taxa = get_common_taxa(genome_taxa, pangenome_taxa)
     pangenome_taxon_links = [
         PangenomeTaxonLink(pangenome_id=pangenome.id, taxon_id=taxon.id)
         for taxon in pangenome_taxa
