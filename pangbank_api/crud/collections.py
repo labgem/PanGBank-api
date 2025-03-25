@@ -40,7 +40,14 @@ def make_collection_public_with_releases(
 ):
 
     public_releases: List[CollectionReleasePublicWithCount] = []
-    for release in collection.releases:
+
+    if only_latest_release:
+        releases = [release for release in collection.releases if release.latest]
+    else:
+        releases = collection.releases
+
+    for release in releases:
+
         release_public = CollectionReleasePublicWithCount.model_validate(
             release,
             from_attributes=True,
@@ -55,12 +62,6 @@ def make_collection_public_with_releases(
     public_releases = sorted(
         public_releases, key=lambda x: parse(x.version), reverse=True
     )
-
-    # # Mark the latest release
-    # if public_releases:
-    #     public_releases[0].latest = True
-    # if only_latest_release:
-    #     public_releases = public_releases[:1]
 
     collection_public = CollectionPublicWithReleases.model_validate(
         collection,
