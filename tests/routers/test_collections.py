@@ -52,12 +52,14 @@ def test_get_collections(
         **collection_release_data,
         collection=collection_1,
         taxonomy_source=taxonomy_source,
+        latest=True,
     )
 
     release2 = CollectionRelease(
         **collection_release_data,
         collection=collection_2,
         taxonomy_source=taxonomy_source,
+        latest=True,
     )
 
     session.add(release1)
@@ -86,9 +88,23 @@ def test_get_collections(
     assert "pangenomes_directory" not in data[0]["releases"][0]
 
 
-def test_get_collection(session: Session, client: TestClient):
-    collection_1 = Collection(name="Collection 1")
+def test_get_collection(
+    session: Session, client: TestClient, collection_release_data: dict[str, Any]
+):
+    taxonomy_source = TaxonomySource(
+        name="Taxonomy Source 1",
+        ranks="Domain; Phylum; Class; Order; Family; Genus; Species",
+    )
 
+    collection_1 = Collection(name="Collection 1")
+    release = CollectionRelease(
+        **collection_release_data,
+        collection=collection_1,
+        taxonomy_source=taxonomy_source,
+        latest=True,
+    )
+
+    session.add(release)
     session.add(collection_1)
     session.commit()
     session.refresh(collection_1)

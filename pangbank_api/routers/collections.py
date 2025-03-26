@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
 from pangbank_api.crud import collections as collections_crud
-from pangbank_api.crud.common import FilterCollection
+from pangbank_api.crud.common import FilterCollection, FilterRelease
 
 from ..dependencies import SessionDep
 from ..models import CollectionPublicWithReleases
@@ -23,9 +23,11 @@ def get_collections(session: SessionDep, filter_params: FilterCollection = Depen
 
 
 @router.get("/collections/{collection_id}", response_model=CollectionPublicWithReleases)
-def get_collection(collection_id: int, session: SessionDep):
+def get_collection(
+    collection_id: int, session: SessionDep, filter_release: FilterRelease = Depends()
+):
 
-    collection = collections_crud.get_collection(session, collection_id)
+    collection = collections_crud.get_collection(session, collection_id, filter_release)
 
     if not collection:
         raise HTTPException(
@@ -54,7 +56,6 @@ async def get_collection_mash_sketch(
         )
     mash_sketch_path = settings.pangbank_data_dir / mash_sketch_file
 
-    print("mash_sketch_path", mash_sketch_path)
     if not mash_sketch_path.exists():
         raise HTTPException(
             status_code=404,

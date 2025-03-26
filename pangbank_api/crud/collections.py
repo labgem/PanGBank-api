@@ -5,7 +5,7 @@ from pathlib import Path
 from sqlmodel import Session, select
 from packaging.version import parse
 
-from pangbank_api.crud.common import FilterCollection
+from pangbank_api.crud.common import FilterCollection, FilterRelease
 from pangbank_api.models import (
     Collection,
     CollectionReleasePublicWithCount,
@@ -59,7 +59,6 @@ def make_collection_public_with_releases(
             update={
                 "pangenome_count": len(release.pangenomes),
                 "collection_name": collection.name,
-                "latest_release": latest_release,
             },
         )
         public_releases.append(release_public)
@@ -72,19 +71,21 @@ def make_collection_public_with_releases(
     collection_public = CollectionPublicWithReleases.model_validate(
         collection,
         from_attributes=True,
-        update={"releases": public_releases},
+        update={
+            "releases": public_releases,
+        },
     )
     return collection_public
 
 
-def get_collection(session: Session, collection_id: int):
+def get_collection(session: Session, collection_id: int, filter_release: FilterRelease):
 
     collection = session.get(Collection, collection_id)
     if collection is None:
         return None
 
     public_collection = make_collection_public_with_releases(
-        collection, only_latest_release=True
+        collection, only_latest_release=filter_release.only_latest_release
     )
     return public_collection
 

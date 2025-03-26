@@ -98,7 +98,6 @@ class CollectionPublic(CollectionBase):
 
 class CollectionPublicWithReleases(CollectionPublic):
     releases: list["CollectionReleasePublicWithCount"]
-    latest_release: "CollectionReleasePublicWithCount"
 
 
 class TaxonomySourceBase(SQLModel):

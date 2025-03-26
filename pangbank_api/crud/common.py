@@ -9,10 +9,13 @@ class PaginationParams(BaseModel):
     limit: int = Query(default=20, le=100)
 
 
-class FilterCollection(BaseModel):
+class FilterRelease(BaseModel):
+    only_latest_release: bool | None = None
+
+
+class FilterCollection(FilterRelease):
     collection_name: str | None = None
     collection_id: int | None = None
-    only_latest_release: bool | None = None
 
 
 class FilterTaxon(BaseModel):
