@@ -40,13 +40,16 @@ def parse_collection_release_input_json(
         genome_source.file = collection_release_json.parent / genome_source.file
 
     pangenomes_directory = pangbank_data_dir / data_input.release.pangenomes_directory
+    mash_sketch_file = pangbank_data_dir / data_input.release.mash_sketch
 
     data_input.release.pangenomes_directory = str(pangenomes_directory)
 
     # Check if paths exist
-    missing_files = [data_input.taxonomy.file, pangenomes_directory] + [
-        gs.file for gs in data_input.genome_sources
-    ]
+    missing_files = [
+        data_input.taxonomy.file,
+        pangenomes_directory,
+        mash_sketch_file,
+    ] + [gs.file for gs in data_input.genome_sources]
     missing_files = [f for f in missing_files if not f.exists()]
 
     if missing_files:
