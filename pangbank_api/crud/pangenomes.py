@@ -85,7 +85,7 @@ def get_public_pangenome(session: Session, pangenome_id: int) -> PangenomePublic
 
 def get_pangenomes(
     session: Session,
-    filter_params: FilterCollectionTaxonGenome,
+    filter_params: FilterCollectionTaxonGenome | None = None,
     pagination_params: PaginationParams | None = None,
 ) -> Sequence[Pangenome]:
 
@@ -98,26 +98,26 @@ def get_pangenomes(
 
     collectionrelease_alias = aliased(CollectionRelease)
 
-    if filter_params.collection_name is not None:
+    if filter_params and filter_params.collection_name is not None:
         query = (
             query.join(collectionrelease_alias)
             .join(Collection)
             .where(Collection.name == filter_params.collection_name)
         )
 
-    if filter_params.only_latest_release is True:
+    if filter_params and filter_params.only_latest_release is True:
         query = query.join(collectionrelease_alias).where(
             collectionrelease_alias.latest
         )
 
-    if filter_params.genome_name is not None:
+    if filter_params and filter_params.genome_name is not None:
         query = (
             query.join(GenomePangenomeLink)
             .join(Genome)
             .where(Genome.name == filter_params.genome_name)
         )
 
-    if filter_params.taxon_name is not None:
+    if filter_params and filter_params.taxon_name is not None:
         # Apply offset and limit
 
         query = query.join(PangenomeTaxonLink).join(Taxon)
@@ -139,9 +139,10 @@ def get_pangenomes(
 
 def get_public_pangenomes(
     session: Session,
-    filter_params: FilterCollectionTaxonGenome,
+    filter_params: FilterCollectionTaxonGenome | None = None,
     pagination_params: PaginationParams | None = None,
 ) -> Iterator[PangenomePublic]:
+
     pangenomes = get_pangenomes(session, filter_params, pagination_params)
 
     public_pangenomes = (make_pangenome_public(pangenome) for pangenome in pangenomes)
@@ -152,7 +153,7 @@ def get_public_pangenomes(
 def get_genomes_in_pangenome(
     session: Session,
     pangenome_id: int,
-    filter_genome: FilterGenome,
+    filter_genome: FilterGenome | None = None,
     filter_metadata: FilterGenomeMetadata | None = None,
     pagination_params: PaginationParams | None = None,
 ):
@@ -166,7 +167,7 @@ def get_genomes_in_pangenome(
         .where(Pangenome.id == pangenome_id)
     )
 
-    if filter_genome.genome_name is not None:
+    if filter_genome and filter_genome.genome_name is not None:
         query = query.join(Genome).where(Genome.name == filter_genome.genome_name)
 
     if pagination_params:
