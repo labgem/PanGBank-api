@@ -170,6 +170,8 @@ class CollectionRelease(CollectionReleaseBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     mash_sketch: str
+    mash_sketch_md5sum: str
+
     pangenomes_directory: str
     collection: "Collection" = Relationship(back_populates="releases")
 
@@ -297,8 +299,9 @@ class PangenomeBase(PangenomeMetric):
 
 class Pangenome(PangenomeBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-
+    name: str
     file_name: str
+    file_md5sum: str
 
     collection_release_id: int | None = Field(
         default=None, foreign_key="collectionrelease.id"

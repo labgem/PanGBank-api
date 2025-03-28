@@ -24,6 +24,7 @@ def collection_release_data() -> dict[str, Any]:
         "date": datetime.now(),
         "collection_id": 1,
         "taxonomy_source_id": 1,
+        "mash_sketch_md5sum": "1234567890abcdef",
     }
 
 

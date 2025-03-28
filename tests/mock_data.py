@@ -109,6 +109,7 @@ def mock_data(
         mash_version="2.0",
         date=datetime.datetime.now(),
         collection=collection,
+        mash_sketch_md5sum="1234567890abcdef",
     )
     release2 = CollectionRelease(
         version="2.0.0",
@@ -121,6 +122,7 @@ def mock_data(
         date=datetime.datetime.now(),
         collection=collection,
         latest=True,
+        mash_sketch_md5sum="1234567890abcdef",
     )
 
     taxonomy_source = TaxonomySource(name="TaxSouce", ranks="Domain;Family;Species")
@@ -148,18 +150,24 @@ def mock_data(
         **pangenome_metric_data,
         collection_release=release1,
         file_name="Pangenome One",
+        name="Pangenome_One",
+        file_md5sum="1a",
         taxa=[taxon_bact, taxon_actino],
     )
     pangenome2 = Pangenome(
         **pangenome_metric_data,
         collection_release=release1,
         file_name="Pangenome Two",
+        name="Pangenome_Two",
+        file_md5sum="2a",
         taxa=[taxon_archaea],
     )
     pangenome3 = Pangenome(
         **pangenome_metric_data,
         collection_release=release2,
         file_name="Pangenome Three",
+        name="Pangenome_Three",
+        file_md5sum="3a",
         taxa=[taxon_bact_2],
     )
 

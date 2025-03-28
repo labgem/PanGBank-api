@@ -21,7 +21,7 @@ def temp_json_file(tmp_path: Path):
             "pangenomes_directory": "pangenomes",
             "release_note": "This release is just a test release.",
             "date": "2025-01-29",
-            "mash_sketch": "mash_sketch/families_persistent_all.msh",
+            "mash_sketch": "families_persistent_all.msh",
             "mash_version": "2.3",
         },
         "taxonomy": {
@@ -46,10 +46,12 @@ def temp_json_file(tmp_path: Path):
     pangenome_dir = tmp_path / "pangenomes"
     genome_source_file = tmp_path / "RefSeq.list"
     taxonomy_file = tmp_path / "taxonomy.tsv.gz"
+    mash_sketch_file = tmp_path / "families_persistent_all.msh"
 
     pangenome_dir.mkdir(parents=True, exist_ok=True)
     genome_source_file.touch()
     taxonomy_file.touch()
+    mash_sketch_file.touch()
 
     json_file.write_text(json.dumps(json_data))
     return json_file

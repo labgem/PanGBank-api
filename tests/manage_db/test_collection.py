@@ -40,6 +40,7 @@ def collection_release():
         mash_sketch="mash_sketch/families_persistent_all.msh",
         mash_version="2.3",
         pangenomes_directory="pangenomes",
+        mash_sketch_md5sum="1234567890abcdef",
     )
 
     return collection_release
@@ -56,6 +57,7 @@ def collection_release2():
         mash_sketch="mash_sketch/families_persistent_all.msh",
         mash_version="2.3",
         pangenomes_directory="pangenomes",
+        mash_sketch_md5sum="1234567890abcdef",
     )
     return collection_release2
 
@@ -205,6 +207,7 @@ def test_create_collection_release_ppanggo_version_mismatch(
         mash_sketch="mash_sketch/families_persistent_all.msh",
         mash_version="2.3",
         pangenomes_directory="pangenomes",
+        mash_sketch_md5sum="1234567890abcdef",
     )
 
     create_collection_release(collection, collection_release, taxonomy_source, session)

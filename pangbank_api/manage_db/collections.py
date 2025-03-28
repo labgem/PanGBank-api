@@ -3,7 +3,6 @@ import gzip
 import logging
 from pathlib import Path
 from typing import Iterator, List
-
 from packaging.version import parse
 
 # import sys
@@ -31,7 +30,7 @@ from pangbank_api.models import (
     TaxonomySource,
 )
 from pangbank_api.manage_db.genome_metadata import parse_metadata_table
-
+from pangbank_api.manage_db.utils import compute_md5
 
 logger = logging.getLogger(__name__)  # __name__ ensures uniqueness per module
 
@@ -297,6 +296,7 @@ def add_pangenomes_to_db(
             pangenome_local_path.as_posix(), None
         )
         if pangenome is None:
+            pangenome_file_md5sum = compute_md5(pangenome_file)
             pangenome_metric = get_pangenome_metrics_from_info_file(pangenome_info_file)
             pangenome = Pangenome.model_validate(
                 pangenome_metric,
@@ -304,6 +304,8 @@ def add_pangenomes_to_db(
                 update={
                     "file_name": pangenome_local_path.as_posix(),
                     "collection_release": collection_release,
+                    "name": pangenome_dir.name,
+                    "file_md5sum": pangenome_file_md5sum,
                 },
             )
             new_pangenomes.append(pangenome)

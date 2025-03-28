@@ -31,6 +31,7 @@ def collection_release_data(tmp_path: Path) -> dict[str, Any]:
         "date": datetime.now(),
         "collection_id": 1,
         "taxonomy_source_id": 1,
+        "mash_sketch_md5sum": "1234567890abcdef",
     }
 
 
@@ -108,12 +109,16 @@ def test_data(
         annotation_source="PPANGGOLIN",
         collection_release=release,
         taxa=taxa,
+        name="Pangenome_test",
+        file_md5sum="1a",
     )
     pangenome2 = Pangenome(
         **pangenome_metric_data,
         file_name=pangneom2_file.name,
         annotation_source="PPANGGOLIN",
         collection_release=release,
+        name="Pangenome_test2",
+        file_md5sum="2a",
         taxa=taxa,
     )
 

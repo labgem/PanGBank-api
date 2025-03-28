@@ -1,6 +1,9 @@
 import json
 import logging
 from pathlib import Path
+import hashlib
+from sqlmodel import SQLModel  # type: ignore
+
 
 import typer
 from rich.logging import RichHandler
@@ -31,6 +34,10 @@ def parse_collection_release_input_json(
     collection_release_json: Path, pangbank_data_dir: Path
 ):
     json_content = check_and_read_json_file(collection_release_json)
+    mash_sketch_md5sum = compute_md5(
+        pangbank_data_dir / json_content["release"]["mash_sketch"]
+    )
+    json_content["release"]["mash_sketch_md5sum"] = mash_sketch_md5sum
     # Validate JSON structure using Pydantic
     data_input = CollectionReleaseInput.model_validate(json_content)
 
@@ -69,3 +76,11 @@ def set_up_logging_config():
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[RichHandler()],
     )
+
+
+def compute_md5(file_path: Path):
+    md5_hash = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):  # Read file in chunks
+            md5_hash.update(chunk)
+    return md5_hash.hexdigest()
