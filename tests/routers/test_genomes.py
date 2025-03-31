@@ -134,17 +134,15 @@ def test_read_genomes_filter_by_substring_match_taxon(
     taxon_name = "Bacteria"
 
     # Act
-    response = client.get(f"/genomes/?taxon_name={taxon_name}&substring_match=true")
+    response = client.get(
+        f"/genomes/?taxon_name={taxon_name}&substring_taxon_match=true"
+    )
 
     # Assert
     assert response.status_code == 200
     data = response.json()
-    for g in data:
-        print(g)
-        print()
-    assert (
-        len(data) == 3
-    )  # Two genomes have the taxon "Bacteria" and one has "d__Bacteria"
+    # Two genomes have the taxon "Bacteria" and one has "d__Bacteria"
+    assert len(data) == 3
 
 
 def test_read_genomes_pagination(client: TestClient, session: Session, mock_data: None):

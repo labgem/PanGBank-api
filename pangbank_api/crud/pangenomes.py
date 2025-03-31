@@ -95,17 +95,25 @@ def get_pangenomes(
         query = query.where(Pangenome.name == filter_params.pangenome_name)
 
     collectionrelease_alias = aliased(CollectionRelease)
-
-    if filter_params and filter_params.collection_name is not None:
-        query = (
-            query.join(collectionrelease_alias)
-            .join(Collection)
-            .where(Collection.name == filter_params.collection_name)
-        )
+    # collectionrelease_alias_2 = aliased(CollectionRelease)
 
     if filter_params and filter_params.only_latest_release is True:
         query = query.join(collectionrelease_alias).where(
             collectionrelease_alias.latest
+        )
+
+    if filter_params and filter_params.collection_name is not None:
+        query = (
+            query.join(CollectionRelease)
+            .join(Collection)
+            .where(Collection.name == filter_params.collection_name)
+        )
+
+    if filter_params and filter_params.collection_id is not None:
+        query = (
+            query.join(CollectionRelease)
+            .join(Collection)
+            .where(Collection.id == filter_params.collection_id)
         )
 
     if filter_params and filter_params.genome_name is not None:
@@ -119,7 +127,7 @@ def get_pangenomes(
         # Apply offset and limit
 
         query = query.join(PangenomeTaxonLink).join(Taxon)
-        if filter_params.substring_match:
+        if filter_params.substring_taxon_match:
             query = query.where(
                 func.lower(Taxon.name).like(f"%{filter_params.taxon_name.lower()}%")
             )

@@ -20,7 +20,7 @@ class FilterCollection(FilterRelease):
 
 class FilterTaxon(BaseModel):
     taxon_name: Annotated[str | None, Query(min_length=3)] = None
-    substring_match: bool = False
+    substring_taxon_match: bool = False
 
 
 class FilterGenome(BaseModel):

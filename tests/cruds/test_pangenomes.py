@@ -47,7 +47,7 @@ def test_get_pangenomes_with_taxon_name_substring_filter(
     """Test with taxon_name substring filter."""
 
     filter_params = FilterGenomeTaxonGenomePangenome(
-        taxon_name="Bacteria", substring_match=True
+        taxon_name="Bacteria", substring_taxon_match=True
     )
     result = get_pangenomes(
         session=session, filter_params=filter_params, pagination_params=None

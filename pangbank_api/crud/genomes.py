@@ -59,7 +59,7 @@ def get_genomes(
 
         query = query.join(GenomeTaxonLink).join(Taxon)
 
-        if filter_params.substring_match:
+        if filter_params.substring_taxon_match:
             query = query.where(
                 func.lower(Taxon.name).like(f"%{filter_params.taxon_name.lower()}%")
             )
