@@ -1,6 +1,6 @@
 from sqlmodel import Session
 
-from pangbank_api.crud.common import FilterCollectionTaxonGenome, PaginationParams
+from pangbank_api.crud.common import FilterGenomeTaxonGenomePangenome, PaginationParams
 from pangbank_api.crud.pangenomes import get_pangenomes
 from pangbank_api.models import Pangenome
 from ..mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
@@ -13,7 +13,7 @@ from ..mock_data import (
 
 def test_get_pangenomes_no_filters(session: Session, mock_data: None):
     """Test with no filters applied, should return all pangenomes."""
-    empty_filter_params = FilterCollectionTaxonGenome()
+    empty_filter_params = FilterGenomeTaxonGenomePangenome()
 
     result = get_pangenomes(
         session=session, filter_params=empty_filter_params, pagination_params=None
@@ -24,7 +24,7 @@ def test_get_pangenomes_no_filters(session: Session, mock_data: None):
 
 def test_get_pangenomes_with_genome_name_filter(session: Session, mock_data: None):
     """Test with genome_name filter."""
-    filter_params = FilterCollectionTaxonGenome(genome_name="GenomeA")
+    filter_params = FilterGenomeTaxonGenomePangenome(genome_name="GenomeA")
 
     result = get_pangenomes(session=session, filter_params=filter_params)
 
@@ -34,7 +34,7 @@ def test_get_pangenomes_with_genome_name_filter(session: Session, mock_data: Non
 def test_get_pangenomes_with_taxon_name_filter(session: Session, mock_data: None):
     """Test with exact taxon_name filter."""
 
-    filter_params = FilterCollectionTaxonGenome(taxon_name="d__Bacteria")
+    filter_params = FilterGenomeTaxonGenomePangenome(taxon_name="d__Bacteria")
     result = get_pangenomes(
         session=session, filter_params=filter_params, pagination_params=None
     )
@@ -46,7 +46,7 @@ def test_get_pangenomes_with_taxon_name_substring_filter(
 ):
     """Test with taxon_name substring filter."""
 
-    filter_params = FilterCollectionTaxonGenome(
+    filter_params = FilterGenomeTaxonGenomePangenome(
         taxon_name="Bacteria", substring_match=True
     )
     result = get_pangenomes(
@@ -59,7 +59,7 @@ def test_get_pangenomes_with_taxon_name_substring_filter(
 def test_get_pangenomes_with_pagination(session: Session, mock_data: None):
     """Test with pagination (offset and limit)."""
     pagination_params = PaginationParams(offset=0, limit=1)
-    empty_filter_params = FilterCollectionTaxonGenome()
+    empty_filter_params = FilterGenomeTaxonGenomePangenome()
 
     result = get_pangenomes(
         session=session,
@@ -72,7 +72,7 @@ def test_get_pangenomes_with_pagination(session: Session, mock_data: None):
 def test_get_pangenomes_with_combined_filters(session: Session, mock_data: None):
     """Test with multiple filters applied."""
 
-    filter_params = FilterCollectionTaxonGenome(
+    filter_params = FilterGenomeTaxonGenomePangenome(
         only_latest_release=True, genome_name="GenomeA"
     )
 
@@ -84,7 +84,7 @@ def test_get_pangenomes_with_combined_filters(session: Session, mock_data: None)
 def test_get_pangenomes_no_results(session: Session):
     """Test when no results match the filters."""
 
-    filter_params = FilterCollectionTaxonGenome(genome_name="NoValidGenomeName")
+    filter_params = FilterGenomeTaxonGenomePangenome(genome_name="NoValidGenomeName")
 
     result = get_pangenomes(
         session=session, filter_params=filter_params, pagination_params=None
