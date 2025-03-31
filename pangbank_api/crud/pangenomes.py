@@ -8,7 +8,7 @@ from sqlalchemy.orm import aliased
 from sqlmodel import Session, select
 
 from pangbank_api.crud.common import (
-    FilterCollectionTaxonGenome,
+    FilterGenomeTaxonGenomePangenome,
     PaginationParams,
     FilterGenome,
     FilterGenomeMetadata,
@@ -85,16 +85,14 @@ def get_public_pangenome(session: Session, pangenome_id: int) -> PangenomePublic
 
 def get_pangenomes(
     session: Session,
-    filter_params: FilterCollectionTaxonGenome | None = None,
+    filter_params: FilterGenomeTaxonGenomePangenome | None = None,
     pagination_params: PaginationParams | None = None,
 ) -> Sequence[Pangenome]:
 
     query = select(Pangenome).distinct()
 
-    # if filter_params.collection_release_id is not None:
-    #     query = query.where(
-    #         Pangenome.collection_release_id == filter_params.collection_release_id
-    #     )
+    if filter_params and filter_params.pangenome_name is not None:
+        query = query.where(Pangenome.name == filter_params.pangenome_name)
 
     collectionrelease_alias = aliased(CollectionRelease)
 
@@ -139,7 +137,7 @@ def get_pangenomes(
 
 def get_public_pangenomes(
     session: Session,
-    filter_params: FilterCollectionTaxonGenome | None = None,
+    filter_params: FilterGenomeTaxonGenomePangenome | None = None,
     pagination_params: PaginationParams | None = None,
 ) -> Iterator[PangenomePublic]:
 

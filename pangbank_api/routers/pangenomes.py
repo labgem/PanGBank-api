@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 
 from pangbank_api.crud import pangenomes as pangenomes_crud
 from pangbank_api.crud.common import (
-    FilterCollectionTaxonGenome,
+    FilterGenomeTaxonGenomePangenome,
     PaginationParams,
     FilterGenome,
     FilterGenomeMetadata,
@@ -25,7 +25,7 @@ router = APIRouter(
 @router.get("/pangenomes/", response_model=list[PangenomePublic])
 async def get_pangenomes(
     session: SessionDep,
-    filter_params: FilterCollectionTaxonGenome = Depends(),
+    filter_params: FilterGenomeTaxonGenomePangenome = Depends(),
     pagination_params: PaginationParams = Depends(),
 ):
     pangenomes = pangenomes_crud.get_public_pangenomes(
@@ -140,7 +140,7 @@ async def get_genome_in_pangenome(
 
 @router.get("/pangenomes/count/", response_model=int)
 async def get_pangenome_count(
-    session: SessionDep, filter_params: FilterCollectionTaxonGenome = Depends()
+    session: SessionDep, filter_params: FilterGenomeTaxonGenomePangenome = Depends()
 ):
     pangenomes = pangenomes_crud.get_pangenomes(session, filter_params)
 

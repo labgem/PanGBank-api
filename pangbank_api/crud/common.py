@@ -27,6 +27,10 @@ class FilterGenome(BaseModel):
     genome_name: str | None = None
 
 
+class FilterPangenome(BaseModel):
+    pangenome_name: str | None = None
+
+
 class FilterGenomeMetadata(BaseModel):
     metadata_key: str | None = None
     metadata_value: str | None = None
@@ -41,6 +45,12 @@ class FilterCollectionTaxonGenome(
     FilterCollection,
     FilterTaxon,
     FilterGenome,
+):
+    pass
+
+
+class FilterGenomeTaxonGenomePangenome(
+    FilterCollection, FilterTaxon, FilterGenome, FilterPangenome
 ):
     pass
 
