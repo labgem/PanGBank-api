@@ -294,14 +294,16 @@ class PangenomeMetric(SQLModel):
 
 
 class PangenomeBase(PangenomeMetric):
+
     annotation_source: str | None = None
+    name: str
+    file_md5sum: str
 
 
 class Pangenome(PangenomeBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
     file_name: str
-    file_md5sum: str
 
     collection_release_id: int | None = Field(
         default=None, foreign_key="collectionrelease.id"

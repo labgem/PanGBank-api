@@ -38,7 +38,7 @@ class FilterGenomeMetadata(BaseModel):
 
 
 class FilterGenomeTaxon(FilterGenome, FilterTaxon):
-    genome_name: str | None = None
+    pass
 
 
 class FilterCollectionTaxonGenome(
