@@ -79,6 +79,14 @@ def pangenome_metric_data(session: Session) -> Dict[str, Any]:
         "spot_count": 3,
         "module_count": 15,
         "family_in_module_count": 50,
+        "mean_completeness": 0.95,
+        "mean_contamination": 0.95,
+        "mean_fragmentation": 0.95,
+        "mean_exact_core_families_count_per_genome": 40.0,
+        "mean_soft_core_families_count_per_genome": 40.0,
+        "mean_persistent_families_count_per_genome": 40.0,
+        "mean_shell_families_count_per_genome": 40.0,
+        "mean_cloud_families_count_per_genome": 40.0,
     }
 
     # Return as list of dicts
