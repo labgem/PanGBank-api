@@ -16,10 +16,11 @@ from pangbank_api.models import (
 
 def get_genome_public(genome: Genome) -> GenomePublicWithTaxonomies:
     taxonomies = get_taxonomies_from_taxa(genome.taxa)
-    genome_public = GenomePublicWithTaxonomies.model_validate(
-        genome, from_attributes=True, update={"taxonomies": taxonomies}
+    genome_public = GenomePublicWithTaxonomies(
+        **genome.model_dump(),
+        taxonomies=taxonomies,
+        genome_source=genome.genome_source,
     )
-
     return genome_public
 
 
