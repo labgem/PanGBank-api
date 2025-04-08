@@ -56,21 +56,19 @@ def make_pangenome_public(pangenome: Pangenome) -> PangenomePublic:
         len(taxonomies) == 1
     ), f"{pangenome.file_name} {pangenome.id} have an issue with its taxonomies. Found {len(taxonomies)} taxonomies"
 
-    collection_release_public = CollectionReleasePublic.model_validate(
-        pangenome.collection_release,
-        from_attributes=True,
-        update={
-            "collection_name": pangenome.collection_release.collection.name,
-        },
+    collection_release_public = CollectionReleasePublic(
+        **pangenome.collection_release.model_dump(),
+        taxonomy_source=pangenome.collection_release.taxonomy_source,
+        collection_name=pangenome.collection_release.collection.name,
+        collection=pangenome.collection_release.collection
     )
-    pangenome_public = PangenomePublic.model_validate(
-        pangenome,
-        from_attributes=True,
-        update={
-            "taxonomy": taxonomies[0],
-            "collection_release": collection_release_public,
-        },
+
+    pangenome_public = PangenomePublic(
+        **pangenome.model_dump(),
+        collection_release=collection_release_public,
+        taxonomy=taxonomies[0],
     )
+    
     return pangenome_public
 
 
