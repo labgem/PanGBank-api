@@ -292,6 +292,17 @@ class PangenomeMetric(SQLModel):
     module_count: int
     family_in_module_count: int
 
+    # Summary metrics from genomes
+    mean_completeness: float
+    mean_contamination: float
+    mean_fragmentation: float
+
+    mean_exact_core_families_count_per_genome: float
+    mean_soft_core_families_count_per_genome: float
+    mean_persistent_families_count_per_genome: float
+    mean_shell_families_count_per_genome: float
+    mean_cloud_families_count_per_genome: float
+
 
 class PangenomeBase(PangenomeMetric):
 

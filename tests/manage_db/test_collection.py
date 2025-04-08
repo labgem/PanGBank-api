@@ -121,6 +121,35 @@ Content:
     info_yaml = pangenome_dir / "info.yaml"
     info_yaml.write_text(info_yaml_content)
 
+    summary_genome_stats_content = """\
+Persistent_families:
+  mean: 4422.193548387097
+  median: 4428.0
+Soft_core_families:
+  mean: 4272.870967741936
+  median: 4279.0
+Exact_core_families:
+  mean: 4059.0
+  median: 4059.0
+Shell_families:
+  mean: 828.258064516129
+  median: 800.0
+Cloud_families:
+  mean: 251.83870967741936
+  median: 258.0
+Fragmentation:
+  mean: 0.37
+  median: 0.31
+Completeness:
+  mean: 99.39903225806451
+  median: 99.53
+Contamination:
+  mean: 0.03612903225806452
+  median: 0.02
+    """
+    genomes_statistics_summary_yaml = pangenome_dir / "genomes_statistics_summary.yaml"
+    genomes_statistics_summary_yaml.write_text(summary_genome_stats_content)
+
     # Create `pangenome.h5` as an empty file
     pangenome_h5 = pangenome_dir / "pangenome.h5"
     pangenome_h5.touch()

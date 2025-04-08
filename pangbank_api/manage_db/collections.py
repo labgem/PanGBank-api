@@ -195,8 +195,40 @@ def parse_genome_metrics_file(tsv_file_path: Path) -> Iterator[GenomeInPangenome
                 raise ValueError(f"Error parsing row {row}: {e}") from e
 
 
-def get_pangenome_metrics_from_info_file(yaml_file_path: Path) -> PangenomeMetric:
-    with open(yaml_file_path, "r") as file:
+def get_pangenome_metrics_from_genome_stats_summary_yaml(
+    yaml_genome_stats_summary_path: Path,
+):
+    with open(yaml_genome_stats_summary_path, "r") as file:
+        data = yaml.safe_load(file)
+
+    pangenome_data = {
+        "mean_completeness": data.get("Completeness", {}).get("mean"),
+        "mean_contamination": data.get("Contamination", {}).get("mean"),
+        "mean_fragmentation": data.get("Fragmentation", {}).get("mean"),
+        "mean_exact_core_families_count_per_genome": data.get(
+            "Exact_core_families", {}
+        ).get("mean"),
+        "mean_soft_core_families_count_per_genome": data.get(
+            "Soft_core_families", {}
+        ).get("mean"),
+        "mean_persistent_families_count_per_genome": data.get(
+            "Persistent_families", {}
+        ).get("mean"),
+        "mean_shell_families_count_per_genome": data.get("Shell_families", {}).get(
+            "mean"
+        ),
+        "mean_cloud_families_count_per_genome": data.get("Cloud_families", {}).get(
+            "mean"
+        ),
+    }
+
+    return pangenome_data
+
+
+def get_pangenome_metrics_from_info_yaml(yaml_info_path: Path):
+    """ """
+
+    with open(yaml_info_path, "r") as file:
         data = yaml.safe_load(file)
 
     # Initialize pangenome_data
@@ -237,6 +269,20 @@ def get_pangenome_metrics_from_info_file(yaml_file_path: Path) -> PangenomeMetri
         pangenome_data[f"{partition_key}_family_mean_genome_frequency"] = (
             data.get("Content", {}).get(partition, {}).get("mean_genomes_frequency")
         )
+    return pangenome_data
+
+
+def get_pangenome_metrics_from_info_files(
+    yaml_info_path: Path, yaml_genome_stats_summary_path: Path
+) -> PangenomeMetric:
+    """ """
+
+    pangenome_data = get_pangenome_metrics_from_info_yaml(yaml_info_path)
+    pangenome_data.update(
+        get_pangenome_metrics_from_genome_stats_summary_yaml(
+            yaml_genome_stats_summary_path
+        )
+    )
 
     return PangenomeMetric.model_validate(pangenome_data)
 
@@ -286,6 +332,9 @@ def add_pangenomes_to_db(
             else pangenome_dir / "genomes_md5sum.tsv"
         )
         pangenome_info_file = pangenome_dir / "info.yaml"
+        yaml_genome_stats_summary_file = (
+            pangenome_dir / "genomes_statistics_summary.yaml"
+        )
         genomes_statistics_file = pangenome_dir / "genomes_statistics.tsv.gz"
 
         genomes_metadata_dir = pangenome_dir / "metadata"
@@ -297,7 +346,9 @@ def add_pangenomes_to_db(
         )
         if pangenome is None:
             pangenome_file_md5sum = compute_md5(pangenome_file)
-            pangenome_metric = get_pangenome_metrics_from_info_file(pangenome_info_file)
+            pangenome_metric = get_pangenome_metrics_from_info_files(
+                pangenome_info_file, yaml_genome_stats_summary_file
+            )
             pangenome = Pangenome.model_validate(
                 pangenome_metric,
                 from_attributes=True,
