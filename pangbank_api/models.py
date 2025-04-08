@@ -205,6 +205,9 @@ class TaxonBase(SQLModel):
         index=True, default=None, foreign_key="taxonomysource.id"
     )
 
+    def __lt__(self, other: "Taxon"):
+        return self.name < other.name
+
 
 class Taxon(TaxonBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -355,6 +358,12 @@ class Taxonomy(TaxonomyBase):
 class TaxonomyPublic(TaxonomyBase):
     taxonomy_source: TaxonomySourcePublic
     taxa: list[TaxonPublic]
+
+    def __str__(self):
+        return ";".join([taxon.name for taxon in self.taxa])
+
+    def __lt__(self, other: "TaxonomyPublic"):
+        return self.taxa < other.taxa
 
 
 class MetadataBase(SQLModel):
