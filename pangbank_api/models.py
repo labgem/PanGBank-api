@@ -124,6 +124,9 @@ class TaxonomySource(TaxonomySourceBase, table=True):
 class TaxonomySourcePublic(TaxonomySourceBase):
     id: int
 
+    def __str__(self):
+        return " ".join([self.name, self.version or ""])
+
 
 class GenomeSourceBase(SQLModel):
     name: str
@@ -368,7 +371,7 @@ class TaxonomyPublic(TaxonomyBase):
 
 class MetadataBase(SQLModel):
 
-    key: str
+    key: str = Field(index=True)
     value: str
 
 
