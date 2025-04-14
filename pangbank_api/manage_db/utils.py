@@ -41,15 +41,13 @@ def parse_collection_release_input_json(
     # Validate JSON structure using Pydantic
     data_input = CollectionReleaseInput.model_validate(json_content)
 
-    data_input.taxonomy.file = collection_release_json.parent / data_input.taxonomy.file
+    data_input.taxonomy.file = pangbank_data_dir / data_input.taxonomy.file
 
     for genome_source in data_input.genome_sources:
-        genome_source.file = collection_release_json.parent / genome_source.file
+        genome_source.file = pangbank_data_dir / genome_source.file
 
     pangenomes_directory = pangbank_data_dir / data_input.release.pangenomes_directory
     mash_sketch_file = pangbank_data_dir / data_input.release.mash_sketch
-
-    data_input.release.pangenomes_directory = str(pangenomes_directory)
 
     # Check if paths exist
     missing_files = [
