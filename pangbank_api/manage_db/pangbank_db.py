@@ -72,7 +72,7 @@ def add_collection_release(
 
     genome_sources = data_input.genome_sources
 
-    pangenome_dir = Path(collection_release_input.pangenomes_directory)
+    pangenome_dir = pangbank_data_dir / collection_release_input.pangenomes_directory
 
     genome_name_to_lineage = parse_taxonomy_file(taxonomy_file)
     lineages = set(genome_name_to_lineage.values())
