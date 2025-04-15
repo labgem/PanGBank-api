@@ -169,7 +169,8 @@ def test_get_pangenome_file_success(
     # Assert
     assert response.status_code == 200
     assert (
-        response.headers["content-disposition"] == 'attachment; filename="pangenome.h5"'
+        response.headers["content-disposition"]
+        == 'attachment; filename="Pangenome_test_id1.h5"'
     )
 
 
