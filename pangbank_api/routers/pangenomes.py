@@ -147,6 +147,53 @@ async def get_genome_in_pangenome(
     return pangenome_with_genomes_stat
 
 
+@router.get(
+    "/pangenomes/{pangenome_id}/{genome_id}/cgview_map",
+    response_model=str,
+    response_class=FileResponse,
+)
+async def get_genome_cgview_map(
+    pangenome_id: int, genome_id: int, session: SessionDep, settings: SettingsDep
+):
+
+    pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
+
+    if not pangenome:
+        raise HTTPException(status_code=404, detail="Pangenome not found")
+
+    pangenome_with_genomes_stat = pangenomes_crud.get_genome_in_pangenome(
+        session, pangenome_id, genome_id
+    )
+
+    if not pangenome_with_genomes_stat:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Genome id={genome_id} not linked with pangenome id={pangenome_id}",
+        )
+
+    cgview_map_relative_path = (
+        Path(pangenome.collection_release.pangenomes_directory)
+        / pangenome.name
+        / "proksee"
+        / f"{pangenome_with_genomes_stat.genome.name}.json.gz"
+    )
+
+    cgview_map_full_path = settings.pangbank_data_dir / cgview_map_relative_path
+    # cgview_map_relative_path
+
+    if not cgview_map_full_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"cgview map '{cgview_map_relative_path}' does not exists",
+        )
+
+    return FileResponse(
+        cgview_map_full_path,
+        media_type="application/json",
+        headers={"Content-Encoding": "gzip", "Content-Type": "application/json"},
+    )
+
+
 @router.get("/pangenomes/count/", response_model=int)
 async def get_pangenome_count(
     session: SessionDep, filter_params: FilterGenomeTaxonGenomePangenome = Depends()
