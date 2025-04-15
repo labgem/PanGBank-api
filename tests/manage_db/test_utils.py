@@ -66,9 +66,7 @@ def test_parse_collection_release_input_json(temp_json_file: Path, tmp_path: Pat
     assert data.taxonomy.name == "GTDB"
     assert len(data.genome_sources) == 1
     assert data.genome_sources[0].file == temp_json_file.parent / "RefSeq.list"
-    assert data.release.pangenomes_directory == str(
-        temp_json_file.parent / "pangenomes"
-    )
+    assert data.release.pangenomes_directory == str("pangenomes")
 
 
 def test_parse_collection_release_input_json_no_input(tmp_path: Path):
