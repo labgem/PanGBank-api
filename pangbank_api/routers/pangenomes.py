@@ -184,7 +184,7 @@ async def get_genome_cgview_map(
     if not cgview_map_full_path.exists():
         raise HTTPException(
             status_code=404,
-            detail=f"cgview map '{cgview_map_relative_path}' does not exists",
+            detail=f"cgview map '{cgview_map_relative_path}' does not exist",
         )
 
     return FileResponse(
