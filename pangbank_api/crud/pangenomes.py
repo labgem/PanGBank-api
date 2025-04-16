@@ -50,10 +50,11 @@ def get_pangenome(session: Session, pangenome_id: int) -> Pangenome | None:
 
 
 def make_pangenome_public_metrics(p: Pangenome) -> dict:
+    mean_fam_per_genome = p.mean_persistent_families_count_per_genome + p.mean_shell_families_count_per_genome + p.mean_cloud_families_count_per_genome
     return {
-        "persistent_fraction": p.mean_persistent_families_count_per_genome / p.family_count,
-        "shell_fraction": p.mean_shell_families_count_per_genome / p.family_count,
-        "cloud_fraction": p.mean_cloud_families_count_per_genome / p.family_count,
+        "persistent_fraction": p.mean_persistent_families_count_per_genome / mean_fam_per_genome,
+        "shell_fraction": p.mean_shell_families_count_per_genome / mean_fam_per_genome,
+        "cloud_fraction": p.mean_cloud_families_count_per_genome / mean_fam_per_genome,
     }
 
 def make_pangenome_public(pangenome: Pangenome) -> PangenomePublic:
