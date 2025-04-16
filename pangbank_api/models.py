@@ -348,6 +348,9 @@ class PangenomePublic(PangenomeBase):
 
     collection_release_id: int
 
+    persistent_fraction: float
+    shell_fraction: float
+    cloud_fraction: float
 
 class TaxonomyBase(SQLModel):
     pass
