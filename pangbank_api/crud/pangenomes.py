@@ -49,6 +49,13 @@ def get_pangenome(session: Session, pangenome_id: int) -> Pangenome | None:
     return pangenome
 
 
+def make_pangenome_public_metrics(p: Pangenome) -> dict:
+    return {
+        "persistent_fraction": p.mean_persistent_families_count_per_genome / p.family_count,
+        "shell_fraction": p.mean_shell_families_count_per_genome / p.family_count,
+        "cloud_fraction": p.mean_cloud_families_count_per_genome / p.family_count,
+    }
+
 def make_pangenome_public(pangenome: Pangenome) -> PangenomePublic:
 
     taxonomies = get_taxonomies_from_taxa(pangenome.taxa)
@@ -66,6 +73,7 @@ def make_pangenome_public(pangenome: Pangenome) -> PangenomePublic:
 
     pangenome_public = PangenomePublic(
         **pangenome.model_dump(),
+        **make_pangenome_public_metrics(pangenome),
         collection_release=collection_release_public,
         taxonomy=taxonomies[0],
     )
