@@ -19,7 +19,13 @@ from pangbank_api.models import (
     MetadataBase,
     GenomeMetadataSource,
     GenomePangenomeLink,
+    CollectionRelease,
+    Pangenome,
 )
+from sqlalchemy import exists
+from sqlalchemy.orm import selectinload
+
+logger = logging.getLogger(__name__)  # __name__ ensures uniqueness per module
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -50,6 +56,151 @@ def parse_metadata_table(
             ]
 
             yield genome_name, genome_metadata_list
+
+
+def get_all_genomes_from_release_with_no_metadata_from_source(
+    collection_release: CollectionRelease,
+    metadata_source: GenomeMetadataSource,
+    session: Session,
+):
+    # Subquery: does this genome have metadata from the given source?
+    metadata_exists_subquery = select(GenomeMetadata.id).where(
+        GenomeMetadata.genome_id == Genome.id,
+        GenomeMetadata.source_id == metadata_source.id,
+    )
+
+    genomes_statement = (
+        select(Genome)
+        .join(GenomePangenomeLink)
+        .join(Pangenome)
+        .where(Pangenome.collection_release_id == collection_release.id)
+        .where(~exists(metadata_exists_subquery))
+        .distinct()
+    )
+
+    genomes_of_the_release = session.exec(genomes_statement).all()
+
+    return genomes_of_the_release
+
+
+def add_metadata_to_genomes_of_the_release(
+    collection_release: CollectionRelease,
+    metadata_source_and_genome_name_to_metadatas: list[
+        tuple[GenomeMetadataSource, dict[str, list[MetadataBase]]]
+    ],
+    session: Session,
+):
+
+    for (
+        metadata_source,
+        genome_name_to_metadatas,
+    ) in metadata_source_and_genome_name_to_metadatas:
+        logger.info(
+            f"Adding metadata to genomes of the release from metadata source {metadata_source.name}."
+        )
+        genomes = get_all_genomes_from_release_with_no_metadata_from_source(
+            collection_release,
+            metadata_source,
+            session,
+        )
+
+        logger.info(
+            f"Retrieved {len(genomes)} genomes from the database "
+            f"that are part of collection release {collection_release.id} "
+            f"and that have no metadata from source {metadata_source.name} ({metadata_source.description})."
+        )
+
+        all_metadatas: List[GenomeMetadata] = []
+        for genome in genomes:
+            genome_name = genome.name
+            if genome.id is None:
+                raise ValueError(
+                    f"Genome {genome_name} does not have an ID. Cannot add metadata."
+                )
+            if genome_name in genome_name_to_metadatas:
+                metadatabase_list = genome_name_to_metadatas[genome_name]
+                all_metadatas += create_metadata(
+                    genome.id, metadatabase_list, metadata_source
+                )
+
+        logger.info(
+            f"Adding {len(all_metadatas)} new metadata from metadata source {metadata_source.name} to the database describing {len(genomes)} genomes."
+        )
+        session.add_all(all_metadatas)
+
+    session.commit()
+
+
+def get_all_genome_pangenome_links_for_release(
+    collection_release: CollectionRelease,
+    session: Session,
+):
+    statement = (
+        select(GenomePangenomeLink)
+        .options(selectinload(GenomePangenomeLink.genome))
+        .join(Pangenome)
+        .where(Pangenome.collection_release_id == collection_release.id)
+    )
+    results = session.exec(statement).all()
+
+    return results
+
+
+def update_genome_pangenome_links_with_specific_metadata(
+    collection_release: CollectionRelease,
+    metadata_source_and_genome_name_to_metadatas: list[
+        tuple[GenomeMetadataSource, dict[str, list[MetadataBase]]]
+    ],
+    session: Session,
+):
+
+    genome_pangenome_links = get_all_genome_pangenome_links_for_release(
+        collection_release, session
+    )
+    genome_name_to_genome_pangenome_link = {
+        genome_pangenome_link.genome.name: genome_pangenome_link
+        for genome_pangenome_link in genome_pangenome_links
+    }
+
+    updated_genome_pangenome_links: List[GenomePangenomeLink] = []
+
+    for (
+        genome_metadata_source,
+        genome_name_to_metadatas,
+    ) in metadata_source_and_genome_name_to_metadatas:
+
+        for genome_name, metadatas in genome_name_to_metadatas.items():
+            if genome_name in genome_name_to_genome_pangenome_link:
+                is_updated = False
+                genome_pangenome_link = genome_name_to_genome_pangenome_link[
+                    genome_name
+                ]
+
+                strain_attribute = genome_metadata_source.strain_attribute
+                organism_name_attribute = genome_metadata_source.organism_name_attribute
+
+                for metadata in metadatas:
+
+                    if metadata.key == strain_attribute:
+                        strain = metadata.value
+                        genome_pangenome_link.strain = strain
+                        is_updated = True
+
+                    if metadata.key == organism_name_attribute:
+                        organism_name = metadata.value
+                        genome_pangenome_link.organism_name = organism_name
+                        is_updated = True
+
+                if is_updated:
+                    updated_genome_pangenome_links.append(genome_pangenome_link)
+
+        logger.info(
+            f"Updating {len(updated_genome_pangenome_links)} genome pangenome links with strain and organism name from source {genome_metadata_source.name}."
+        )
+
+        session.add_all(updated_genome_pangenome_links)
+
+        session.commit()
 
 
 def create_metadata(
@@ -88,22 +239,30 @@ def get_all_genomes_in_pangenome(session: Session):
     return genomes_with_links
 
 
-def add_genome_source_to_db(metadata_source: GenomeMetadataSource, session: Session):
+def add_genome_metadata_source_to_db(
+    metadata_source: GenomeMetadataSource, session: Session
+):
+
     metadata_source_in_db = session.exec(
         select(GenomeMetadataSource).where(
             (GenomeMetadataSource.name == metadata_source.name)
-            & (GenomeMetadataSource.version == metadata_source.version)
         )
     ).first()
 
     if metadata_source_in_db is not None:
-        raise ValueError(
-            f"Genome Metadata Source '{metadata_source.name}' "
-            f"version: '{metadata_source.version}' already exists in the database."
+        logger.info(
+            f"Genome Metadata Source '{metadata_source.name}' already exists in the database."
         )
+        return metadata_source_in_db
 
-    session.add(metadata_source)
-    session.commit()
+    else:
+        logger.info(
+            f"Adding new Genome Metadata Source '{metadata_source.name}' to the database."
+        )
+        session.add(metadata_source)
+        session.commit()
+        session.refresh(metadata_source)
+        return metadata_source
 
 
 @app.command(no_args_is_help=True)
@@ -136,7 +295,7 @@ def add(
     create_db_and_tables()
 
     with Session(engine) as session:
-        add_genome_source_to_db(metadata_source, session)
+        add_genome_metadata_source_to_db(metadata_source, session)
 
         # we could add more filter to add metadata to only genomes of interest
         genomes = get_all_genomes_in_pangenome(session)
@@ -232,7 +391,6 @@ def delete(
         else:
             statement = select(GenomeMetadataSource).where(
                 (GenomeMetadataSource.name == metadata_source_name)
-                & (GenomeMetadataSource.version == metadata_source_version)
             )
 
         metadata_sources = session.exec(statement).all()
@@ -248,8 +406,7 @@ def delete(
             metadata_sources = session.exec(select(GenomeMetadataSource)).all()
 
             avalaible_metadata = [
-                f"name='{source.name} version='{source.version}'"
-                for source in metadata_sources
+                f"name='{source.name}'" for source in metadata_sources
             ]
 
             error_message += f"Available genome metadata sources in the database: {avalaible_metadata}"
@@ -258,7 +415,7 @@ def delete(
         else:
             for source in metadata_sources:
                 logging.info(
-                    f"Deleting genome metadata source: '{source.name} version={source.version}' from the database."
+                    f"Deleting genome metadata source: '{source.name}' from the database."
                 )
                 session.delete(source)
 
@@ -286,9 +443,8 @@ def list():
         # Create a table for the metadata sources
         table = Table(title="Genome Metadata Sources", header_style="bold magenta")
         table.add_column("Name", style="bold cyan")
-        table.add_column("Version", style="bold yellow")
 
         for source in metadata_sources:
-            table.add_row(source.name, source.version)
+            table.add_row(source.name)
 
         console.print(table)

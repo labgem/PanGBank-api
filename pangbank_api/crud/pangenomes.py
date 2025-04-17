@@ -23,8 +23,10 @@ from pangbank_api.models import (
     Taxon,
     CollectionRelease,
     CollectionReleasePublic,
-    GenomeInPangenomeMetadata,
     Collection,
+    TaxonomySourcePublic,
+    CollectionPublic,
+    TaxonomyPublic,
 )
 
 
@@ -49,13 +51,14 @@ def get_pangenome(session: Session, pangenome_id: int) -> Pangenome | None:
     return pangenome
 
 
-def make_pangenome_public_metrics(p: Pangenome) -> dict:
+def make_pangenome_public_metrics(p: Pangenome) -> dict[str, float]:
     mean_fam_per_genome = p.mean_persistent_families_count_per_genome + p.mean_shell_families_count_per_genome + p.mean_cloud_families_count_per_genome
     return {
         "persistent_fraction": p.mean_persistent_families_count_per_genome / mean_fam_per_genome,
         "shell_fraction": p.mean_shell_families_count_per_genome / mean_fam_per_genome,
         "cloud_fraction": p.mean_cloud_families_count_per_genome / mean_fam_per_genome,
     }
+
 
 def make_pangenome_public(pangenome: Pangenome) -> PangenomePublic:
 
@@ -67,18 +70,22 @@ def make_pangenome_public(pangenome: Pangenome) -> PangenomePublic:
 
     collection_release_public = CollectionReleasePublic(
         **pangenome.collection_release.model_dump(),
-        taxonomy_source=pangenome.collection_release.taxonomy_source,
+        taxonomy_source=TaxonomySourcePublic(
+            **pangenome.collection_release.taxonomy_source.model_dump()
+        ),
         collection_name=pangenome.collection_release.collection.name,
-        collection=pangenome.collection_release.collection
+        collection=CollectionPublic(
+            **pangenome.collection_release.collection.model_dump()
+        ),
     )
 
     pangenome_public = PangenomePublic(
-        **pangenome.model_dump(),
+        **pangenome.model_dump(),  # type: ignore
         **make_pangenome_public_metrics(pangenome),
         collection_release=collection_release_public,
-        taxonomy=taxonomies[0],
+        taxonomy=TaxonomyPublic(**taxonomies[0].model_dump()),
     )
-    
+
     return pangenome_public
 
 
@@ -172,7 +179,7 @@ def get_genomes_in_pangenome(
     pagination_params: PaginationParams | None = None,
 ):
     # Alias for the metadata table
-    metadata_alias = aliased(GenomeInPangenomeMetadata)
+    # metadata_alias = aliased(GenomeInPangenomeMetadata)
 
     query = (
         select(GenomePangenomeLink)
@@ -187,17 +194,17 @@ def get_genomes_in_pangenome(
     if pagination_params:
         query = query.offset(pagination_params.offset).limit(pagination_params.limit)
 
-    if filter_metadata:
-        if filter_metadata.metadata_key:
-            query = query.join(metadata_alias).where(
-                metadata_alias.key == filter_metadata.metadata_key
-            )
+    # if filter_metadata:
+    #     if filter_metadata.metadata_key:
+    #         query = query.join(metadata_alias).where(
+    #             metadata_alias.key == filter_metadata.metadata_key
+    #         )
 
-        if filter_metadata.metadata_value is not None:
-            query = query.where(metadata_alias.value == filter_metadata.metadata_value)
+    #     if filter_metadata.metadata_value is not None:
+    #         query = query.where(metadata_alias.value == filter_metadata.metadata_value)
 
     pangenome_genomes_links = session.exec(query).all()
-    return pangenome_genomes_links
+    return list(pangenome_genomes_links)
 
 
 def get_genome_in_pangenome(session: Session, pangenome_id: int, genome_id: int):
