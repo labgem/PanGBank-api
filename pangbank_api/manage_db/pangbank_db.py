@@ -15,7 +15,13 @@ from pangbank_api.manage_db.collections import (
     delete_full_collection,
     print_collections,
 )
-from pangbank_api.manage_db.genome_metadata import app as genome_metadata_app
+from pangbank_api.manage_db.genome_metadata import (
+    add_genome_metadata_source_to_db,
+    add_metadata_to_genomes_of_the_release,
+    update_genome_pangenome_links_with_specific_metadata,
+    app as genome_metadata_app,
+    parse_metadata_table,
+)
 from pangbank_api.manage_db.genomes import add_genomes_to_db
 from pangbank_api.manage_db.taxonomy import (
     add_taxon_to_db,
@@ -27,6 +33,7 @@ from pangbank_api.manage_db.utils import (
     parse_collection_release_input_json,
     set_up_logging_config,
 )
+from pangbank_api.models import GenomeMetadataSource, MetadataBase
 
 cli = typer.Typer(
     no_args_is_help=True,
@@ -67,6 +74,7 @@ def add_collection_release(
     collection_input = data_input.collection
     collection_release_input = data_input.release
     taxonomy_input = data_input.taxonomy
+    genome_metadata_source_inputs = data_input.genome_metadata_sources
 
     taxonomy_file = taxonomy_input.file
 
@@ -77,9 +85,43 @@ def add_collection_release(
     genome_name_to_lineage = parse_taxonomy_file(taxonomy_file)
     lineages = set(genome_name_to_lineage.values())
 
+    metadata_source_and_genome_name_to_metadatas: list[
+        tuple[GenomeMetadataSource, dict[str, list[MetadataBase]]]
+    ] = []
+    metadata_sources: list[GenomeMetadataSource] = []
+
     create_db_and_tables()
 
     with Session(engine) as session:
+
+        # Parse metadata sources and metadata tables
+        logging.info(
+            f"Parsing metadata sources and metadata tables from {pangbank_data_dir}"
+        )
+        for genome_metadata_source_input in genome_metadata_source_inputs:
+            genome_metadata_file = pangbank_data_dir / genome_metadata_source_input.file
+            logging.info(
+                f"Parsing metadata sources and metadata tables {genome_metadata_file}"
+            )
+            genome_name_to_metadatas = {
+                genome_name: genome_metadata_list
+                for genome_name, genome_metadata_list in parse_metadata_table(
+                    genome_metadata_file
+                )
+            }
+
+            genome_metadata_source = GenomeMetadataSource.model_validate(
+                genome_metadata_source_input, from_attributes=True
+            )
+            genome_metadata_source = add_genome_metadata_source_to_db(
+                genome_metadata_source, session
+            )
+
+            metadata_source_and_genome_name_to_metadatas.append(
+                (genome_metadata_source, genome_name_to_metadatas)
+            )
+            metadata_sources.append(genome_metadata_source)
+
         genome_name_to_genome = add_genomes_to_db(genome_sources, session)
 
         taxonomy_source = create_taxonomy_source(taxonomy_input, session=session)
@@ -101,6 +143,7 @@ def add_collection_release(
             collection_input=collection_input,
             collection_release_input=collection_release_input,
             taxonomy_source=taxonomy_source,
+            genome_metadata_sources=metadata_sources,
             session=session,
         )
 
@@ -108,6 +151,18 @@ def add_collection_release(
             pangenome_dir,
             genome_name_to_genome=genome_name_to_genome,
             collection_release=collection_release,
+            session=session,
+        )
+
+        add_metadata_to_genomes_of_the_release(
+            collection_release,
+            metadata_source_and_genome_name_to_metadatas,
+            session=session,
+        )
+
+        update_genome_pangenome_links_with_specific_metadata(
+            collection_release,
+            metadata_source_and_genome_name_to_metadatas,
             session=session,
         )
 
