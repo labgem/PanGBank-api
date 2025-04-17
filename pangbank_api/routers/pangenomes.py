@@ -6,15 +6,10 @@ from pangbank_api.crud.common import (
     FilterGenomeTaxonGenomePangenome,
     PaginationParams,
     FilterGenome,
-    FilterGenomeMetadata,
 )
 
 from pangbank_api.dependencies import SessionDep
-from pangbank_api.models import (
-    PangenomePublic,
-    GenomePangenomeLinkPublic,
-    GenomePangenomeLinkWithMetadataPublic,
-)
+from pangbank_api.models import PangenomePublic, GenomePangenomeLinkPublic
 from pangbank_api.config import SettingsDep
 from pathlib import Path
 
@@ -91,33 +86,6 @@ async def get_genomes_in_pangenome(
         session,
         pangenome_id,
         filter_genome=filter_genome,
-        pagination_params=pagination_params,
-    )
-
-    return pangenome_with_genomes_stat
-
-
-@router.get(
-    "/pangenomes/{pangenome_id}/genomes_metadata",
-    response_model=list[GenomePangenomeLinkWithMetadataPublic],
-)
-async def get_genomes_metadata_in_pangenome(
-    pangenome_id: int,
-    session: SessionDep,
-    filter_genome: FilterGenome = Depends(),
-    filter_metadata: FilterGenomeMetadata = Depends(),
-    pagination_params: PaginationParams = Depends(),
-):
-
-    pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
-    if not pangenome:
-        raise HTTPException(status_code=404, detail="Pangenome not found")
-
-    pangenome_with_genomes_stat = pangenomes_crud.get_genomes_in_pangenome(
-        session,
-        pangenome_id,
-        filter_genome=filter_genome,
-        filter_metadata=filter_metadata,
         pagination_params=pagination_params,
     )
 
