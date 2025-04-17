@@ -11,6 +11,8 @@ from pangbank_api.models import (
     GenomePublicWithTaxonomies,
     GenomeTaxonLink,
     Taxon,
+    TaxonomyPublic,
+    GenomeSourcePublic,
 )
 
 
@@ -18,8 +20,8 @@ def get_genome_public(genome: Genome) -> GenomePublicWithTaxonomies:
     taxonomies = get_taxonomies_from_taxa(genome.taxa)
     genome_public = GenomePublicWithTaxonomies(
         **genome.model_dump(),
-        taxonomies=taxonomies,
-        genome_source=genome.genome_source,
+        taxonomies=[TaxonomyPublic(**taxonomy.model_dump()) for taxonomy in taxonomies],
+        genome_source=GenomeSourcePublic(**genome.genome_source.model_dump()),
     )
     return genome_public
 
