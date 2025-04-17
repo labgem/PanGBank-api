@@ -137,7 +137,7 @@ def get_all_genome_pangenome_links_for_release(
 ):
     statement = (
         select(GenomePangenomeLink)
-        .options(selectinload(GenomePangenomeLink.genome))
+        .options(selectinload(GenomePangenomeLink.genome))  # type: ignore
         .join(Pangenome)
         .where(Pangenome.collection_release_id == collection_release.id)
     )
