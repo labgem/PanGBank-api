@@ -58,29 +58,38 @@ def parse_metadata_table(
             yield genome_name, genome_metadata_list
 
 
-def get_all_genomes_from_release_with_no_metadata_from_source(
+def get_genomes_from_release_without_metadata_in_batches(
     collection_release: CollectionRelease,
     metadata_source: GenomeMetadataSource,
     session: Session,
+    chunk_size: int = 1000,
 ):
-    # Subquery: does this genome have metadata from the given source?
-    metadata_exists_subquery = select(GenomeMetadata.id).where(
-        GenomeMetadata.genome_id == Genome.id,
-        GenomeMetadata.source_id == metadata_source.id,
-    )
+    offset = 0
 
-    genomes_statement = (
-        select(Genome)
-        .join(GenomePangenomeLink)
-        .join(Pangenome)
-        .where(Pangenome.collection_release_id == collection_release.id)
-        .where(~exists(metadata_exists_subquery))
-        .distinct()
-    )
+    while True:
+        metadata_exists_subquery = select(GenomeMetadata.id).where(
+            GenomeMetadata.genome_id == Genome.id,
+            GenomeMetadata.source_id == metadata_source.id,
+        )
 
-    genomes_of_the_release = session.exec(genomes_statement).all()
+        genomes_statement = (
+            select(Genome)
+            .join(GenomePangenomeLink)
+            .join(Pangenome)
+            .where(Pangenome.collection_release_id == collection_release.id)
+            .where(~exists(metadata_exists_subquery))
+            .distinct()
+            .offset(offset)
+            .limit(chunk_size)
+        )
 
-    return genomes_of_the_release
+        genomes_batch = session.exec(genomes_statement).all()
+
+        if not genomes_batch:
+            break
+
+        yield genomes_batch
+        offset += chunk_size
 
 
 def add_metadata_to_genomes_of_the_release(
@@ -95,38 +104,39 @@ def add_metadata_to_genomes_of_the_release(
         metadata_source,
         genome_name_to_metadatas,
     ) in metadata_source_and_genome_name_to_metadatas:
+
         logger.info(
             f"Adding metadata to genomes of the release from metadata source {metadata_source.name}."
         )
-        genomes = get_all_genomes_from_release_with_no_metadata_from_source(
-            collection_release,
-            metadata_source,
-            session,
-        )
 
-        logger.info(
-            f"Retrieved {len(genomes)} genomes from the database "
-            f"that are part of collection release {collection_release.id} "
-            f"and that have no metadata from source {metadata_source.name} ({metadata_source.description})."
-        )
+        for genomes in get_genomes_from_release_without_metadata_in_batches(
+            collection_release, metadata_source, session
+        ):
 
-        all_metadatas: List[GenomeMetadata] = []
-        for genome in genomes:
-            genome_name = genome.name
-            if genome.id is None:
-                raise ValueError(
-                    f"Genome {genome_name} does not have an ID. Cannot add metadata."
-                )
-            if genome_name in genome_name_to_metadatas:
-                metadatabase_list = genome_name_to_metadatas[genome_name]
-                all_metadatas += create_metadata(
-                    genome.id, metadatabase_list, metadata_source
-                )
+            logger.info(
+                f"Retrieved {len(genomes)} genomes from the database "
+                f"that are part of collection release {collection_release.id} "
+                f"and that have no metadata from source {metadata_source.name} ({metadata_source.description})."
+            )
 
-        logger.info(
-            f"Adding {len(all_metadatas)} new metadata from metadata source {metadata_source.name} to the database describing {len(genomes)} genomes."
-        )
-        session.add_all(all_metadatas)
+            all_metadatas: List[GenomeMetadata] = []
+
+            for genome in genomes:
+                genome_name = genome.name
+                if genome.id is None:
+                    raise ValueError(
+                        f"Genome {genome_name} does not have an ID. Cannot add metadata."
+                    )
+                if genome_name in genome_name_to_metadatas:
+                    metadatabase_list = genome_name_to_metadatas[genome_name]
+                    all_metadatas += create_metadata(
+                        genome.id, metadatabase_list, metadata_source
+                    )
+
+            logger.info(
+                f"Adding {len(all_metadatas)} new metadata from metadata source {metadata_source.name} to the database describing {len(genomes)} genomes."
+            )
+            session.add_all(all_metadatas)
 
     session.commit()
 
