@@ -154,11 +154,11 @@ def add_collection_release(
             session=session,
         )
 
-        add_metadata_to_genomes_of_the_release(
-            collection_release,
-            metadata_source_and_genome_name_to_metadatas,
-            session=session,
-        )
+        # add_metadata_to_genomes_of_the_release(
+        #     collection_release,
+        #     metadata_source_and_genome_name_to_metadatas,
+        #     session=session,
+        # )
 
         update_genome_pangenome_links_with_specific_metadata(
             collection_release,
