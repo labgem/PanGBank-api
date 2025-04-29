@@ -17,7 +17,6 @@ from pangbank_api.manage_db.collections import (
 )
 from pangbank_api.manage_db.genome_metadata import (
     add_genome_metadata_source_to_db,
-    add_metadata_to_genomes_of_the_release,
     update_genome_pangenome_links_with_specific_metadata,
     app as genome_metadata_app,
     parse_metadata_table,
