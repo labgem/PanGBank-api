@@ -43,52 +43,6 @@ def metadata_file():
     yield tsv_file_path
 
 
-def test_add_genome_metadata(
-    session: Session, metadata_source_file: str, metadata_file: str
-):
-    genomes = [Genome(name=f"Genome_{i}") for i in range(1, 6)]
-
-    session.add_all(genomes)
-    session.commit()
-
-    # Mock get_all_genomes_in_pangenome to return the same genomes we inserted
-    with patch(
-        "pangbank_api.manage_db.genome_metadata.get_all_genomes_in_pangenome",
-        return_value=genomes,
-    ):
-        with patch(
-            "pangbank_api.manage_db.genome_metadata.Session", return_value=session
-        ):
-            with patch("pangbank_api.manage_db.genome_metadata.create_db_and_tables"):
-                add(Path(metadata_source_file), Path(metadata_file))
-
-    # Try adding the same metadata source again
-    with patch(
-        "pangbank_api.manage_db.genome_metadata.get_all_genomes_in_pangenome",
-        return_value=genomes,
-    ):
-        with patch(
-            "pangbank_api.manage_db.genome_metadata.Session", return_value=session
-        ):
-            with patch("pangbank_api.manage_db.genome_metadata.create_db_and_tables"):
-                with pytest.raises(ValueError):
-                    add(Path(metadata_source_file), Path(metadata_file))
-
-    metadata = session.exec(select(GenomeMetadata)).all()
-
-    assert len(metadata) == 10
-
-    metadata = session.exec(select(GenomeMetadataSource)).all()
-    assert len(metadata) == 1
-
-    with patch("pangbank_api.manage_db.genome_metadata.Session", return_value=session):
-        with patch("pangbank_api.manage_db.genome_metadata.create_db_and_tables"):
-            delete("DB_A", "2.6.0")
-
-    metadata = session.exec(select(GenomeMetadataSource)).all()
-    assert len(metadata) == 0
-
-
 def test_delete_unexisiting_genome_metadata(session: Session):
     with patch("pangbank_api.manage_db.genome_metadata.Session", return_value=session):
         with patch("pangbank_api.manage_db.genome_metadata.create_db_and_tables"):
@@ -100,7 +54,7 @@ def test_list_metadata_source(
     session: Session,
     capsys: pytest.CaptureFixture,  # type: ignore
 ):
-    source = GenomeMetadataSource(name="DB_A", version="2.6.0")
+    source = GenomeMetadataSource(name="DB_A")
     session.add(source)
     session.commit()
 
@@ -109,7 +63,6 @@ def test_list_metadata_source(
 
     captured = capsys.readouterr()  # type: ignore
     assert "DB_A" in captured.out  # type: ignore
-    assert "2.6.0" in captured.out  # type: ignore
 
 
 def test_list_metadata_source_empty_db(
