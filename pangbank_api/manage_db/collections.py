@@ -26,7 +26,6 @@ from pangbank_api.models import (
     Taxon,
     GenomeMetadataSource,
     TaxonomySource,
-    MetadataBase,
 )
 
 # from pangbank_api.manage_db.genome_metadata import parse_metadata_table
@@ -408,103 +407,6 @@ def add_pangenomes_to_db(
     logger.info(f"Added {len(new_pangenomes)} new pangenomes to the database")
 
     return pangenomes
-
-
-def add_metadata_to_genomes_of_the_pangenome(
-    genomes: List[Genome],
-    metadata_source_and_genome_name_to_metadatas: list[
-        tuple[GenomeMetadataSource, dict[str, list[MetadataBase]]]
-    ],
-    session: Session,
-):
-
-    for (
-        metadata_source,
-        genome_name_to_metadatas,
-    ) in metadata_source_and_genome_name_to_metadatas:
-
-        for genome in genomes:
-            if genome.name in genome_name_to_metadatas:
-                # if genome has not metadata from metadata_source
-                # add metadata to the genome
-                # else ignore genome
-                pass
-            # TODO continue here
-
-
-# def add_strain_and_organism_name_to_genome_pangenome_links(
-#     pangenome_genome_links: list[GenomePangenomeLink],
-#     metadata_source_and_genome_name_to_metadatas: list[
-#         tuple[GenomeMetadataSource, dict[str, list[MetadataBase]]]
-#     ],
-#     session: Session,
-# ):
-#     for (
-#         metadata_source,
-#         genome_name_to_metadatas,
-#     ) in metadata_source_and_genome_name_to_metadatas:
-
-#     genome_name_to_link = {link.genome.name: link for link in pangenome_genome_links}
-
-#     for metadata_file in metadata_files:
-#         source_name = extract_source_from_metadata_file(metadata_file)
-
-#         metadata_source = add_metadata_source_to_db(source_name, session)
-
-#         metadatas: List[GenomeInPangenomeMetadata] = []
-#         genome_to_metadata_list = parse_metadata_table(
-#             metadata_file, disable_track=True
-#         )
-
-#         for genome_name, metadata_list in genome_to_metadata_list:
-#             link = genome_name_to_link.get(genome_name, None)
-#             if link:
-#                 metadatas += create_metadata(link, metadata_list, metadata_source)
-
-#         session.add_all(metadatas)
-
-#     session.commit()
-
-
-# def add_metadata_source_to_db(metadata_source_name: str, session: Session):
-#     metadata_source = session.exec(
-#         select(GenomeInPangenomeMetadataSource).where(
-#             (GenomeInPangenomeMetadataSource.name == metadata_source_name)
-#         )
-#     ).first()
-
-#     if metadata_source is None:
-#         metadata_source = GenomeInPangenomeMetadataSource(name=metadata_source_name)
-
-#         logger.info(f"Adding metadata source '{metadata_source_name}' to the database")
-
-#         session.add(metadata_source)
-#         session.commit()
-#         session.refresh(metadata_source)
-#     # else:
-#     #     logger.debug(
-#     #         f"Metadata source '{metadata_source_name}' already exists in the database"
-#     #     )
-
-#     return metadata_source
-
-
-# def create_metadata(
-#     genome_in_pangenome: GenomePangenomeLink,
-#     metadata_list: list[MetadataBase],
-#     source: GenomeInPangenomeMetadataSource,
-# ):
-#     """ """
-#     metadatas: List[GenomeInPangenomeMetadata] = []
-
-#     for metadata_input in metadata_list:
-#         metadata = GenomeInPangenomeMetadata.model_validate(
-#             metadata_input,
-#             update={"genome_in_pangenome": genome_in_pangenome, "source": source},
-#         )
-#         metadatas.append(metadata)
-
-#     return metadatas
 
 
 def extract_source_from_metadata_file(metadata_file: Path) -> str:
