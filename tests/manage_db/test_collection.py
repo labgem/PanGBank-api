@@ -15,6 +15,7 @@ from pangbank_api.models import (
     Genome,
     Pangenome,
     TaxonomySource,
+    GenomeMetadataSource,
 )
 from sqlmodel import Session, select
 from unittest.mock import patch
@@ -179,15 +180,32 @@ GenomeB	1	811	2	810	1	1	766	767	766	767	784	2	783	1	1	27	0	27	0	0	0	0	0	0	0	99.8
     return pangenome_dir
 
 
+@pytest.fixture()
+def genome_metadata_sources():
+
+    return [
+        GenomeMetadataSource(
+            name="metadata_source_A",
+            strain_attribute="strain",
+            organism_name_attribute="organism_name",
+        )
+    ]
+
+
 def test_create_collection_release(
     session: Session,
     collection: Collection,
     collection_release: CollectionRelease,
     collection_release2: CollectionRelease,
     taxonomy_source: TaxonomySource,
+    genome_metadata_sources: list[GenomeMetadataSource],
 ):
     collection_release = create_collection_release(
-        collection, collection_release, taxonomy_source, session
+        collection,
+        collection_release,
+        taxonomy_source,
+        genome_metadata_sources,
+        session,
     )
 
     assert collection_release.collection.name == "collection_A"
@@ -202,7 +220,11 @@ def test_create_collection_release(
     assert len(collections) == 1
 
     collection_release = create_collection_release(
-        collection, collection_release2, taxonomy_source, session
+        collection,
+        collection_release2,
+        taxonomy_source,
+        genome_metadata_sources,
+        session,
     )
 
     collections = session.exec(select(Collection)).all()
@@ -212,7 +234,11 @@ def test_create_collection_release(
 
     # add again the same release and collection to check if it is not added again
     collection_release = create_collection_release(
-        collection, collection_release2, taxonomy_source, session
+        collection,
+        collection_release2,
+        taxonomy_source,
+        genome_metadata_sources,
+        session,
     )
 
     collections = session.exec(select(Collection)).all()
@@ -225,6 +251,7 @@ def test_create_collection_release_ppanggo_version_mismatch(
     session: Session,
     collection: Collection,
     collection_release: CollectionRelease,
+    genome_metadata_sources: list[GenomeMetadataSource],
     taxonomy_source: TaxonomySource,
 ):
     collection_release_with_version_mismatch = CollectionRelease(
@@ -239,13 +266,20 @@ def test_create_collection_release_ppanggo_version_mismatch(
         mash_sketch_md5sum="1234567890abcdef",
     )
 
-    create_collection_release(collection, collection_release, taxonomy_source, session)
+    create_collection_release(
+        collection,
+        collection_release,
+        taxonomy_source,
+        genome_metadata_sources,
+        session,
+    )
 
     with pytest.raises(ValueError):
         collection_release = create_collection_release(
             collection,
             collection_release_with_version_mismatch,
             taxonomy_source,
+            genome_metadata_sources,
             session,
         )
 
@@ -288,8 +322,15 @@ def test_delete_full_collection(
     collection: Collection,
     collection_release: CollectionRelease,
     taxonomy_source: TaxonomySource,
+    genome_metadata_sources: list[GenomeMetadataSource],
 ):
-    create_collection_release(collection, collection_release, taxonomy_source, session)
+    create_collection_release(
+        collection,
+        collection_release,
+        taxonomy_source,
+        genome_metadata_sources,
+        session,
+    )
 
     delete_full_collection(session, collection.name)
 
@@ -309,8 +350,15 @@ def test_delete_unexisting_collection_release(
     collection: Collection,
     collection_release: CollectionRelease,
     taxonomy_source: TaxonomySource,
+    genome_metadata_sources: list[GenomeMetadataSource],
 ):
-    create_collection_release(collection, collection_release, taxonomy_source, session)
+    create_collection_release(
+        collection,
+        collection_release,
+        taxonomy_source,
+        genome_metadata_sources,
+        session,
+    )
 
     with pytest.raises(ValueError):
         delete_collection_release(session, collection.name, "99999")
@@ -321,8 +369,15 @@ def test_delete_collection_release(
     collection: Collection,
     collection_release: CollectionRelease,
     taxonomy_source: TaxonomySource,
+    genome_metadata_sources: list[GenomeMetadataSource],
 ):
-    create_collection_release(collection, collection_release, taxonomy_source, session)
+    create_collection_release(
+        collection,
+        collection_release,
+        taxonomy_source,
+        genome_metadata_sources,
+        session,
+    )
 
     delete_collection_release(session, collection.name, collection_release.version)
 
@@ -338,10 +393,17 @@ def test_print_collections(
     collection: Collection,
     collection_release: CollectionRelease,
     taxonomy_source: TaxonomySource,
+    genome_metadata_sources: list[GenomeMetadataSource],
     capsys: pytest.CaptureFixture,  # type: ignore
 ) -> None:
     """Tests if the collection name appears in console output."""
-    create_collection_release(collection, collection_release, taxonomy_source, session)
+    create_collection_release(
+        collection,
+        collection_release,
+        taxonomy_source,
+        genome_metadata_sources,
+        session,
+    )
 
     with patch("pangbank_api.manage_db.collections.Session", return_value=session):
         print_collections()
