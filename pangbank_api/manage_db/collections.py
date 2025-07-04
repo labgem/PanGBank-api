@@ -264,6 +264,15 @@ def get_pangenome_metrics_from_info_yaml(yaml_info_path: Path):
         "family_in_module_count": data.get("Content", {})
         .get("Modules", {})
         .get("Families_in_Modules"),
+        "all_genome_fluidity": data.get("Content", {})
+        .get("Genomes_fluidity", {})
+        .get("all"),
+        "shell_genome_fluidity": data.get("Content", {})
+        .get("Genomes_fluidity", {})
+        .get("shell"),
+        "cloud_genome_fluidity": data.get("Content", {})
+        .get("Genomes_fluidity", {})
+        .get("cloud"),
     }
 
     # Loop through partitions to populate family counts and genome frequency metrics

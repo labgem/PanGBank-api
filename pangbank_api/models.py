@@ -308,6 +308,13 @@ class PangenomeMetric(SQLModel):
     rgp_count: int
     spot_count: int
 
+    all_genome_fluidity: float | None = None
+    shell_genome_fluidity: float | None = None
+    cloud_genome_fluidity: float | None = None
+    accessory_genome_fluidity: float | None = (
+        None  # Accessory genome fluidity of shell and cloud genome fluidity
+    )
+
     # Modules information
     module_count: int
     family_in_module_count: int
