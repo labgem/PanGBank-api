@@ -21,7 +21,8 @@ dev = [
     "requests>=2.32.3",
     "httpx>=0.28.1",
     "pytest-cov>=6.0.0",
-    "flake8>=7.1.2"
+    "flake8>=7.1.2",
+    "alembic>=1.13.1" 
 ]
 
 [project.scripts]
