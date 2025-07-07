@@ -26,49 +26,71 @@ PanGBank is an API designed to manage a database of pangenomes. Built with **Fas
    fastapi dev pangbank_api/main.py
    ```
 
-### Manage the database
+## Manage the database
 
 Interact with the database locally. You need to define the environement variable `PANGBANK_DB_PATH`.
 
-#### Add a collection release to the database with 
+### Add a collection release to the database with 
 
 ```bash
 pangbank_db add-collection-release <collection_release_json>
 ```
-#### List collections
+### List collections
 
 ```bash
 pangbank_db list-collection
 ```
 
-#### Delete a collection release
+### Delete a collection release
 
 ```bash
 pangbank_db delete-collection <collection name> --release-version <release version>
 ```
 
-### Docker Compose Setup
 
-1. Build and run the Docker image:
-   ```bash
-   docker-compose up --build
-   ```
+## 🗃️ Database Migrations with Alembic
 
-<!-- ## API Documentation
+We use [Alembic](https://alembic.sqlalchemy.org/) to manage schema changes in the PanGBank database.
 
-FastAPI automatically generates interactive API documentation: -->
-<!-- 
-- Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc) -->
+### 🔄 Common commands
 
-<!-- ## Environment Variables
+#### 📐 Create a new migration
 
-Create a `.env` file to store database connection settings and other configurations:
+Generate a migration after updating your SQLModel models (e.g., adding or changing columns):
 
-```env
-DATABASE_URL=sqlite:///./pangbank.db  # Change for production use
-DEBUG=True
-``` -->
+```bash
+alembic revision --autogenerate -m "Describe your change here"
+```
+
+> 🔧 Make sure all your models are imported in `alembic/env.py` before running this.
+
+#### ⬆️ Apply migrations to the database
+
+This applies all pending migrations:
+
+```bash
+alembic upgrade head
+```
+
+#### ⬇️ Roll back the last migration (use with caution)
+
+If something went wrong, you can revert the last migration:
+
+```bash
+alembic downgrade -1
+```
+
+Or go back to the base (empty schema):
+
+```bash
+alembic downgrade base
+```
+
+### 📝 Notes
+
+* The SQLite database path is defined in `config.py` via the `pangbank_db_path` setting (`PANGBANK_DB_PATH` env var).
+* Alembic is configured to read this dynamically, so no need to change `alembic.ini`.
+
 
 
 ## Contributing
