@@ -120,8 +120,8 @@ The JSON file provided to the command must define:
 
 
 > [!NOTE]
-> * Paths for `pangenomes_directory` and `mash_sketch` must be **relative to `PANGBANK_DATA_DIR`**.
-> * Paths for `taxonomy.file`, `genome_sources[*].file`, and `genome_metadata_sources[*].file` must be **absolute file paths**.
+> Paths for `pangenomes_directory` and `mash_sketch` must be **relative to `PANGBANK_DATA_DIR`**.
+> Paths for `taxonomy.file`, `genome_sources[*].file`, and `genome_metadata_sources[*].file` must be **absolute file paths**.
 
 </details>
 
