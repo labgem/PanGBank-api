@@ -40,11 +40,6 @@ def parse_collection_release_input_json(
     # Validate JSON structure using Pydantic
     data_input = CollectionReleaseInput.model_validate(json_content)
 
-    data_input.taxonomy.file = pangbank_data_dir / data_input.taxonomy.file
-
-    for genome_source in data_input.genome_sources:
-        genome_source.file = pangbank_data_dir / genome_source.file
-
     pangenomes_directory = pangbank_data_dir / data_input.release.pangenomes_directory
     mash_sketch_file = pangbank_data_dir / data_input.release.mash_sketch
 
@@ -57,7 +52,7 @@ def parse_collection_release_input_json(
         ]
         + [gs.file for gs in data_input.genome_sources]
         + [
-            pangbank_data_dir / metadata_source.file
+            metadata_source.file
             for metadata_source in data_input.genome_metadata_sources
         ]
     )
