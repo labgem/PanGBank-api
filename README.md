@@ -58,12 +58,6 @@ pangbank_db add-collection-release <collection_release.json>
 > export PANGBANK_DB_PATH="<path/to/database.sqlite>"
 > export PANGBANK_DATA_DIR="<root/path/serving/pangenomes>"
 > ```
-
-The JSON file provided to the command must define:
-
-* the **collection name and description**
-* the **release version** and related metadata
-* paths to taxonomy, genome sources, and genome metadata
   
 
 <details>
@@ -118,10 +112,9 @@ The JSON file provided to the command must define:
 }
 ```
 
-
-> [!NOTE]
-> Paths for `pangenomes_directory` and `mash_sketch` must be **relative to `PANGBANK_DATA_DIR`**.
-> Paths for `taxonomy.file`, `genome_sources[*].file`, and `genome_metadata_sources[*].file` must be **absolute file paths**.
+#### Note
+* Paths for `pangenomes_directory` and `mash_sketch` must be **relative to `PANGBANK_DATA_DIR`**.
+* Paths for `taxonomy.file`, `genome_sources[*].file`, and `genome_metadata_sources[*].file` must be **absolute file paths**.
 
 </details>
 
