@@ -94,11 +94,9 @@ def add_collection_release(
     with Session(engine) as session:
 
         # Parse metadata sources and metadata tables
-        logging.info(
-            f"Parsing metadata sources and metadata tables from {pangbank_data_dir}"
-        )
+        logging.info("Parsing metadata sources and metadata tables")
         for genome_metadata_source_input in genome_metadata_source_inputs:
-            genome_metadata_file = pangbank_data_dir / genome_metadata_source_input.file
+            genome_metadata_file = genome_metadata_source_input.file
             logging.info(
                 f"Parsing metadata sources and metadata tables {genome_metadata_file}"
             )

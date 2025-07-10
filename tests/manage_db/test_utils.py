@@ -9,6 +9,13 @@ from pangbank_api.manage_db.utils import parse_collection_release_input_json
 @pytest.fixture
 def temp_json_file(tmp_path: Path):
     """Creates a temporary JSON file with valid input data."""
+
+    json_file = tmp_path / "input.json"
+    pangenome_dir = tmp_path / "pangenomes"
+    genome_source_file = tmp_path / "RefSeq.list"
+    taxonomy_file = tmp_path / "taxonomy.tsv.gz"
+    mash_sketch_file = tmp_path / "families_persistent_all.msh"
+
     json_data: Dict[str, Any] = {
         "collection": {
             "name": "Test dataset",
@@ -28,12 +35,12 @@ def temp_json_file(tmp_path: Path):
             "name": "GTDB",
             "version": "24.1",
             "ranks": "Domain; Phylum; Class; Order; Family; Genus; Species",
-            "file": "taxonomy.tsv.gz",
+            "file": taxonomy_file.as_posix(),
         },
         "genome_sources": [
             {
                 "name": "RefSeq",
-                "file": "RefSeq.list",
+                "file": genome_source_file.as_posix(),
                 "version": "",
                 "description": "",
                 "source": "",
@@ -41,12 +48,6 @@ def temp_json_file(tmp_path: Path):
             }
         ],
     }
-
-    json_file = tmp_path / "input.json"
-    pangenome_dir = tmp_path / "pangenomes"
-    genome_source_file = tmp_path / "RefSeq.list"
-    taxonomy_file = tmp_path / "taxonomy.tsv.gz"
-    mash_sketch_file = tmp_path / "families_persistent_all.msh"
 
     pangenome_dir.mkdir(parents=True, exist_ok=True)
     genome_source_file.touch()
