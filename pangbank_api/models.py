@@ -311,9 +311,8 @@ class PangenomeMetric(SQLModel):
     all_genome_fluidity: float | None = None
     shell_genome_fluidity: float | None = None
     cloud_genome_fluidity: float | None = None
-    accessory_genome_fluidity: float | None = (
-        None  # Accessory genome fluidity of shell and cloud genome fluidity
-    )
+    # Accessory genome fluidity of shell and cloud genome fluidity
+    accessory_genome_fluidity: float | None = None
 
     # Modules information
     module_count: int
