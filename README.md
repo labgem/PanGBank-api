@@ -1,50 +1,141 @@
-# PanGBank API
+# 🧬 PanGBank API
 
-PanGBank is an API designed to manage a database of pangenomes. Built with **FastAPI** and using **SQLModel** as the ORM. The API can be deployed using **Docker**.
+**PanGBank** is a web API for managing a database of **pangenomes**, built with [**FastAPI**](https://fastapi.tiangolo.com) and using [**SQLModel**](https://sqlmodel.tiangolo.com) as its ORM.
 
-## Installation
+It provides a RESTful interface for querying and exploring pangenome collections. Alongside the API, a command-line tool `pangbank_db` is included to manage the database.
 
-### Local Setup
+## 🚀 Installation
 
-1. Clone the repository:
+### Local API Setup
+
+1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/labgem/PanGBank-api.git
    cd PanGBank-api
    ```
 
-2. Create a virtual environment and install dependencies:
+2. **Create a virtual environment and install dependencies**:
+
    ```bash
    python -m venv venv
    source venv/bin/activate
    pip install .
    ```
 
-3. Run the API in development mode:
+3. **Run the API in development mode**:
+
    ```bash
-   export PANGBANK_DB_PATH="<Path to the SQLlite database>"
-   export PANGBANK_DATA_DIR="<Path to the Directory containing Pangenomes>"
+   export PANGBANK_DB_PATH="<path/to/database.sqlite>"
+   export PANGBANK_DATA_DIR="<path/to/pangenome_directory>"
    fastapi dev pangbank_api/main.py
    ```
 
-## Manage the database
+> `PANGBANK_DB_PATH` is the path to your SQLite database file.
+> `PANGBANK_DATA_DIR` is the root directory containing your pangenome data and mash files.
 
-Interact with the database locally. You need to define the environement variable `PANGBANK_DB_PATH`.
 
-### Add a collection release to the database with 
+## 🛠️ Managing the Database with `pangbank_db`
+
+All CLI commands require the `PANGBANK_DB_PATH` environment variable to be set.
 
 ```bash
-pangbank_db add-collection-release <collection_release_json>
+export PANGBANK_DB_PATH="<path/to/database.sqlite>"
 ```
-### List collections
+
+
+### ➕ Add a Collection Release
+
+To add a new collection of pangenomes in the database, use:
+
+```bash
+pangbank_db add-collection-release <collection_release.json>
+```
+> [!NOTE]
+> This command requires two environment variables:
+>
+> ```bash
+> export PANGBANK_DB_PATH="<path/to/database.sqlite>"
+> export PANGBANK_DATA_DIR="<root/path/serving/pangenomes>"
+> ```
+
+The JSON file provided to the command must define:
+
+* the **collection name and description**
+* the **release version** and related metadata
+* paths to taxonomy, genome sources, and genome metadata
+  
+
+<details>
+
+
+<summary>🧷 JSON Schema Example</summary>
+
+
+
+```jsonc
+{
+  "collection": {
+    "name": "GTDB_all_sampled",
+    "description": "GTDB all is a collection of pangenomes made of GTDB species that have at least 15 genomes."
+  },
+  "release": {
+    "version": "1.0.0",
+    "ppanggolin_version": "2.2.4",
+    "pangbank_wf_version": "0.0.2",
+    "pangenomes_directory": "GTDB_refseq/release_v1.0.0/data/pangenomes/", // relative to PANGBANK_DATA_DIR
+    "release_note": "",
+    "date": "2025-07-10",
+    "mash_sketch": "GTDB_refseq/release_v1.0.0/data/mash_sketch/families_persistent_all.msh", // relative to PANGBANK_DATA_DIR
+    "mash_version": "2.3"
+  },
+  "taxonomy": {
+    "name": "GTDB",
+    "version": "10-RS226",
+    "ranks": "Domain; Phylum; Class; Order; Family; Genus; Species",
+    "file": "/absolute/path/to/taxonomy.tsv"
+  },
+  "genome_sources": [
+    {
+      "name": "RefSeq",
+      "file": "/absolute/path/to/genomes.tsv",
+      "version": "",
+      "description": "",
+      "source": "",
+      "url": ""
+    }
+  ],
+  "genome_metadata_sources": [
+    {
+      "name": "GTDB 10-RS226 metadata",
+      "description": "Metadata collected from GTDB. Some columns have been filtered out.",
+      "url": "https://data.ace.uq.edu.au/public/gtdb/data/releases/release226/226.0/",
+      "strain_attribute": "ncbi_strain_identifiers",
+      "organism_name_attribute": "ncbi_organism_name",
+      "file": "/absolute/path/to/metadata.tsv"
+    }
+  ]
+}
+```
+
+
+> [!NOTE]
+> * Paths for `pangenomes_directory` and `mash_sketch` must be **relative to `PANGBANK_DATA_DIR`**.
+> * Paths for `taxonomy.file`, `genome_sources[*].file`, and `genome_metadata_sources[*].file` must be **absolute file paths**.
+
+</details>
+
+
+### 📋 List Existing Collections
 
 ```bash
 pangbank_db list-collection
 ```
 
-### Delete a collection release
+### ❌ Delete a Collection Release
 
 ```bash
-pangbank_db delete-collection <collection name> --release-version <release version>
+pangbank_db delete-collection <collection_name> --release-version <version>
 ```
 
 
