@@ -1,7 +1,8 @@
 # 🧬 PanGBank API
 
-**PanGBank** is a web API for managing a database of **pangenomes**, built with [**FastAPI**](https://fastapi.tiangolo.com) and using [**SQLModel**](https://sqlmodel.tiangolo.com) as its ORM.
+This repository contains the API used to manage the **PanGBank** database, which stores collections of pangenomes built with [**PPanGGOLiN**](https://github.com/labgem/PPanGGOLiN).
 
+The API is built with [**FastAPI**](https://fastapi.tiangolo.com) and uses [**SQLModel**](https://sqlmodel.tiangolo.com) as its ORM.
 It provides a RESTful interface for querying and exploring pangenome collections. Alongside the API, a command-line tool `pangbank_db` is included to manage the database.
 
 ## 🚀 Installation
