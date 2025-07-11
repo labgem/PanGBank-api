@@ -1,4 +1,4 @@
-# 🧬 PanGBank API
+# PanGBank API
 
 This repository contains the API used to manage the **PanGBank** database, which stores collections of pangenomes built with [**PPanGGOLiN**](https://github.com/labgem/PPanGGOLiN).
 
@@ -45,7 +45,7 @@ export PANGBANK_DB_PATH="<path/to/database.sqlite>"
 ```
 
 
-### ➕ Add a Collection Release
+### Add a Collection Release
 
 To add a new collection of pangenomes in the database, use:
 
@@ -64,7 +64,7 @@ pangbank_db add-collection-release <collection_release.json>
 <details>
 
 
-<summary>🧷 JSON Schema Example</summary>
+<summary>JSON Schema Example</summary>
 
 
 
@@ -120,13 +120,13 @@ pangbank_db add-collection-release <collection_release.json>
 </details>
 
 
-### 📋 List Existing Collections
+### List Existing Collections
 
 ```bash
 pangbank_db list-collection
 ```
 
-### ❌ Delete a Collection Release
+### Delete a Collection Release
 
 ```bash
 pangbank_db delete-collection <collection_name> --release-version <version>
@@ -137,9 +137,8 @@ pangbank_db delete-collection <collection_name> --release-version <version>
 
 We use [Alembic](https://alembic.sqlalchemy.org/) to manage schema changes in the PanGBank database.
 
-### 🔄 Common commands
 
-#### 📐 Create a new migration
+#### Create a new migration
 
 Generate a migration after updating your SQLModel models (e.g., adding or changing columns):
 
@@ -147,9 +146,7 @@ Generate a migration after updating your SQLModel models (e.g., adding or changi
 alembic revision --autogenerate -m "Describe your change here"
 ```
 
-> 🔧 Make sure all your models are imported in `alembic/env.py` before running this.
-
-#### ⬆️ Apply migrations to the database
+#### Apply migrations to the database
 
 This applies all pending migrations:
 
@@ -157,7 +154,7 @@ This applies all pending migrations:
 alembic upgrade head
 ```
 
-#### ⬇️ Roll back the last migration (use with caution)
+#### Roll back the last migration (use with caution)
 
 If something went wrong, you can revert the last migration:
 
@@ -171,10 +168,9 @@ Or go back to the base (empty schema):
 alembic downgrade base
 ```
 
-### 📝 Notes
-
-* The SQLite database path is defined in `config.py` via the `pangbank_db_path` setting (`PANGBANK_DB_PATH` env var).
-* Alembic is configured to read this dynamically, so no need to change `alembic.ini`.
+> [!NOTE]
+> * The SQLite database path is defined in `config.py` via the `pangbank_db_path` setting (`PANGBANK_DB_PATH` env var).
+>* Alembic is configured to read this dynamically, so no need to change `alembic.ini`.
 
 
 
