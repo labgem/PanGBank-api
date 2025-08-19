@@ -166,6 +166,8 @@ class CollectionReleaseBase(SQLModel):
     release_note: str
 
     mash_version: str
+    mash_sketch_md5sum: str
+
     latest: bool = False
     date: datetime
     collection_id: int | None = Field(
@@ -183,7 +185,6 @@ class CollectionRelease(CollectionReleaseBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     mash_sketch: str
-    mash_sketch_md5sum: str
 
     pangenomes_directory: str
     collection: "Collection" = Relationship(back_populates="releases")
