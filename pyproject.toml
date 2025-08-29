@@ -1,6 +1,6 @@
 [project]
 name = "PanGBank-api"
-version = "0.1.0"
+version = "0.1.1"
 description = "Source code to PanGBank API"
 authors = [
     { name = "Jean Mainguy"}
