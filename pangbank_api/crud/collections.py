@@ -100,3 +100,14 @@ def get_collection_mash_sketch(session: Session, collection_id: int):
     latest_release = max(collection.releases, key=lambda x: parse(x.version))
 
     return Path(latest_release.mash_sketch)
+
+def get_collection_index_directory(session: Session, collection_id: int):
+
+    collection = session.get(Collection, collection_id)
+
+    if not collection:
+        return None
+
+    latest_release = max(collection.releases, key=lambda x: parse(x.version))
+
+    return Path(latest_release.pangenomes_directory) / ".." / "metapang/bank_index"
