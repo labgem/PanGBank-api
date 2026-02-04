@@ -157,7 +157,7 @@ async def get_genome_cgview_map(
 
     return FileResponse(
         cgview_map_full_path,
-        filename=f"{pangenome.name}_id{pangenome.id}_{pangenome_with_genomes_stat.genome.name}.json.gz",
+        filename=f"{pangenome.name}_id{pangenome.id}_{pangenome_with_genomes_stat.genome.name}.json",
         media_type="application/json",
         headers={"Content-Encoding": "gzip", "Content-Type": "application/json"},
     )
