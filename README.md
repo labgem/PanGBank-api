@@ -7,7 +7,38 @@ It provides a RESTful interface for querying and exploring pangenome collections
 
 ## 🚀 Installation
 
-### Local API Setup
+PanGBank-api is organized into two main components:
+- **Core package**: Database models, CRUD operations, and CLI tools (`pangbank_db`)
+- **API server**: FastAPI-based REST API (optional)
+
+### Option 1: Install Core Package Only
+
+For database management and CLI tools without the API server:
+
+```bash
+pip install pangbank-api
+```
+
+This installs:
+- Database models (`pangbank_api.models`)
+- Database utilities (`pangbank_api.database`, `pangbank_api.config`)
+- CRUD operations (`pangbank_api.crud`)
+- CLI tool `pangbank_db` for database management
+
+### Option 2: Install with FastAPI (Full API Server)
+
+For running the REST API server:
+
+```bash
+pip install pangbank-api[fastapi]
+```
+
+This additionally installs:
+- FastAPI framework
+- API routers (`pangbank_api.routers`)
+- API server (`pangbank_api.main`)
+
+### Local Development Setup
 
 1. **Clone the repository**:
 
@@ -16,12 +47,12 @@ It provides a RESTful interface for querying and exploring pangenome collections
    cd PanGBank-api
    ```
 
-2. **Create a virtual environment and install dependencies**:
+2. **Create a virtual environment and install with FastAPI**:
 
    ```bash
    python -m venv venv
    source venv/bin/activate
-   pip install .
+   pip install .[fastapi]
    ```
 
 3. **Run the API in development mode**:

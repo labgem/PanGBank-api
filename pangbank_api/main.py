@@ -1,11 +1,17 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+try:
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+except ImportError:
+    raise ImportError(
+        "FastAPI is required to run the API server. "
+        "Install it with: pip install pangbank-api[fastapi]"
+    )
 
 from .database import create_db_and_tables
 from .routers import collections, genomes, pangenomes
 from .config import get_settings
-from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

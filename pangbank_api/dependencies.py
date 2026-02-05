@@ -1,10 +1,18 @@
 from collections.abc import Generator
 from typing import Annotated
 
-from fastapi import Depends
+try:
+    from fastapi import Depends
+except ImportError:
+    raise ImportError(
+        "FastAPI is required for API dependencies. "
+        "Install it with: pip install pangbank-api[fastapi]"
+    )
+
 from sqlmodel import Session
 
 from .database import engine
+from .config import Settings, get_settings
 
 
 def get_session() -> Generator[Session, None, None]:
@@ -13,3 +21,4 @@ def get_session() -> Generator[Session, None, None]:
 
 
 SessionDep = Annotated[Session, Depends(get_session)]
+SettingsDep = Annotated[Settings, Depends(get_settings)]

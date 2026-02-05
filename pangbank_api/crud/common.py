@@ -1,12 +1,11 @@
-from fastapi import Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from pangbank_api.models import Taxon, Taxonomy
 from typing import Annotated
 
 class PaginationParams(BaseModel):
     offset: int = 0
-    limit: int = Query(default=20, le=100)
+    limit: int = Field(default=20, le=100)
 
 
 class FilterRelease(BaseModel):
@@ -19,7 +18,7 @@ class FilterCollection(FilterRelease):
 
 
 class FilterTaxon(BaseModel):
-    taxon_name: Annotated[str | None, Query(min_length=3)] = None
+    taxon_name: Annotated[str | None, Field(min_length=3)] = None
     substring_taxon_match: bool = False
 
 
