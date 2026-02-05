@@ -33,7 +33,7 @@ jobs:
             
       - name: Install the project dependencies
         run: |
-          uv pip install -e .[dev]
+          uv pip install -e .[dev,fastapi]
           uv run python -V
 
       - name: Run flake8 (code style and linting)
