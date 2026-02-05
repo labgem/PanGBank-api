@@ -10,7 +10,7 @@ from pangbank_api.crud.common import (
 
 from pangbank_api.dependencies import SessionDep
 from pangbank_api.models import PangenomePublic, GenomePangenomeLinkPublic
-from pangbank_api.config import SettingsDep
+from pangbank_api.dependencies import SettingsDep
 from pathlib import Path
 
 router = APIRouter(
