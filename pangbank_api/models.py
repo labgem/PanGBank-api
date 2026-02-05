@@ -28,6 +28,7 @@ class CollectionReleaseGenomeMetadataLink(SQLModel, table=True):
 
 
 class GenomeInPangenomeMetric(SQLModel):
+    model_config = {"populate_by_name": True}  # type: ignore
 
     # Metrics
     genome_name: str = Field(..., alias="Genome_name")
