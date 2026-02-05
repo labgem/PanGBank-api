@@ -4,10 +4,9 @@ from fastapi.responses import FileResponse
 from pangbank_api.crud import collections as collections_crud
 from pangbank_api.crud.common import FilterCollection, FilterRelease
 
-from ..dependencies import SessionDep
+from ..dependencies import SessionDep, SettingsDep
 from ..models import CollectionPublicWithReleases
 
-from ..config import SettingsDep
 
 router = APIRouter(
     tags=["collections"],
