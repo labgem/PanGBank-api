@@ -181,9 +181,9 @@ async def get_pangenome_dbg(
 
     if not pangenome:
         raise HTTPException(status_code=404, detail="Pangenome not found")
-    
+
     dbg_relative_path = (
-        Path(pangenome.collection_release.pangenomes_directory) / f"../metapang/pangenome_dbg/{pangenome.name}/{pangenome.name}.dbg" 
+        Path(pangenome.collection_release.pangenomes_directory) / f"../metapang/pangenome_dbg/{pangenome.name}/{pangenome.name}.dbg"
     )
     dbg_full_path = settings.pangbank_data_dir / dbg_relative_path
 
@@ -196,21 +196,16 @@ async def get_pangenome_dbg(
         path=dbg_full_path.as_posix(),
         filename=f"{pangenome.name}_id{pangenome.id}.dbg",
     )
-    
 
-@router.get(
-    "/pangenomes/{pangenome_id}/dbg/annotations", response_model=str, response_class=FileResponse
-)
-async def get_pangenome_dbg_annotations(
-    pangenome_id: int, session: SessionDep, settings: SettingsDep
-):
+
+def get_annotation(pangenome_id: int, suffix: str, session: SessionDep, settings: SettingsDep) -> FileResponse:
     pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
-    
+
     if not pangenome:
         raise HTTPException(status_code=404, detail="Pangenome not found")
-    
+
     dbg_annotations_relative_path = (
-        Path(pangenome.collection_release.pangenomes_directory) / f"../metapang/pangenome_dbg/{pangenome.name}/{pangenome.name}.row_diff_brwt.annodbg" 
+        Path(pangenome.collection_release.pangenomes_directory) / f"../metapang/pangenome_dbg/{pangenome.name}/{pangenome.name}{suffix}.row_diff_brwt.annodbg"
     )
     dbg_annotations_full_path = settings.pangbank_data_dir / dbg_annotations_relative_path
 
@@ -219,8 +214,25 @@ async def get_pangenome_dbg_annotations(
             status_code=404,
             detail=f"DBG annotations file {dbg_annotations_relative_path} does not exists",
         )
-    
+
     return FileResponse(
         path=dbg_annotations_full_path.as_posix(),
-        filename=f"{pangenome.name}_id{pangenome.id}.row_diff_brwt.annodbg",
+        filename=f"{pangenome.name}_id{pangenome.id}{suffix}.row_diff_brwt.annodbg",
     )
+
+@router.get(
+    "/pangenomes/{pangenome_id}/dbg/family_annotations", response_model=str, response_class=FileResponse
+)
+async def get_pangenome_dbg_annotations(
+    pangenome_id: int, session: SessionDep, settings: SettingsDep
+):
+    return get_annotation(pangenome_id, "", session, settings)
+
+@router.get(
+    "/pangenomes/{pangenome_id}/dbg/genome_annotations", response_model=str, response_class=FileResponse
+)
+async def get_pangenome_dbg_annotations_genomes(
+    pangenome_id: int, session: SessionDep, settings: SettingsDep
+):
+    return get_annotation(pangenome_id, "_genomes", session, settings)
+
