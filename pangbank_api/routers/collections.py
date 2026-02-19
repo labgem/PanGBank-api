@@ -66,19 +66,20 @@ async def get_collection_mash_sketch(
 @router.get(
     "/collections/{collection_id}/index/info",
     response_model=str,
-    response_class=FileResponse
+    response_class=FileResponse,
+    include_in_schema=False
 )
 async def get_collection_index_info(
     collection_id: int, session: SessionDep, settings: SettingsDep
 ):
     index_directory = collections_crud.get_collection_index_directory(session, collection_id)
-    
+
     if not index_directory:
         raise HTTPException(
             status_code=404,
             detail=f"Index info of collection with id={collection_id} not found",
         )
-    
+
     index_info_file = settings.pangbank_data_dir / index_directory / "index_info.json"
 
     if not index_info_file.exists():
@@ -86,39 +87,41 @@ async def get_collection_index_info(
             status_code=404,
             detail=f"Index info file {index_info_file.name} does not exists",
         )
-    
+
     return FileResponse(path=index_info_file, filename="index_info.json")
 
 @router.get(
     "/collections/{collection_id}/index/pangenomes",
     response_model=str,
-    response_class=FileResponse
+    response_class=FileResponse,
+    include_in_schema=False
 )
 async def get_collection_index_pangenomes(
     collection_id: int, session: SessionDep, settings: SettingsDep
 ):
     index_directory = collections_crud.get_collection_index_directory(session, collection_id)
-    
+
     if not index_directory:
         raise HTTPException(
             status_code=404,
             detail=f"Index pangenomes of collection with id={collection_id} not found",
         )
-    
+
     index_pangenome_file = settings.pangbank_data_dir / index_directory / "pangenome_index.sbt.zip"
-    
+
     if not index_pangenome_file.exists():
         raise HTTPException(
             status_code=404,
             detail=f"Index pangenome file {index_pangenome_file.name} does not exists",
         )
-    
+
     return FileResponse(path=index_pangenome_file, filename="pangenome_index.sbt.zip")
 
 @router.get(
     "/collections/{collection_id}/index/genomes",
     response_model=str,
-    response_class=FileResponse
+    response_class=FileResponse,
+    include_in_schema=False
 )
 async def get_collection_index_genomes(
     collection_id: int, session: SessionDep, settings: SettingsDep
@@ -130,13 +133,13 @@ async def get_collection_index_genomes(
             status_code=404,
             detail=f"Index genomes of collection with id={collection_id} not found",
         )
-    
+
     index_genome_file = settings.pangbank_data_dir / index_directory / "genome_index.sbt.zip"
-    
+
     if not index_genome_file.exists():
         raise HTTPException(
             status_code=404,
             detail=f"Index genome file {index_genome_file.name} does not exists",
         )
-    
+
     return FileResponse(path=index_genome_file, filename="genome_index.sbt.zip")

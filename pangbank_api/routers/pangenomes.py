@@ -172,7 +172,8 @@ async def get_pangenome_count(
     return len(pangenomes)
 
 @router.get(
-    "/pangenomes/{pangenome_id}/dbg/graph", response_model=str, response_class=FileResponse
+    "/pangenomes/{pangenome_id}/dbg/graph", response_model=str, response_class=FileResponse,
+    include_in_schema=False
 )
 async def get_pangenome_dbg(
     pangenome_id: int, session: SessionDep, settings: SettingsDep
@@ -221,7 +222,8 @@ def get_annotation(pangenome_id: int, suffix: str, session: SessionDep, settings
     )
 
 @router.get(
-    "/pangenomes/{pangenome_id}/dbg/family_annotations", response_model=str, response_class=FileResponse
+    "/pangenomes/{pangenome_id}/dbg/family_annotations", response_model=str, response_class=FileResponse,
+    include_in_schema=False
 )
 async def get_pangenome_dbg_annotations(
     pangenome_id: int, session: SessionDep, settings: SettingsDep
@@ -229,7 +231,8 @@ async def get_pangenome_dbg_annotations(
     return get_annotation(pangenome_id, "", session, settings)
 
 @router.get(
-    "/pangenomes/{pangenome_id}/dbg/genome_annotations", response_model=str, response_class=FileResponse
+    "/pangenomes/{pangenome_id}/dbg/genome_annotations", response_model=str, response_class=FileResponse,
+    include_in_schema=False
 )
 async def get_pangenome_dbg_annotations_genomes(
     pangenome_id: int, session: SessionDep, settings: SettingsDep
