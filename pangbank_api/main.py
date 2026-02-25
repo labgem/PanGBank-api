@@ -12,6 +12,7 @@ except ImportError:
 from .database import create_db_and_tables
 from .routers import collections, genomes, pangenomes
 from .config import get_settings
+from importlib.metadata import version
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,6 +26,7 @@ app = FastAPI(
     title="PanGBank API",
     docs_url="/",
     description="API for managing collections pangenomes.",
+    version=version("PanGBank-api"),
 )
 
 app.add_middleware(
