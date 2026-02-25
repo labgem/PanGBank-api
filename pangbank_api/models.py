@@ -181,7 +181,6 @@ class CollectionReleaseBase(SQLModel):
         default=None, foreign_key="taxonomysource.id", ondelete="RESTRICT"
     )
 
-
 class CollectionRelease(CollectionReleaseBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
@@ -211,6 +210,7 @@ class CollectionReleasePublic(CollectionReleaseBase):
 
 class CollectionReleasePublicWithCount(CollectionReleasePublic):
     pangenome_count: int
+    genome_count: int
 
 
 class TaxonBase(SQLModel):

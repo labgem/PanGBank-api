@@ -58,6 +58,9 @@ def make_collection_public_with_releases(
             from_attributes=True,
             update={
                 "pangenome_count": len(release.pangenomes),
+                "genome_count": sum(
+                    len(pangenome.genome_links) for pangenome in release.pangenomes
+                ),
                 "collection_name": collection.name,
             },
         )
