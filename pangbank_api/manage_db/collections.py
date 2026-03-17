@@ -315,6 +315,45 @@ def get_pangenome_metrics_from_info_files(
     return PangenomeMetric.model_validate(pangenome_data)
 
 
+def update_collection_release_counts(
+    collection_release: CollectionRelease,
+    session: Session,
+) -> None:
+    """
+    Update the pangenome_count and genome_count fields for a collection release.
+    
+    This should be called after all pangenomes have been added to the collection release.
+    
+    :param collection_release: The collection release to update.
+    :param session: SQLAlchemy session for database transactions.
+    """
+    # Refresh to get the latest pangenomes
+    session.refresh(collection_release)
+    
+    # Count pangenomes
+    pangenome_count = len(collection_release.pangenomes)
+    
+    # Count unique genomes across all pangenomes
+    genome_ids: set[int] = set()
+    for pangenome in collection_release.pangenomes:
+        for genome_link in pangenome.genome_links:
+            if genome_link.genome_id is not None:
+                genome_ids.add(genome_link.genome_id)
+    genome_count = len(genome_ids)
+    
+    # Update the counts
+    collection_release.pangenome_count = pangenome_count
+    collection_release.genome_count = genome_count
+    
+    session.add(collection_release)
+    session.commit()
+    
+    logger.info(
+        f"Updated collection release {collection_release.collection.name}:{collection_release.version} "
+        f"with pangenome_count={pangenome_count} and genome_count={genome_count}"
+    )
+
+
 def add_pangenomes_to_db(
     pangenome_main_dir: Path,
     collection_release: CollectionRelease,

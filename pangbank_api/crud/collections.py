@@ -8,7 +8,7 @@ from packaging.version import parse
 from pangbank_api.crud.common import FilterCollection, FilterRelease
 from pangbank_api.models import (
     Collection,
-    CollectionReleasePublicWithCount,
+    CollectionReleasePublic,
     CollectionPublicWithReleases,
 )
 
@@ -39,7 +39,7 @@ def make_collection_public_with_releases(
     collection: Collection, only_latest_release: bool | None
 ):
 
-    public_releases: List[CollectionReleasePublicWithCount] = []
+    public_releases: List[CollectionReleasePublic] = []
 
     latest_release = max(collection.releases, key=lambda x: parse(x.version))
     assert (
@@ -53,14 +53,10 @@ def make_collection_public_with_releases(
 
     for release in releases:
 
-        release_public = CollectionReleasePublicWithCount.model_validate(
+        release_public = CollectionReleasePublic.model_validate(
             release,
             from_attributes=True,
             update={
-                "pangenome_count": len(release.pangenomes),
-                "genome_count": sum(
-                    len(pangenome.genome_links) for pangenome in release.pangenomes
-                ),
                 "collection_name": collection.name,
             },
         )
