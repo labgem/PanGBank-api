@@ -108,7 +108,7 @@ class CollectionPublic(CollectionBase):
 
 
 class CollectionPublicWithReleases(CollectionPublic):
-    releases: list["CollectionReleasePublicWithCount"]
+    releases: list["CollectionReleasePublic"]
 
 
 class TaxonomySourceBase(SQLModel):
@@ -180,6 +180,10 @@ class CollectionReleaseBase(SQLModel):
     taxonomy_source_id: int | None = Field(
         default=None, foreign_key="taxonomysource.id", ondelete="RESTRICT"
     )
+    
+    # Cached counts for performance
+    pangenome_count: int | None = None
+    genome_count: int | None = None
 
 class CollectionRelease(CollectionReleaseBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -207,10 +211,6 @@ class CollectionReleasePublic(CollectionReleaseBase):
     taxonomy_source: TaxonomySourcePublic
     collection_name: str
     collection: CollectionPublic
-
-class CollectionReleasePublicWithCount(CollectionReleasePublic):
-    pangenome_count: int
-    genome_count: int
 
 
 class TaxonBase(SQLModel):

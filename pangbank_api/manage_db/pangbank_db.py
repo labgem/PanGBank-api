@@ -14,6 +14,7 @@ from pangbank_api.manage_db.collections import (
     delete_collection_release,
     delete_full_collection,
     print_collections,
+    update_collection_release_counts,
 )
 from pangbank_api.manage_db.genome_metadata import (
     add_genome_metadata_source_to_db,
@@ -150,6 +151,9 @@ def add_collection_release(
             collection_release=collection_release,
             session=session,
         )
+
+        # Update the cached counts after all pangenomes have been added
+        update_collection_release_counts(collection_release, session)
 
         # add_metadata_to_genomes_of_the_release(
         #     collection_release,
