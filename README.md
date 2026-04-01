@@ -167,7 +167,7 @@ pangbank_db add-collection-release <collection_release.json>
 ### List Existing Collections
 
 ```bash
-pangbank_db list-collection
+pangbank_db list-collections
 ```
 
 ### Delete a Collection Release
@@ -175,6 +175,37 @@ pangbank_db list-collection
 ```bash
 pangbank_db delete-collection <collection_name> --release-version <version>
 ```
+
+### Add Genome Statuses to an Existing Release
+
+Add genome status information (representative, reference, type strain, etc.) to an existing collection release without re-importing the entire collection:
+
+```bash
+pangbank_db add-genome-statuses \
+  <collection_name> \
+  <release_version> \
+  <status_type> \
+  <origin> \
+  <file>
+```
+
+**Example:**
+
+```bash
+pangbank_db add-genome-statuses \
+  "GTDB_all_sampled" \
+  "1.0.0" \
+  "representative" \
+  "GTDB" \
+  /path/to/gtdb_representatives.txt
+```
+
+This command is useful for:
+- Adding genome statuses to releases that were imported without them
+- Updating status information when new representative/reference genomes are announced
+- Adding multiple status types incrementally (e.g., first representatives, then type strains)
+
+The file should contain one genome name per line. Duplicate statuses are automatically skipped.
 
 
 ## Database Migrations with Alembic
