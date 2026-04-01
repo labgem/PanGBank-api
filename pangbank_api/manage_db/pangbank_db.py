@@ -22,6 +22,7 @@ from pangbank_api.manage_db.genome_metadata import (
     app as genome_metadata_app,
     parse_metadata_table,
 )
+from pangbank_api.manage_db.genome_status import add_genome_statuses_to_release
 from pangbank_api.manage_db.genomes import add_genomes_to_db
 from pangbank_api.manage_db.taxonomy import (
     add_taxon_to_db,
@@ -75,6 +76,7 @@ def add_collection_release(
     collection_release_input = data_input.release
     taxonomy_input = data_input.taxonomy
     genome_metadata_source_inputs = data_input.genome_metadata_sources
+    genome_status_inputs = data_input.genome_statuses
 
     taxonomy_file = taxonomy_input.file
 
@@ -164,6 +166,14 @@ def add_collection_release(
         update_genome_pangenome_links_with_specific_metadata(
             collection_release,
             metadata_source_and_genome_name_to_metadatas,
+            session=session,
+        )
+
+        # Add genome status information (representative/reference genomes)
+        add_genome_statuses_to_release(
+            collection_release,
+            genome_status_inputs,
+            genome_name_to_genome,
             session=session,
         )
 

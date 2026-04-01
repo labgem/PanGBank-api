@@ -25,11 +25,24 @@ class GenomeMetadataSourceInput(MetadataSourceBase):
     )
 
 
+class GenomeStatusInput(BaseModel):
+    """Input for genome status (representative/reference) information."""
+
+    status_type: str  # "representative", "reference", etc.
+    origin: str  # "GTDB RS220", "NCBI RefSeq", etc.
+    file: Path  # Path to text file with genome names (one per line)
+
+
 class CollectionReleaseInput(BaseModel):
     collection: Collection
     release: CollectionRelease
     taxonomy: TaxonomySourceInput
-    genome_sources: list[GenomeSourceInput] = Field(default_factory=list)
+    genome_sources: list[GenomeSourceInput] = Field(
+        default_factory=list
+    )  # pyright: ignore[reportUnknownVariableType]
     genome_metadata_sources: list[GenomeMetadataSourceInput] = Field(
         default_factory=list
-    )
+    )  # pyright: ignore[reportUnknownVariableType]
+    genome_statuses: list[GenomeStatusInput] = Field(
+        default_factory=list
+    )  # pyright: ignore[reportUnknownVariableType]

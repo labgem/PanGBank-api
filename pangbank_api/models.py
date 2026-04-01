@@ -27,6 +27,47 @@ class CollectionReleaseGenomeMetadataLink(SQLModel, table=True):
     )
 
 
+class GenomeStatusBase(SQLModel):
+    status_type: str  # "representative", "reference", "type_strain", etc.
+    origin: str  # "GTDB", "NCBI_RefSeq", "Custom", etc.
+    collection_release_id: int
+
+
+class GenomeStatus(GenomeStatusBase, table=True):
+    """
+    Tracks genome status (representative/reference/etc.) within a collection release.
+
+    Examples:
+    - GTDB representative genomes: status_type="representative", origin="GTDB"
+    - NCBI reference genomes: status_type="reference", origin="NCBI_RefSeq"
+    """
+
+    __table_args__ = (
+        UniqueConstraint("genome_id", "collection_release_id", "status_type", "origin"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+
+    genome_id: int = Field(foreign_key="genome.id", index=True)
+    collection_release_id: int = Field(foreign_key="collectionrelease.id", index=True)
+
+    # Type and origin as strings for flexibility
+    status_type: str = Field(
+        index=True
+    )  # "representative", "reference", "type_strain", etc.
+    origin: str = Field(index=True)  # "GTDB", "NCBI_RefSeq", "Custom", etc.
+
+    # Relationships
+    genome: "Genome" = Relationship(back_populates="statuses")
+    collection_release: "CollectionRelease" = Relationship(
+        back_populates="genome_statuses"
+    )
+
+
+class GenomeStatusPublic(GenomeStatusBase):
+    id: int
+
+
 class GenomeInPangenomeMetric(SQLModel):
     model_config = {"populate_by_name": True}  # type: ignore
 
@@ -206,6 +247,10 @@ class CollectionRelease(CollectionReleaseBase, table=True):
         link_model=CollectionReleaseGenomeMetadataLink,
     )
 
+    genome_statuses: list["GenomeStatus"] = Relationship(
+        back_populates="collection_release", cascade_delete=True
+    )
+
 class CollectionReleasePublic(CollectionReleaseBase):
     id: int
     taxonomy_source: TaxonomySourcePublic
@@ -268,14 +313,17 @@ class Genome(GenomeBase, table=True):
         back_populates="genome", cascade_delete=True
     )
 
+    statuses: list["GenomeStatus"] = Relationship(
+        back_populates="genome", cascade_delete=True
+    )
+
 
 class GenomePublic(GenomeBase):
+    """Public genome model with taxonomies and statuses."""
     id: int
     genome_source: GenomeSourcePublic
-
-
-class GenomePublicWithTaxonomies(GenomePublic):
     taxonomies: list["TaxonomyPublic"]
+    statuses: list["GenomeStatusPublic"] = []
 
 
 class PangenomeMetric(SQLModel):

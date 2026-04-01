@@ -55,6 +55,7 @@ def parse_collection_release_input_json(
             metadata_source.file
             for metadata_source in data_input.genome_metadata_sources
         ]
+        + [status_input.file for status_input in data_input.genome_statuses]
     )
 
     missing_files = [f for f in missing_files if not f.exists()]

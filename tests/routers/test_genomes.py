@@ -4,7 +4,16 @@ from httpx import Response
 from sqlmodel import Session
 
 
-from pangbank_api.models import GenomeSource, Taxon, Genome, TaxonomySource
+from pangbank_api.models import (
+    GenomeSource,
+    Taxon,
+    Genome,
+    TaxonomySource,
+    GenomeStatus,
+    Collection,
+    CollectionRelease,
+)
+from datetime import datetime
 from ..mock_session import session_fixture, client_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
@@ -190,3 +199,102 @@ def test_get_genome_by_id_not_found(client: TestClient, session: Session):
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Genome not found"}
+
+
+def test_get_genome_with_statuses(client: TestClient, session: Session):
+    """
+    Test that genome statuses are included in the API response.
+    """
+    # Arrange: Create genome with statuses
+    taxonomy_source = TaxonomySource(
+        name="GTDB", ranks="Domain;Phylum;Class", version="R220"
+    )
+    taxon = Taxon(
+        name="d__Bacteria", rank="Domain", depth=0, taxonomy_source=taxonomy_source
+    )
+    genome_source = GenomeSource(name="NCBI")
+    genome = Genome(name="TestGenome", taxa=[taxon], genome_source=genome_source)
+
+    collection = Collection(name="TestCollection", description="Test")
+    collection_release = CollectionRelease(
+        version="1.0",
+        ppanggolin_version="2.0",
+        pangbank_wf_version="1.0",
+        release_note="Test release",
+        mash_version="2.0",
+        mash_sketch_md5sum="abc123",
+        mash_sketch="sketch_data",
+        pangenomes_directory="/test",
+        date=datetime.now(),
+        collection=collection,
+        taxonomy_source=taxonomy_source,
+    )
+
+    session.add_all(
+        [taxonomy_source, taxon, genome_source, genome, collection, collection_release]
+    )
+    session.commit()
+    session.refresh(genome)
+    session.refresh(collection_release)
+
+    assert (
+        collection_release.id is not None
+    ), "Collection release ID should be set after commit"
+    assert genome.id is not None, "Genome ID should be set after commit"
+
+    # Add genome statuses
+    status1 = GenomeStatus(
+        genome_id=genome.id,
+        collection_release_id=collection_release.id,
+        status_type="representative",
+        origin="GTDB",
+    )
+    status2 = GenomeStatus(
+        genome_id=genome.id,
+        collection_release_id=collection_release.id,
+        status_type="reference",
+        origin="NCBI_RefSeq",
+    )
+
+    session.add_all([status1, status2])
+    session.commit()
+    session.refresh(genome)
+
+    # Act
+    response = client.get(f"/genomes/{genome.id}")
+
+    # Assert
+    assert response.status_code == 200
+    data = response.json()
+    assert "name" in data
+    assert data["name"] == "TestGenome"
+    assert "taxonomies" in data
+    assert "statuses" in data
+    assert isinstance(data["statuses"], list)
+    assert len(data["statuses"]) == 2
+
+    # Check status details
+    status_types = [s["status_type"] for s in data["statuses"]]
+    status_origins = [s["origin"] for s in data["statuses"]]
+
+    assert "representative" in status_types
+    assert "reference" in status_types
+    assert "GTDB" in status_origins
+    assert "NCBI_RefSeq" in status_origins
+
+
+def test_get_genome_without_statuses(
+    client: TestClient, session: Session, mock_data: None
+):
+    """
+    Test that genomes without statuses return an empty statuses list.
+    """
+    # Act
+    response = client.get("/genomes/1")
+
+    # Assert
+    assert response.status_code == 200
+    data = response.json()
+    assert "statuses" in data
+    assert isinstance(data["statuses"], list)
+    assert len(data["statuses"]) == 0  # No statuses for this genome

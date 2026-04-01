@@ -8,27 +8,41 @@ from pangbank_api.crud.common import (
 )
 from pangbank_api.models import (
     Genome,
-    GenomePublicWithTaxonomies,
+    GenomePublic,
     GenomeTaxonLink,
     Taxon,
     TaxonomyPublic,
     GenomeSourcePublic,
+    GenomeStatusPublic,
 )
 
 
-def get_genome_public(genome: Genome) -> GenomePublicWithTaxonomies:
+def get_genome_public(genome: Genome) -> GenomePublic:
     taxonomies = get_taxonomies_from_taxa(genome.taxa)
-    genome_public = GenomePublicWithTaxonomies(
+
+    # Convert genome statuses to public models
+    statuses = [
+        GenomeStatusPublic(
+            id=(
+                status.id if status.id is not None else 0
+            ),  # id should always be set from DB
+            status_type=status.status_type,
+            origin=status.origin,
+            collection_release_id=status.collection_release_id,
+        )
+        for status in genome.statuses
+    ]
+
+    genome_public = GenomePublic(
         **genome.model_dump(),
         taxonomies=[TaxonomyPublic(**taxonomy.model_dump()) for taxonomy in taxonomies],
         genome_source=GenomeSourcePublic(**genome.genome_source.model_dump()),
+        statuses=statuses,
     )
     return genome_public
 
 
-def get_genome_by_id(
-    session: Session, genome_id: int
-) -> GenomePublicWithTaxonomies | None:
+def get_genome_by_id(session: Session, genome_id: int) -> GenomePublic | None:
     genome = session.get(Genome, genome_id)
     if genome is None:
         return None
@@ -36,9 +50,7 @@ def get_genome_by_id(
     return get_genome_public(genome)
 
 
-def get_genome_by_name(
-    session: Session, genome_name: str
-) -> GenomePublicWithTaxonomies | None:
+def get_genome_by_name(session: Session, genome_name: str) -> GenomePublic | None:
     genome = session.exec(select(Genome).where(Genome.name == genome_name)).first()
 
     if genome is None:
@@ -51,7 +63,7 @@ def get_genomes(
     session: Session,
     filter_params: FilterGenomeTaxon,
     pagination_params: PaginationParams | None,
-) -> list[GenomePublicWithTaxonomies]:
+) -> list[GenomePublic]:
     query = select(Genome).distinct()
 
     if filter_params.genome_name is not None:
