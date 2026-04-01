@@ -24,6 +24,7 @@ from pangbank_api.manage_db.genome_metadata import (
 )
 from pangbank_api.manage_db.genome_status import add_genome_statuses_to_release
 from pangbank_api.manage_db.genomes import add_genomes_to_db
+from pangbank_api.manage_db.input_models import GenomeStatusInput
 from pangbank_api.manage_db.taxonomy import (
     add_taxon_to_db,
     link_genomes_and_taxa,
@@ -34,7 +35,13 @@ from pangbank_api.manage_db.utils import (
     parse_collection_release_input_json,
     set_up_logging_config,
 )
-from pangbank_api.models import GenomeMetadataSource, MetadataBase
+from pangbank_api.models import (
+    GenomeMetadataSource,
+    MetadataBase,
+    Collection,
+    CollectionRelease,
+    Genome,
+)
 
 cli = typer.Typer(
     no_args_is_help=True,
@@ -213,6 +220,89 @@ def delete_collection(
 
         else:
             delete_full_collection(session, collection_name)
+
+
+@cli.command(no_args_is_help=True)
+def add_genome_statuses(
+    collection_name: Annotated[str, typer.Argument(help="Name of the collection.")],
+    release_version: Annotated[
+        str, typer.Argument(help="Version of the collection release.")
+    ],
+    status_type: Annotated[
+        str,
+        typer.Argument(
+            help="Type of genome status (e.g., 'representative', 'reference', 'type_strain')."
+        ),
+    ],
+    origin: Annotated[
+        str,
+        typer.Argument(
+            help="Origin of the genome status (e.g., 'GTDB', 'NCBI_RefSeq')."
+        ),
+    ],
+    file: Annotated[
+        Path,
+        typer.Argument(
+            help="Path to text file containing genome names (one per line).",
+            exists=True,
+        ),
+    ],
+):
+    """
+    Add genome status information to an existing collection release.
+
+    This command allows you to add or update genome statuses (representative, reference, type strain, etc.)
+    for genomes in an existing collection release without re-importing the entire collection.
+    """
+    set_up_logging_config()
+
+    create_db_and_tables()
+
+    with Session(engine) as session:
+        # Find the collection release
+        statement = (
+            select(CollectionRelease)
+            .join(Collection)
+            .where(
+                (Collection.name == collection_name)
+                & (CollectionRelease.version == release_version)
+            )
+        )
+
+        collection_release = session.exec(statement).first()
+
+        if collection_release is None:
+            logging.error(
+                f"Collection release not found: {collection_name}:{release_version}"
+            )
+            raise typer.Exit(code=1)
+
+        logging.info(f"Found collection release: {collection_name}:{release_version}")
+
+        # Get all genomes from the database
+        all_genomes = session.exec(select(Genome)).all()
+        genome_name_to_genome = {genome.name: genome for genome in all_genomes}
+
+        logging.info(f"Found {len(genome_name_to_genome)} genomes in the database")
+
+        # Create GenomeStatusInput
+        genome_status_input = GenomeStatusInput(
+            status_type=status_type,
+            origin=origin,
+            file=file,
+        )
+
+        # Add genome statuses
+        add_genome_statuses_to_release(
+            collection_release=collection_release,
+            genome_status_inputs=[genome_status_input],
+            genome_name_to_genome=genome_name_to_genome,
+            session=session,
+        )
+
+        logging.info(
+            f"Successfully processed genome statuses for {collection_name}:{release_version}"
+        )
 
 
 if __name__ == "__main__":
