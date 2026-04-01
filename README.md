@@ -5,7 +5,7 @@ This repository contains the API used to manage the **PanGBank** database, which
 The API is built with [**FastAPI**](https://fastapi.tiangolo.com) and uses [**SQLModel**](https://sqlmodel.tiangolo.com) as its ORM.
 It provides a RESTful interface for querying and exploring pangenome collections. Alongside the API, a command-line tool `pangbank_db` is included to manage the database.
 
-## 🚀 Installation
+## Installation
 
 PanGBank-api is organized into two main components:
 - **Core package**: Database models, CRUD operations, and CLI tools (`pangbank_db`)
@@ -67,7 +67,7 @@ This additionally installs:
 > `PANGBANK_DATA_DIR` is the root directory containing your pangenome data and mash files.
 
 
-## 🛠️ Managing the Database with `pangbank_db`
+## Managing the Database with `pangbank_db`
 
 All CLI commands require the `PANGBANK_DB_PATH` environment variable to be set.
 
@@ -140,13 +140,26 @@ pangbank_db add-collection-release <collection_release.json>
       "organism_name_attribute": "ncbi_organism_name",
       "file": "/absolute/path/to/metadata.tsv"
     }
+  ],
+  "genome_status_files": [
+    {
+      "status_type": "representative",
+      "origin": "GTDB",
+      "file": "/absolute/path/to/gtdb_representatives.txt"
+    },
+    {
+      "status_type": "reference",
+      "origin": "NCBI_RefSeq",
+      "file": "/absolute/path/to/ncbi_references.txt"
+    }
   ]
 }
 ```
 
 #### Note
 * Paths for `pangenomes_directory` and `mash_sketch` must be **relative to `PANGBANK_DATA_DIR`**.
-* Paths for `taxonomy.file`, `genome_sources[*].file`, and `genome_metadata_sources[*].file` must be **absolute file paths**.
+* Paths for `taxonomy.file`, `genome_sources[*].file`, `genome_metadata_sources[*].file`, and `genome_status_files[*].file` must be **absolute file paths**.
+* `genome_status_files` is optional. Each file should contain one genome name per line.
 
 </details>
 
@@ -164,7 +177,7 @@ pangbank_db delete-collection <collection_name> --release-version <version>
 ```
 
 
-## 🗃️ Database Migrations with Alembic
+## Database Migrations with Alembic
 
 We use [Alembic](https://alembic.sqlalchemy.org/) to manage schema changes in the PanGBank database.
 

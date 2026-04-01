@@ -1,13 +1,12 @@
-from pangbank_api.manage_db.genome_metadata import add, delete, list
-from pangbank_api.models import Genome, GenomeMetadata, GenomeMetadataSource
+from pangbank_api.manage_db.genome_metadata import delete, list
+from pangbank_api.models import GenomeMetadataSource
 
 import pytest
 import tempfile
 import json
 import random
-from pathlib import Path
 from unittest.mock import patch
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from ..mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
