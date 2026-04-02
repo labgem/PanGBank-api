@@ -182,23 +182,30 @@ Add genome status information (representative, reference, type strain, etc.) to 
 
 ```bash
 pangbank_db add-genome-statuses \
-  <collection_name> \
-  <release_version> \
-  <status_type> \
-  <origin> \
-  <file>
+  --collection_name <collection_name> \
+  --release_version <release_version> \
+  --status_type <status_type> \
+  --origin <origin> \
+  --file <file>
 ```
 
 **Example:**
 
 ```bash
 pangbank_db add-genome-statuses \
-  "GTDB_all_sampled" \
-  "1.0.0" \
-  "representative" \
-  "GTDB" \
-  /path/to/gtdb_representatives.txt
+  --collection-name "GTDB_all_sampled" \
+  --release-version "1.0.0" \
+  --status-type "representative" \
+  --origin "GTDB" \
+  --file /path/to/gtdb_representatives.txt
 ```
+pangbank_db add-genome-statuses \
+  --collection-name "GTDB_refseq" \
+  --release-version "1.0.0" \
+  --status-type "representative" \
+  --origin "GTDB" \
+  --file /env/export/labgem_bank/PanGBank_genomes/GTDB_RS226/genome_metadata/gtdb_representative_genomes.txt
+
 
 This command is useful for:
 - Adding genome statuses to releases that were imported without them

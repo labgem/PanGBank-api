@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from sqlmodel import Session
+from sqlmodel import Session, select
 from typing_extensions import Annotated
 
 from pangbank_api.database import create_db_and_tables, engine
@@ -224,25 +224,23 @@ def delete_collection(
 
 @cli.command(no_args_is_help=True)
 def add_genome_statuses(
-    collection_name: Annotated[str, typer.Argument(help="Name of the collection.")],
+    collection_name: Annotated[str, typer.Option(help="Name of the collection.")],
     release_version: Annotated[
-        str, typer.Argument(help="Version of the collection release.")
+        str, typer.Option(help="Version of the collection release.")
     ],
     status_type: Annotated[
         str,
-        typer.Argument(
+        typer.Option(
             help="Type of genome status (e.g., 'representative', 'reference', 'type_strain')."
         ),
     ],
     origin: Annotated[
         str,
-        typer.Argument(
-            help="Origin of the genome status (e.g., 'GTDB', 'NCBI_RefSeq')."
-        ),
+        typer.Option(help="Origin of the genome status (e.g., 'GTDB', 'NCBI_RefSeq')."),
     ],
     file: Annotated[
         Path,
-        typer.Argument(
+        typer.Option(
             help="Path to text file containing genome names (one per line).",
             exists=True,
         ),
