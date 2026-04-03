@@ -293,6 +293,28 @@ class TaxonPublic(TaxonBase):
 class GenomeBase(SQLModel):
     name: str = Field(unique=True, index=True)
     genome_source_id: int | None = Field(default=None, foreign_key="genomesource.id")
+    
+    # Optional genome metadata and quality metrics
+    accession: str | None = None
+    ncbi_genome_category: str | None = None
+    genome_category: str | None = None  # Simplified category: isolate, MAG, SAG, unknown
+    
+    # CheckM2 quality metrics
+    checkm2_completeness: float | None = None
+    checkm2_contamination: float | None = None
+    checkm2_model: str | None = None
+    
+    # CheckM quality metrics
+    checkm_completeness: float | None = None
+    checkm_contamination: float | None = None
+    checkm_strain_heterogeneity: float | None = None
+    
+    # Assembly statistics
+    gc_count: int | None = None
+    gc_percentage: float | None = None
+    genome_size: int | None = None
+    l50_contigs: int | None = None
+    n50_contigs: int | None = None
 
 
 class Genome(GenomeBase, table=True):
