@@ -25,6 +25,10 @@ class GenomeMetadataSourceInput(MetadataSourceBase):
     )
 
 
+class GenomeQualityMetricsInput(BaseModel):
+    file: Path
+
+
 class GenomeStatusInput(BaseModel):
     """Input for genome status (representative/reference) information."""
 
@@ -40,9 +44,7 @@ class CollectionReleaseInput(BaseModel):
     genome_sources: list[GenomeSourceInput] = Field(
         default_factory=list
     )  # pyright: ignore[reportUnknownVariableType]
-    genome_metadata_sources: list[GenomeMetadataSourceInput] = Field(
-        default_factory=list
-    )  # pyright: ignore[reportUnknownVariableType]
+    genome_quality_metrics: GenomeQualityMetricsInput | None = None
     genome_statuses: list[GenomeStatusInput] = Field(
         default_factory=list
     )  # pyright: ignore[reportUnknownVariableType]

@@ -156,10 +156,34 @@ pangbank_db add-collection-release <collection_release.json>
 }
 ```
 
+#### Genome Quality Metrics
+
+The `genome_quality_metrics` field (optional) allows you to load assembly quality metrics and statistics into the Genome table during collection import. The TSV file should have:
+
+- **First column**: `genomes` (genome names matching those in your genome_sources)
+- **Other columns**: Any of the following supported quality metrics:
+  - `accession` - Genome accession (e.g., GCA_123456)
+  - `ncbi_genome_category` - NCBI genome category
+  - `genome_category` - Custom genome category
+  - `checkm2_completeness` - CheckM2 completeness (%)
+  - `checkm2_contamination` - CheckM2 contamination (%)
+  - `checkm2_model` - CheckM2 model used
+  - `checkm_completeness` - CheckM completeness (%)
+  - `checkm_contamination` - CheckM contamination (%)
+  - `checkm_strain_heterogeneity` - CheckM strain heterogeneity (%)
+  - `gc_count` - GC base count
+  - `gc_percentage` - GC percentage
+  - `genome_size` - Total genome size (bp)
+  - `l50_contigs` - L50 contigs statistic
+  - `n50_contigs` - N50 contigs statistic
+
+The system automatically handles type conversion (str, int, float) based on the Genome model field types. Only optional fields are updated - required fields like `name` are protected from modification.
+
 #### Note
 * Paths for `pangenomes_directory` and `mash_sketch` must be **relative to `PANGBANK_DATA_DIR`**.
-* Paths for `taxonomy.file`, `genome_sources[*].file`, `genome_metadata_sources[*].file`, and `genome_status_files[*].file` must be **absolute file paths**.
-* `genome_status_files` is optional. Each file should contain one genome name per line.
+* Paths for `taxonomy.file`, `genome_sources[*].file`, `genome_quality_metrics.file`, and `genome_status_files[*].file` must be **absolute file paths**.
+* `genome_quality_metrics` and `genome_status_files` are optional.
+* Each genome status file should contain one genome name per line.
 
 </details>
 

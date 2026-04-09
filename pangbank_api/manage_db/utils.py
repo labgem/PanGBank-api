@@ -2,7 +2,6 @@ import json
 import logging
 from pathlib import Path
 import hashlib
-from sqlmodel import SQLModel  # type: ignore
 
 import typer
 from rich.logging import RichHandler
@@ -44,19 +43,21 @@ def parse_collection_release_input_json(
     mash_sketch_file = pangbank_data_dir / data_input.release.mash_sketch
 
     # Check if paths exist
-    missing_files = (
-        [
-            data_input.taxonomy.file,
-            pangenomes_directory,
-            mash_sketch_file,
-        ]
-        + [gs.file for gs in data_input.genome_sources]
-        + [
-            metadata_source.file
-            for metadata_source in data_input.genome_metadata_sources
-        ]
-        + [status_input.file for status_input in data_input.genome_statuses]
-    )
+    missing_files = [
+        data_input.taxonomy.file,
+        pangenomes_directory,
+        mash_sketch_file,
+    ]
+
+    # Add genome source files
+    missing_files += [gs.file for gs in data_input.genome_sources]
+
+    # Add genome quality metrics file if provided
+    if data_input.genome_quality_metrics is not None:
+        missing_files.append(data_input.genome_quality_metrics.file)
+
+    # Add genome status files
+    missing_files += [status_input.file for status_input in data_input.genome_statuses]
 
     missing_files = [f for f in missing_files if not f.exists()]
 

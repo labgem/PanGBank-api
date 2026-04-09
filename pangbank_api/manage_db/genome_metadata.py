@@ -1,8 +1,9 @@
 import csv
 import gzip
 import logging
+import typing
 from pathlib import Path
-from typing import Generator, List, Optional
+from typing import Any, Generator, List, Optional
 from rich.console import Console
 from rich.table import Table
 
@@ -15,6 +16,7 @@ from pangbank_api.database import create_db_and_tables, engine
 from pangbank_api.manage_db.utils import check_and_read_json_file, set_up_logging_config
 from pangbank_api.models import (
     Genome,
+    GenomeBase,
     GenomeMetadata,
     MetadataBase,
     GenomeMetadataSource,
@@ -30,12 +32,37 @@ logger = logging.getLogger(__name__)  # __name__ ensures uniqueness per module
 app = typer.Typer(no_args_is_help=True)
 
 
+def get_valid_genome_quality_columns() -> set[str]:
+    """Get the set of valid optional column names from the Genome model.
+
+    Returns:
+        Set of field names that are optional in the GenomeBase model.
+        These are the valid columns for genome quality metrics.
+    """
+    return {
+        field_name
+        for field_name, field_info in GenomeBase.model_fields.items()
+        if not field_info.is_required()
+    }
+
+
 def parse_metadata_table(
     file_path: Path,
     disable_track: bool = False,
+    valid_columns: Optional[set[str]] = None,
 ) -> Generator[tuple[str, List[MetadataBase]], None, None]:
-    """Parse a gzip-compressed TSV and yield rows as dictionaries."""
+    """Parse a gzip-compressed TSV and yield rows as dictionaries.
+
+    Args:
+        file_path: Path to the TSV file (can be gzipped)
+        disable_track: Whether to disable the progress bar
+        valid_columns: Optional set of valid column names to include.
+                      If provided, only these columns will be parsed.
+                      Columns not in this set will be filtered out.
+    """
+
     proper_open = gzip.open if file_path.name.endswith("gz") else open
+
     with proper_open(file_path, mode="rt") as tsvfile:
         reader = csv.DictReader(tsvfile, delimiter="\t")
         for row in track(reader, "Parsing metadata", total=None, disable=disable_track):
@@ -52,7 +79,7 @@ def parse_metadata_table(
                     value=str(value),
                 )
                 for key, value in row.items()
-                if key != "genomes"
+                if key != "genomes" and (valid_columns is None or key in valid_columns)
             ]
 
             yield genome_name, genome_metadata_list
@@ -154,6 +181,140 @@ def get_all_genome_pangenome_links_for_release(
     results = session.exec(statement).all()
 
     return results
+
+
+def convert_value_to_field_type(value: str, field_name: str) -> Any:
+    """
+    Convert a string value to the appropriate type based on the Genome model field type.
+
+    Args:
+        value: String value to convert
+        field_name: Name of the field in the Genome model
+
+    Returns:
+        Converted value with appropriate type
+
+    Raises:
+        ValueError: If conversion fails
+    """
+    if value == "":
+        return None
+
+    # Get field information from the model
+    field_info = GenomeBase.model_fields.get(field_name)
+    if field_info is None:
+        raise ValueError(f"Field {field_name} not found in GenomeBase model")
+
+    # Get the annotation (type hint)
+    annotation = field_info.annotation
+
+    # Handle Optional types (e.g., str | None, float | None)
+    # Extract the actual type from Union[type, None] or type | None
+    origin = typing.get_origin(annotation)
+    if origin is typing.Union or str(origin) == "<class 'types.UnionType'>":
+        args = typing.get_args(annotation)
+        # Filter out NoneType to get the actual type
+        non_none_types = [arg for arg in args if arg is not type(None)]
+        if non_none_types:
+            annotation = non_none_types[0]
+
+    # Convert based on type
+    if annotation is int:
+        return int(value)
+    elif annotation is float:
+        return float(value)
+    elif annotation is str:
+        return str(value)
+    else:
+        # For other types, try to return as-is
+        return value
+
+
+def get_all_genomes_for_release(
+    collection_release: CollectionRelease,
+    session: Session,
+) -> dict[str, Genome]:
+    """Get all genomes associated with a collection release."""
+    statement = (
+        select(Genome)
+        .join(GenomePangenomeLink)
+        .join(Pangenome)
+        .where(Pangenome.collection_release_id == collection_release.id)
+        .distinct()
+    )
+    genomes = session.exec(statement).all()
+    return {genome.name: genome for genome in genomes}
+
+
+def update_genomes_with_quality_metrics(
+    collection_release: CollectionRelease,
+    genome_quality_metrics_generator: Generator[
+        tuple[str, List[MetadataBase]], None, None
+    ],
+    session: Session,
+):
+    """
+    Update Genome table with quality metrics and assembly statistics.
+
+    This function updates the typed columns in the Genome table with metadata
+    such as CheckM/CheckM2 quality metrics, assembly statistics, and genome categories.
+    This is more efficient than storing these in the key-value GenomeMetadata table.
+
+    Args:
+        collection_release: The collection release being processed
+        genome_quality_metrics_generator: Generator yielding (genome_name, metadata_list) tuples
+        session: Database session
+    """
+    genome_name_to_genome = get_all_genomes_for_release(collection_release, session)
+    updated_genomes: List[Genome] = []
+    processed_count = 0
+
+    logger.info("Processing genome quality metrics from generator.")
+
+    for genome_name, metadatas in genome_quality_metrics_generator:
+        processed_count += 1
+        if genome_name not in genome_name_to_genome:
+            continue
+
+        genome = genome_name_to_genome[genome_name]
+        is_updated = False
+
+        for metadata in metadatas:
+            # Check if this metadata key corresponds to an optional field in the Genome model
+            # This prevents overwriting required fields like 'name' or 'id'
+            field_info = GenomeBase.model_fields.get(metadata.key)
+            if field_info is not None and not field_info.is_required():
+                try:
+                    # Convert value using the field's actual type from the model
+                    converted_value = convert_value_to_field_type(
+                        metadata.value, metadata.key
+                    )
+
+                    # Skip if conversion returned None (empty string)
+                    if converted_value is None:
+                        continue
+
+                    # Set the attribute on the genome
+                    setattr(genome, metadata.key, converted_value)
+                    is_updated = True
+
+                except (ValueError, TypeError) as e:
+                    logger.warning(
+                        f"Failed to convert metadata {metadata.key}='{metadata.value}' "
+                        f"for genome {genome_name}: {e}"
+                    )
+                    continue
+
+        if is_updated:
+            updated_genomes.append(genome)
+
+    logger.info(
+        f"Processed {processed_count} genome quality metrics entries. "
+        f"Updated {len(updated_genomes)} genomes in the release."
+    )
+
+    session.add_all(updated_genomes)
+    session.commit()
 
 
 def update_genome_pangenome_links_with_specific_metadata(
