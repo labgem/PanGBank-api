@@ -17,10 +17,10 @@ from pangbank_api.manage_db.collections import (
     update_collection_release_counts,
 )
 from pangbank_api.manage_db.genome_metadata import (
-    add_genome_metadata_source_to_db,
-    update_genome_pangenome_links_with_specific_metadata,
+    update_genomes_with_quality_metrics,
     app as genome_metadata_app,
     parse_metadata_table,
+    get_valid_genome_quality_columns,
 )
 from pangbank_api.manage_db.genome_status import add_genome_statuses_to_release
 from pangbank_api.manage_db.genomes import add_genomes_to_db
@@ -36,8 +36,6 @@ from pangbank_api.manage_db.utils import (
     set_up_logging_config,
 )
 from pangbank_api.models import (
-    GenomeMetadataSource,
-    MetadataBase,
     Collection,
     CollectionRelease,
     Genome,
@@ -82,7 +80,7 @@ def add_collection_release(
     collection_input = data_input.collection
     collection_release_input = data_input.release
     taxonomy_input = data_input.taxonomy
-    genome_metadata_source_inputs = data_input.genome_metadata_sources
+    genome_quality_metrics_input = data_input.genome_quality_metrics
     genome_status_inputs = data_input.genome_statuses
 
     taxonomy_file = taxonomy_input.file
@@ -94,40 +92,9 @@ def add_collection_release(
     genome_name_to_lineage = parse_taxonomy_file(taxonomy_file)
     lineages = set(genome_name_to_lineage.values())
 
-    metadata_source_and_genome_name_to_metadatas: list[
-        tuple[GenomeMetadataSource, dict[str, list[MetadataBase]]]
-    ] = []
-    metadata_sources: list[GenomeMetadataSource] = []
-
     create_db_and_tables()
 
     with Session(engine) as session:
-
-        # Parse metadata sources and metadata tables
-        logging.info("Parsing metadata sources and metadata tables")
-        for genome_metadata_source_input in genome_metadata_source_inputs:
-            genome_metadata_file = genome_metadata_source_input.file
-            logging.info(
-                f"Parsing metadata sources and metadata tables {genome_metadata_file}"
-            )
-            genome_name_to_metadatas = {
-                genome_name: genome_metadata_list
-                for genome_name, genome_metadata_list in parse_metadata_table(
-                    genome_metadata_file
-                )
-            }
-
-            genome_metadata_source = GenomeMetadataSource.model_validate(
-                genome_metadata_source_input, from_attributes=True
-            )
-            genome_metadata_source = add_genome_metadata_source_to_db(
-                genome_metadata_source, session
-            )
-
-            metadata_source_and_genome_name_to_metadatas.append(
-                (genome_metadata_source, genome_name_to_metadatas)
-            )
-            metadata_sources.append(genome_metadata_source)
 
         genome_name_to_genome = add_genomes_to_db(genome_sources, session)
 
@@ -150,7 +117,6 @@ def add_collection_release(
             collection_input=collection_input,
             collection_release_input=collection_release_input,
             taxonomy_source=taxonomy_source,
-            genome_metadata_sources=metadata_sources,
             session=session,
         )
 
@@ -164,17 +130,25 @@ def add_collection_release(
         # Update the cached counts after all pangenomes have been added
         update_collection_release_counts(collection_release, session)
 
-        # add_metadata_to_genomes_of_the_release(
-        #     collection_release,
-        #     metadata_source_and_genome_name_to_metadatas,
-        #     session=session,
-        # )
+        # Update Genome table with quality metrics and assembly statistics
+        if genome_quality_metrics_input is not None:
+            logging.info(
+                f"Processing genome quality metrics from {genome_quality_metrics_input.file}"
+            )
+            # Get valid optional columns from the Genome model to filter during parsing
+            valid_columns = get_valid_genome_quality_columns()
 
-        update_genome_pangenome_links_with_specific_metadata(
-            collection_release,
-            metadata_source_and_genome_name_to_metadatas,
-            session=session,
-        )
+            # Pass the generator directly - saves memory by not materializing entire dict
+            genome_quality_metrics_generator = parse_metadata_table(
+                genome_quality_metrics_input.file,
+                valid_columns=valid_columns,
+            )
+
+            update_genomes_with_quality_metrics(
+                collection_release,
+                genome_quality_metrics_generator,
+                session=session,
+            )
 
         # Add genome status information (representative/reference genomes)
         add_genome_statuses_to_release(

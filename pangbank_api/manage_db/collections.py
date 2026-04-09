@@ -24,7 +24,6 @@ from pangbank_api.models import (
     PangenomeMetric,
     PangenomeTaxonLink,
     Taxon,
-    GenomeMetadataSource,
     TaxonomySource,
 )
 
@@ -38,7 +37,6 @@ def create_collection_release(
     collection_input: Collection,
     collection_release_input: CollectionRelease,
     taxonomy_source: TaxonomySource,
-    genome_metadata_sources: list[GenomeMetadataSource],
     session: Session,
 ) -> CollectionRelease:
     """
@@ -83,11 +81,7 @@ def create_collection_release(
         )
         collection_release.collection = collection
         collection_release.taxonomy_source = taxonomy_source
-        collection_release.genome_metadata_sources = genome_metadata_sources
         logger.info(f"New release is linked to taxonomy source {taxonomy_source.name}")
-        logger.info(
-            f"New release is linked to genome metadata sources {[source.name for source in genome_metadata_sources]}"
-        )
 
         session.add(collection_release)
         session.commit()
@@ -106,23 +100,12 @@ def create_collection_release(
             == collection_release_from_db.pangbank_wf_version
         )
 
-        same_genome_metadata_sources = {
-            source.name for source in genome_metadata_sources
-        } == {
-            source.name for source in collection_release_from_db.genome_metadata_sources
-        }
-
-        if (
-            not same_ppanggo_version
-            or not same_pangbank_wf_version
-            or not same_genome_metadata_sources
-        ):
+        if not same_ppanggo_version or not same_pangbank_wf_version:
             raise ValueError(
-                f"For collection {collection.name} release {collection_release.version}:"
-                "Not the same ppanggolin_version or pangbank_wf_version or genome_metadata_sources from input file and whats in the DB.. "
-                f"ppanggolin version : {collection_release.ppanggolin_version} vs {collection_release.ppanggolin_version} "
-                f"ppanggolin version : {collection_release.pangbank_wf_version} vs {collection_release.pangbank_wf_version} "
-                f"genome_metadata_sources : {genome_metadata_sources} vs {collection_release_from_db.genome_metadata_sources}"
+                f"For collection {collection.name} release {collection_release.version}: "
+                "Not the same ppanggolin_version or pangbank_wf_version from input file and whats in the DB. "
+                f"ppanggolin version: {collection_release.ppanggolin_version} vs {collection_release_from_db.ppanggolin_version} "
+                f"pangbank_wf version: {collection_release.pangbank_wf_version} vs {collection_release_from_db.pangbank_wf_version}"
             )
 
         collection_release = collection_release_from_db

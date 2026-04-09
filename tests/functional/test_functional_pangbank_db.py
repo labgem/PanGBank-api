@@ -63,16 +63,17 @@ GCTAGCTAGCTAGCTAGCTA
 
 
 def create_test_metadata_file(test_dir: Path) -> Path:
-    """Create a minimal metadata TSV file for testing."""
-    metadata_file = test_dir / "metadata.tsv"
-    
+    """Create a minimal genome quality metrics TSV file for testing."""
+    metadata_file = test_dir / "genome_quality_metrics.tsv"
+
     # First column must be "genomes"
-    metadata_content = """genomes\tcompleteness\tcontamination\tgenome_category
-GenomeA\t98.5\t0.5\tMAG
-GenomeB\t99.2\t0.3\tMAG
-GenomeC\t97.8\t1.2\tMAG
+    # Include various quality metrics columns that map to Genome table
+    metadata_content = """genomes\tcheckm2_completeness\tcheckm2_contamination\tgenome_size\tgc_percentage\taccession
+GenomeA\t98.5\t0.5\t5000000\t50.5\tGCA_123456
+GenomeB\t99.2\t0.3\t4800000\t51.2\tGCA_789012
+GenomeC\t97.8\t1.2\t5200000\t49.8\tGCA_345678
 """
-    
+
     metadata_file.write_text(metadata_content)
     return metadata_file
 
@@ -290,14 +291,14 @@ def create_collection_release_json(
     mash_sketch_file: Path,
 ) -> Path:
     """Create the collection release JSON configuration file."""
-    
+
     json_file = test_dir / "collection_release_info.json"
-    
+
     # Use absolute paths to avoid path resolution issues
     config: dict[str, Any] = {
         "collection": {
             "name": "test_collection",
-            "description": "Functional test collection"
+            "description": "Functional test collection",
         },
         "release": {
             "version": "1.0.0",
@@ -307,7 +308,7 @@ def create_collection_release_json(
             "mash_version": "2.3",
             "date": datetime.now().isoformat(),
             "pangenomes_directory": str(test_dir / "pangenomes"),
-            "mash_sketch": str(mash_sketch_file)
+            "mash_sketch": str(mash_sketch_file),
         },
         "taxonomy": {
             "name": "GTDB",
@@ -316,7 +317,7 @@ def create_collection_release_json(
             "description": "Test taxonomy",
             "source": "test",
             "url": "https://test.example.com",
-            "file": str(taxonomy_file)
+            "file": str(taxonomy_file),
         },
         "genome_sources": [
             {
@@ -325,33 +326,24 @@ def create_collection_release_json(
                 "description": "Test genome source",
                 "source": "test",
                 "url": "https://test.example.com",
-                "file": str(genome_list_file)
+                "file": str(genome_list_file),
             }
         ],
-        "genome_metadata_sources": [
-            {
-                "name": "CheckM",
-                "description": "CheckM quality metrics",
-                "url": "https://checkm.example.com",
-                "strain_attribute": None,
-                "organism_name_attribute": None,
-                "file": str(metadata_file)
-            }
-        ],
+        "genome_quality_metrics": {"file": str(metadata_file)},
         "genome_statuses": [
             {
                 "status_type": "representative",
                 "origin": "GTDB_R220",
-                "file": str(status_files["gtdb"])
+                "file": str(status_files["gtdb"]),
             },
             {
                 "status_type": "reference",
                 "origin": "NCBI_RefSeq",
-                "file": str(status_files["ncbi"])
-            }
-        ]
+                "file": str(status_files["ncbi"]),
+            },
+        ],
     }
-    
+
     json_file.write_text(json.dumps(config, indent=2))
     return json_file
 
@@ -395,18 +387,18 @@ def verify_database_content(db_path: Path) -> dict[str, Any]:
         Dictionary with counts and verification results
     """
     from sqlmodel import create_engine, Session
-    
+
     # Create engine for the test database
     sqlite_url = f"sqlite:///{db_path}"
     test_engine = create_engine(sqlite_url, echo=False, connect_args={"check_same_thread": False})
-    
+
     with Session(test_engine) as session:
         # Count records
         collections = session.exec(select(Collection)).all()
         releases = session.exec(select(CollectionRelease)).all()
         genomes = session.exec(select(Genome)).all()
         pangenomes = session.exec(select(Pangenome)).all()
-        
+
         results: dict[str, Any] = {
             "collections_count": len(collections),
             "releases_count": len(releases),
@@ -414,24 +406,24 @@ def verify_database_content(db_path: Path) -> dict[str, Any]:
             "pangenomes_count": len(pangenomes),
             "success": True,
         }
-        
+
         # Verify expected values
         if len(collections) != 1:
             results["success"] = False
             results["error"] = f"Expected 1 collection, got {len(collections)}"
-        
+
         if len(releases) != 1:
             results["success"] = False
             results["error"] = f"Expected 1 release, got {len(releases)}"
-        
+
         if len(genomes) != 3:
             results["success"] = False
             results["error"] = f"Expected 3 genomes, got {len(genomes)}"
-        
+
         if len(pangenomes) != 2:
             results["success"] = False
             results["error"] = f"Expected 2 pangenomes, got {len(pangenomes)}"
-        
+
         # Check genome statuses
         if results["success"] and releases:
             release = releases[0]
@@ -439,7 +431,32 @@ def verify_database_content(db_path: Path) -> dict[str, Any]:
             if len(genome_statuses) != 2:
                 results["success"] = False
                 results["error"] = f"Expected 2 genome statuses, got {len(genome_statuses)}"
-        
+
+        # Check that genome quality metrics were loaded
+        if results["success"] and genomes:
+            genomes_with_metrics = [
+                g for g in genomes if g.checkm2_completeness is not None
+            ]
+            if len(genomes_with_metrics) != 3:
+                results["success"] = False
+                results["error"] = (
+                    f"Expected 3 genomes with quality metrics, got {len(genomes_with_metrics)}"
+                )
+
+            # Verify specific values
+            genome_a = next((g for g in genomes if g.name == "GenomeA"), None)
+            if genome_a:
+                if genome_a.checkm2_completeness != 98.5:
+                    results["success"] = False
+                    results["error"] = (
+                        f"Expected GenomeA completeness 98.5, got {genome_a.checkm2_completeness}"
+                    )
+                if genome_a.genome_size != 5000000:
+                    results["success"] = False
+                    results["error"] = (
+                        f"Expected GenomeA size 5000000, got {genome_a.genome_size}"
+                    )
+
         return results
 
 
