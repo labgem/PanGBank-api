@@ -145,9 +145,10 @@ def add_collection_release(
             )
 
             update_genomes_with_quality_metrics(
-                collection_release,
                 genome_quality_metrics_generator,
                 session=session,
+                collection_release=collection_release,
+                allow_overwrite=True,  # Initial import - allow setting all values
             )
 
         # Add genome status information (representative/reference genomes)
@@ -280,6 +281,76 @@ def add_genome_statuses(
         logging.info(
             f"Successfully processed genome statuses for {collection_name}:{release_version}"
         )
+
+
+@cli.command(no_args_is_help=True)
+def add_quality_metrics(
+    file: Annotated[
+        Path,
+        typer.Argument(
+            help="Path to TSV file containing genome quality metrics (e.g., CheckM results). "
+            "Must have a 'genomes' column and quality metric columns matching Genome model fields.",
+            exists=True,
+        ),
+    ],
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force",
+            help="Allow overwriting existing quality metric values. "
+            "By default, attempting to change existing values raises an error. "
+            "Use this flag to intentionally update values (warnings will be logged).",
+        ),
+    ] = False,
+):
+    """
+    Add genome quality metrics to genomes in the database.
+
+    This command allows you to add or update genome quality metrics (CheckM completeness,
+    contamination, genome size, etc.) for genomes that already exist in the database.
+
+    The TSV file should contain:
+    - A 'genomes' column with genome names
+    - Quality metric columns (e.g., checkm2_completeness, checkm2_contamination, genome_size, etc.)
+
+    Only columns that match optional fields in the Genome model will be imported.
+    Invalid columns will be automatically filtered out.
+
+    By default, the command will fail if trying to change existing values.
+    Use --force to allow overwriting (with warnings).
+
+    Examples:
+        # Add quality metrics (fails if values already exist and differ)
+        pangbank_db add-quality-metrics genome_quality_metrics.tsv
+
+        # Force update existing values
+        pangbank_db add-quality-metrics genome_quality_metrics.tsv --force
+    """
+    set_up_logging_config()
+
+    create_db_and_tables()
+
+    with Session(engine) as session:
+        # Get valid optional columns from the Genome model to filter during parsing
+        logging.info("Processing genome quality metrics...")
+        valid_columns = get_valid_genome_quality_columns()
+        logging.info(f"Valid quality metric columns: {sorted(valid_columns)}")
+
+        # Parse the quality metrics file with column filtering
+        genome_quality_metrics_generator = parse_metadata_table(
+            file,
+            valid_columns=valid_columns,
+        )
+
+        # Update all genomes with quality metrics (collection_release=None means all genomes)
+        update_genomes_with_quality_metrics(
+            genome_quality_metrics_generator,
+            session=session,
+            collection_release=None,
+            allow_overwrite=force,
+        )
+
+        logging.info("Successfully processed genome quality metrics")
 
 
 if __name__ == "__main__":
