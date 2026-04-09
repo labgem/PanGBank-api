@@ -246,12 +246,19 @@ def get_all_genomes_for_release(
     return {genome.name: genome for genome in genomes}
 
 
+def get_all_genomes(session: Session) -> dict[str, Genome]:
+    """Get all genomes from the database."""
+    genomes = session.exec(select(Genome)).all()
+    return {genome.name: genome for genome in genomes}
+
+
 def update_genomes_with_quality_metrics(
-    collection_release: CollectionRelease,
     genome_quality_metrics_generator: Generator[
         tuple[str, List[MetadataBase]], None, None
     ],
     session: Session,
+    collection_release: Optional[CollectionRelease] = None,
+    allow_overwrite: bool = False,
 ):
     """
     Update Genome table with quality metrics and assembly statistics.
@@ -261,11 +268,23 @@ def update_genomes_with_quality_metrics(
     This is more efficient than storing these in the key-value GenomeMetadata table.
 
     Args:
-        collection_release: The collection release being processed
         genome_quality_metrics_generator: Generator yielding (genome_name, metadata_list) tuples
         session: Database session
+        collection_release: Optional collection release. If provided, only update genomes
+                           in this release. If None, update all genomes in the database.
+        allow_overwrite: If True, allow overwriting existing values (with warning).
+                        If False (default), raise ValueError when trying to change existing values.
     """
-    genome_name_to_genome = get_all_genomes_for_release(collection_release, session)
+    if collection_release is not None:
+        genome_name_to_genome = get_all_genomes_for_release(collection_release, session)
+        logger.info(
+            f"Updating genomes with quality metrics for collection release {collection_release.id}"
+        )
+    else:
+        genome_name_to_genome = get_all_genomes(session)
+        logger.info(
+            f"Updating all genomes in database with quality metrics ({len(genome_name_to_genome)} genomes)"
+        )
     updated_genomes: List[Genome] = []
     processed_count = 0
 
@@ -294,16 +313,43 @@ def update_genomes_with_quality_metrics(
                     if converted_value is None:
                         continue
 
-                    # Set the attribute on the genome
-                    setattr(genome, metadata.key, converted_value)
-                    is_updated = True
-
                 except (ValueError, TypeError) as e:
+                    # Log conversion errors and skip this field
                     logger.warning(
                         f"Failed to convert metadata {metadata.key}='{metadata.value}' "
                         f"for genome {genome_name}: {e}"
                     )
                     continue
+
+                # Check if genome already has a value for this field
+                existing_value = getattr(genome, metadata.key, None)
+
+                if existing_value is not None:
+                    # Quality metrics should not change - validate consistency
+                    if existing_value != converted_value:
+                        error_msg = (
+                            f"Genome '{genome_name}': Quality metric '{metadata.key}' "
+                            f"value mismatch. Existing: {existing_value}, "
+                            f"New: {converted_value}. "
+                            f"Quality metrics should not change over time."
+                        )
+
+                        if allow_overwrite:
+                            logger.warning(
+                                f"{error_msg} Overwriting with new value (--force flag enabled)."
+                            )
+                            # Allow the update to proceed
+                        else:
+                            raise ValueError(
+                                f"{error_msg} Use --force flag to overwrite existing values."
+                            )
+                    else:
+                        # Values match - no need to update
+                        continue
+
+                # Set the attribute on the genome (only if was None or force overwrite)
+                setattr(genome, metadata.key, converted_value)
+                is_updated = True
 
         if is_updated:
             updated_genomes.append(genome)

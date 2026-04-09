@@ -179,6 +179,12 @@ The `genome_quality_metrics` field (optional) allows you to load assembly qualit
 
 The system automatically handles type conversion (str, int, float) based on the Genome model field types. Only optional fields are updated - required fields like `name` are protected from modification.
 
+**Important**: Quality metrics are immutable once set. If you try to update a genome with different values for existing quality metrics:
+- During `add-collection-release`: New values are accepted with a warning (initial import allows overwrites)
+- During `add-quality-metrics`: Command **fails with an error** unless `--force` flag is used
+
+This ensures data integrity and prevents accidental corruption of quality metric data.
+
 #### Note
 * Paths for `pangenomes_directory` and `mash_sketch` must be **relative to `PANGBANK_DATA_DIR`**.
 * Paths for `taxonomy.file`, `genome_sources[*].file`, `genome_quality_metrics.file`, and `genome_status_files[*].file` must be **absolute file paths**.
@@ -232,6 +238,53 @@ This command is useful for:
 - Adding multiple status types incrementally (e.g., first representatives, then type strains)
 
 The file should contain one genome name per line. Duplicate statuses are automatically skipped.
+
+
+### Add Quality Metrics to Existing Genomes
+
+Add or update genome quality metrics (CheckM completeness, contamination, genome size, etc.) for genomes already in the database:
+
+```bash
+pangbank_db add-quality-metrics <genome_quality_metrics.tsv>
+
+# Force overwrite existing values (with warnings)
+pangbank_db add-quality-metrics <genome_quality_metrics.tsv> --force
+```
+
+**Example:**
+
+```bash
+# Add new quality metrics (fails if trying to change existing values)
+pangbank_db add-quality-metrics /path/to/gtdb_genome_quality_metrics.tsv
+
+# Intentionally overwrite existing metrics (logs warnings)
+pangbank_db add-quality-metrics /path/to/updated_metrics.tsv --force
+```
+
+The TSV file should have:
+- A `genomes` column with genome names
+- Quality metric columns matching the Genome model fields (e.g., `checkm2_completeness`, `checkm2_contamination`, `genome_size`, `gc_percentage`)
+
+**Important Notes:**
+- Only columns that match optional Genome fields will be imported; unknown columns are automatically filtered out
+- Quality metrics are **immutable by default** - attempting to change existing values **raises an error**
+- Use `--force` flag to intentionally overwrite existing values (warnings will be logged for each change)
+- If a genome already has a value for a field:
+  - Identical values are skipped (idempotent operation)
+  - Different values **raise an error** unless `--force` is used
+- Only fields with `None` (no existing value) are updated without restriction
+
+This command is useful for:
+- Adding quality metrics after initial data import
+- Importing metrics for newly added genomes
+- Safely re-running imports without data corruption risk
+
+**Example TSV format:**
+```tsv
+genomes	checkm2_completeness	checkm2_contamination	genome_size	gc_percentage
+GenomeA	98.5	0.2	5000000	45.5
+GenomeB	95.0	1.5	4500000	42.0
+```
 
 
 ## Database Migrations with Alembic
