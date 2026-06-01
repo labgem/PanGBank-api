@@ -27,12 +27,13 @@ def parse_genome_status_file(
     Yields:
         Genome names
     """
-    proper_open = gzip.open if file_path.name.endswith("gz") else open
+    proper_open = gzip.open if file_path.suffix == ".gz" else open
     with proper_open(file_path, "rt") as f:
-        lines = [line.strip() for line in f if line.strip()]
-    
-    for genome_name in track(lines, f"Parsing {file_path.name}", disable=disable_track):
-        yield genome_name
+        genome_names = (line.strip() for line in f if line.strip())
+        for genome_name in track(
+            genome_names, f"Parsing {file_path.name}", disable=disable_track
+        ):
+            yield genome_name
 
 
 def add_genome_statuses_to_release(
