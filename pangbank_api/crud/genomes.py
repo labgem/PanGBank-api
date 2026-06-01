@@ -23,14 +23,13 @@ def get_genome_public(genome: Genome) -> GenomePublic:
     # Convert genome statuses to public models
     statuses = [
         GenomeStatusPublic(
-            id=(
-                status.id if status.id is not None else 0
-            ),  # id should always be set from DB
+            id=status.id,
             status_type=status.status_type,
             origin=status.origin,
             collection_release_id=status.collection_release_id,
         )
         for status in genome.statuses
+        if status.id is not None
     ]
 
     genome_public = GenomePublic(
