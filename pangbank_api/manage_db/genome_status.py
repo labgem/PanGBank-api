@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Generator
 
 from rich.progress import track
-from sqlmodel import Session, select
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session
 
 from pangbank_api.manage_db.input_models import GenomeStatusInput
 from pangbank_api.models import CollectionRelease, Genome, GenomeStatus
@@ -54,55 +55,38 @@ def add_genome_statuses_to_release(
     if not genome_status_inputs:
         logger.info("No genome status inputs provided, skipping.")
         return
-    
+
+    if collection_release.id is None:
+        logger.error(
+            "Collection release does not have an ID. Cannot add genome statuses."
+        )
+        return
+
     for status_input in genome_status_inputs:
         logger.info(
             f"Processing genome statuses: status_type={status_input.status_type}, "
             f"origin={status_input.origin}, file={status_input.file}"
         )
-        
+
         genome_names = list(parse_genome_status_file(status_input.file))
-        
+
         found_count = 0
         missing_count = 0
         skipped_count = 0
-        genome_statuses : list[GenomeStatus] = []
-        
+
         for genome_name in genome_names:
             genome = genome_name_to_genome.get(genome_name)
-            
+
             if genome is None:
                 missing_count += 1
                 continue
-            
+
             if genome.id is None:
                 logger.warning(
                     f"Genome {genome_name} does not have an ID. Skipping status assignment."
                 )
                 continue
-            
-            if collection_release.id is None:
-                logger.error("Collection release does not have an ID. Cannot add genome statuses.")
-                continue
-            
-            # Check if this genome status already exists
-            existing_status = session.exec(
-                select(GenomeStatus).where(
-                    GenomeStatus.genome_id == genome.id,
-                    GenomeStatus.collection_release_id == collection_release.id,
-                    GenomeStatus.status_type == status_input.status_type,
-                    GenomeStatus.origin == status_input.origin,
-                )
-            ).first()
-            
-            if existing_status:
-                skipped_count += 1
-                logger.debug(
-                    f"Genome status already exists for {genome_name} "
-                    f"(status_type={status_input.status_type}, origin={status_input.origin}). Skipping."
-                )
-                continue
-            
+
             # Create GenomeStatus entry
             genome_status = GenomeStatus(
                 genome_id=genome.id,
@@ -110,28 +94,35 @@ def add_genome_statuses_to_release(
                 status_type=status_input.status_type,
                 origin=status_input.origin,
             )
-            genome_statuses.append(genome_status)
-            found_count += 1
-        
-        # Add all statuses to the database
-        if genome_statuses:
-            session.add_all(genome_statuses)
+            try:
+                with session.begin_nested():
+                    session.add(genome_status)
+                    session.flush()
+                found_count += 1
+            except IntegrityError:
+                skipped_count += 1
+                logger.debug(
+                    f"Genome status already exists for {genome_name} "
+                    f"(status_type={status_input.status_type}, origin={status_input.origin}). Skipping."
+                )
+
+        if found_count > 0:
             logger.info(
                 f"Added {found_count} genome statuses "
                 f"(status_type={status_input.status_type}, origin={status_input.origin})"
             )
-        
+
         if skipped_count > 0:
             logger.info(
                 f"Skipped {skipped_count} genome statuses that already exist "
                 f"for status_type={status_input.status_type}, origin={status_input.origin}."
             )
-        
+
         if missing_count > 0:
             logger.info(
                 f"Skipped {missing_count} genomes not found in the database "
                 f"for status_type={status_input.status_type}, origin={status_input.origin}."
             )
-    
+
     session.commit()
     logger.info("Genome status processing complete.")
