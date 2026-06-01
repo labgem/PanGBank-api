@@ -141,7 +141,7 @@ pangbank_db add-collection-release <collection_release.json>
       "file": "/absolute/path/to/metadata.tsv"
     }
   ],
-  "genome_status_files": [
+  "genome_statuses": [
     {
       "status_type": "representative",
       "origin": "GTDB",
@@ -182,9 +182,9 @@ Add genome status information (representative, reference, type strain, etc.) to 
 
 ```bash
 pangbank_db add-genome-statuses \
-  --collection_name <collection_name> \
-  --release_version <release_version> \
-  --status_type <status_type> \
+  --collection-name <collection_name> \
+  --release-version <release_version> \
+  --status-type <status_type> \
   --origin <origin> \
   --file <file>
 ```
@@ -199,12 +199,7 @@ pangbank_db add-genome-statuses \
   --origin "GTDB" \
   --file /path/to/gtdb_representatives.txt
 ```
-pangbank_db add-genome-statuses \
-  --collection-name "GTDB_refseq" \
-  --release-version "1.0.0" \
-  --status-type "representative" \
-  --origin "GTDB" \
-  --file /env/export/labgem_bank/PanGBank_genomes/GTDB_RS226/genome_metadata/gtdb_representative_genomes.txt
+
 
 
 This command is useful for:
