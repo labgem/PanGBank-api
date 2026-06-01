@@ -323,7 +323,7 @@ class GenomePublic(GenomeBase):
     id: int
     genome_source: GenomeSourcePublic
     taxonomies: list["TaxonomyPublic"]
-    statuses: list["GenomeStatusPublic"] = []
+    statuses: list["GenomeStatusPublic"] = Field(default_factory=list)
 
 
 class PangenomeMetric(SQLModel):
