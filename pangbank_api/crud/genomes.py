@@ -1,4 +1,7 @@
+from typing import Any, cast
+
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
 from pangbank_api.crud.common import (
@@ -14,6 +17,13 @@ from pangbank_api.models import (
     TaxonomyPublic,
     GenomeSourcePublic,
     GenomeStatusPublic,
+)
+
+
+GENOME_EAGER_LOAD_OPTIONS = (
+    selectinload(cast(Any, Genome.taxa)).selectinload(cast(Any, Taxon.taxonomy_source)),
+    selectinload(cast(Any, Genome.statuses)),
+    selectinload(cast(Any, Genome.genome_source)),
 )
 
 
@@ -42,7 +52,10 @@ def get_genome_public(genome: Genome) -> GenomePublic:
 
 
 def get_genome_by_id(session: Session, genome_id: int) -> GenomePublic | None:
-    genome = session.get(Genome, genome_id)
+    query = (
+        select(Genome).where(Genome.id == genome_id).options(*GENOME_EAGER_LOAD_OPTIONS)
+    )
+    genome = session.exec(query).first()
     if genome is None:
         return None
 
@@ -50,7 +63,12 @@ def get_genome_by_id(session: Session, genome_id: int) -> GenomePublic | None:
 
 
 def get_genome_by_name(session: Session, genome_name: str) -> GenomePublic | None:
-    genome = session.exec(select(Genome).where(Genome.name == genome_name)).first()
+    query = (
+        select(Genome)
+        .where(Genome.name == genome_name)
+        .options(*GENOME_EAGER_LOAD_OPTIONS)
+    )
+    genome = session.exec(query).first()
 
     if genome is None:
         return None
@@ -63,7 +81,7 @@ def get_genomes(
     filter_params: FilterGenomeTaxon,
     pagination_params: PaginationParams | None,
 ) -> list[GenomePublic]:
-    query = select(Genome).distinct()
+    query = select(Genome).distinct().options(*GENOME_EAGER_LOAD_OPTIONS)
 
     if filter_params.genome_name is not None:
         query = query.where(Genome.name == filter_params.genome_name)
