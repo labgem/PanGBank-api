@@ -324,22 +324,8 @@ def update_genomes_with_quality_metrics(
                 # Check if genome already has a value for this field
                 existing_value = getattr(genome, metadata.key, None)
 
-                if existing_value is not None:
-                    # Quality metrics should not change - validate consistency
-                    if existing_value != converted_value:
-                        error_msg = (
-                            f"Genome '{genome_name}': Quality metric '{metadata.key}' "
-                            f"value mismatch. Existing: {existing_value}, "
-                            f"New: {converted_value}. "
-                            f"Quality metrics should not change over time."
-                        )
-
-                        if allow_overwrite:
-                            logger.warning(
-                                f"{error_msg} Overwriting with new value (--force flag enabled)."
-                            )
-                            # Allow the update to proceed
                         else:
+                            session.rollback()
                             raise ValueError(
                                 f"{error_msg} Use --force flag to overwrite existing values."
                             )
