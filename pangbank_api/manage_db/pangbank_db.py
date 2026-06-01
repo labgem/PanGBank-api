@@ -277,6 +277,11 @@ def add_genome_statuses(
 
         logging.info(f"Found collection release: {collection_name}:{release_version}")
 
+        # TODO: The add-genome-statuses CLI command loads all genomes into memory (select(Genome)).all())
+        # to build a name->genome map. On large databases this can be slow and memory-heavy.
+        # Consider reading the status file first and querying only the needed genomes (e.g., WHERE Genome.name IN (...)),
+        # or iterating in chunks.
+
         # Get all genomes from the database
         all_genomes = session.exec(select(Genome)).all()
         genome_name_to_genome = {genome.name: genome for genome in all_genomes}
