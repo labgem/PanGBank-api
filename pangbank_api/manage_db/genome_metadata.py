@@ -324,18 +324,30 @@ def update_genomes_with_quality_metrics(
                 # Check if genome already has a value for this field
                 existing_value = getattr(genome, metadata.key, None)
 
-                        else:
-                            session.rollback()
-                            raise ValueError(
-                                f"{error_msg} Use --force flag to overwrite existing values."
-                            )
+                if existing_value is None:
+                    # Set new value when field is empty
+                    setattr(genome, metadata.key, converted_value)
+                    is_updated = True
+                elif existing_value != converted_value:
+                    error_msg = (
+                        f"Genome {genome_name} already has value "
+                        f"{metadata.key}='{existing_value}', "
+                        f"cannot change to '{converted_value}'."
+                    )
+                    if allow_overwrite:
+                        logger.warning(
+                            f"{error_msg} Overwriting because --force is enabled."
+                        )
+                        setattr(genome, metadata.key, converted_value)
+                        is_updated = True
                     else:
-                        # Values match - no need to update
-                        continue
-
-                # Set the attribute on the genome (only if was None or force overwrite)
-                setattr(genome, metadata.key, converted_value)
-                is_updated = True
+                        session.rollback()
+                        raise ValueError(
+                            f"{error_msg} Use --force flag to overwrite existing values."
+                        )
+                else:
+                    # Values match - no need to update
+                    continue
 
         if is_updated:
             updated_genomes.append(genome)
