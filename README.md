@@ -186,8 +186,8 @@ This ensures data integrity and prevents accidental corruption of quality metric
 
 #### Note
 * Paths for `pangenomes_directory` and `mash_sketch` must be **relative to `PANGBANK_DATA_DIR`**.
-* Paths for `taxonomy.file`, `genome_sources[*].file`, `genome_quality_metrics.file`, and `genome_status_files[*].file` must be **absolute file paths**.
-* `genome_quality_metrics` and `genome_status_files` are optional.
+* Paths for `taxonomy.file`, `genome_sources[*].file`, `genome_quality_metrics.file`, and `genome_statuses[*].file` must be **absolute file paths**.
+* `genome_quality_metrics` and `genome_statuses` are optional.
 * Each genome status file should contain one genome name per line.
 
 </details>
