@@ -162,7 +162,6 @@ The `genome_quality_metrics` field (optional) allows you to load assembly qualit
 
 - **First column**: `genomes` (genome names matching those in your genome_sources)
 - **Other columns**: Any of the following supported quality metrics:
-  - `accession` - Genome accession (e.g., GCA_123456)
   - `ncbi_genome_category` - NCBI genome category
   - `genome_category` - Custom genome category
   - `checkm2_completeness` - CheckM2 completeness (%)

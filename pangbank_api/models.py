@@ -295,7 +295,6 @@ class GenomeBase(SQLModel):
     genome_source_id: int | None = Field(default=None, foreign_key="genomesource.id")
     
     # Optional genome metadata and quality metrics
-    accession: str | None = None
     ncbi_genome_category: str | None = None
     genome_category: str | None = None  # Simplified category: isolate, MAG, SAG, unknown
     

@@ -100,13 +100,6 @@ def test_convert_value_to_field_type_float():
     assert isinstance(result, float)
 
 
-def test_convert_value_to_field_type_str():
-    """Test conversion of string to string."""
-    result = convert_value_to_field_type("GCA_123456", "accession")
-    assert result == "GCA_123456"
-    assert isinstance(result, str)
-
-
 def test_convert_value_to_field_type_empty_string():
     """Test that empty strings return None."""
     result = convert_value_to_field_type("", "genome_size")

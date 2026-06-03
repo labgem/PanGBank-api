@@ -68,7 +68,7 @@ def create_test_metadata_file(test_dir: Path) -> Path:
 
     # First column must be "genomes"
     # Include various quality metrics columns that map to Genome table
-    metadata_content = """genomes\tcheckm2_completeness\tcheckm2_contamination\tgenome_size\tgc_percentage\taccession
+    metadata_content = """genomes\tcheckm2_completeness\tcheckm2_contamination\tgenome_size\tgc_percentage
 GenomeA\t98.5\t0.5\t5000000\t50.5\tGCA_123456
 GenomeB\t99.2\t0.3\t4800000\t51.2\tGCA_789012
 GenomeC\t97.8\t1.2\t5200000\t49.8\tGCA_345678
