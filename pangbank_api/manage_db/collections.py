@@ -13,7 +13,7 @@ from rich.table import Table
 from sqlmodel import Session, select
 
 from pangbank_api.database import engine
-from pangbank_api.manage_db.taxonomy import get_common_taxa
+from pangbank_api.manage_db.taxonomy import get_common_taxa, create_taxon_from_lineages
 from pangbank_api.models import (
     Collection,
     CollectionRelease,
@@ -387,6 +387,8 @@ def add_pangenomes_to_db(
         )
         genomes_statistics_file = pangenome_dir / "genomes_statistics.tsv.gz"
 
+        pangenome_taxonomy_file = pangenome_dir / "pangenome_taxonomy.txt"
+
         # genomes_metadata_dir = pangenome_dir / "metadata"
 
         pangenome_local_path = Path(pangenome_file.parent.name) / pangenome_file.name
@@ -412,7 +414,7 @@ def add_pangenomes_to_db(
                 },
             )
             new_pangenomes.append(pangenome)
-            genomes = link_pangenome_and_genomes(
+            link_pangenome_and_genomes(
                 pangenome=pangenome,
                 genome_name_to_genome=genome_name_to_genome,
                 genomes_md5sum_file=genomes_md5sum_file,
@@ -420,8 +422,11 @@ def add_pangenomes_to_db(
                 session=session,
             )
 
-            link_pangenome_and_genome_taxa(
-                pangenome, genomes, collection_release.taxonomy_source, session
+            link_pangenome_and_taxonomy(
+                pangenome,
+                pangenome_taxonomy_file,
+                collection_release.taxonomy_source,
+                session,
             )
 
             # metadata_files = list(
@@ -473,26 +478,45 @@ def extract_source_from_metadata_file(metadata_file: Path) -> str:
     return source
 
 
-def link_pangenome_and_genome_taxa(
+def link_pangenome_and_taxonomy(
     pangenome: Pangenome,
-    genomes: list[Genome],
+    pangenome_taxonomy_file: Path,
     taxonomy_source: TaxonomySource,
     session: Session,
 ):
-    pangenome_taxa: List[Taxon] = []
+    if taxonomy_source is None:
+        logger.info(
+            f"Skipping taxonomy linking for pangenome {pangenome.name}: taxonomy source is not defined."
+        )
+        return
 
-    for genome in genomes:
-        genome_taxa = [
-            taxon for taxon in genome.taxa if taxon.taxonomy_source == taxonomy_source
-        ]
-        if not pangenome_taxa:
-            pangenome_taxa = genome_taxa
-        else:
-            pangenome_taxa = get_common_taxa(genome_taxa, pangenome_taxa)
-    pangenome_taxon_links = [
-        PangenomeTaxonLink(pangenome_id=pangenome.id, taxon_id=taxon.id)
-        for taxon in pangenome_taxa
-    ]
+    if not pangenome_taxonomy_file.exists():
+        logger.info(
+            f"Skipping taxonomy linking for pangenome {pangenome.name}: "
+            f"missing taxonomy file {pangenome_taxonomy_file}."
+        )
+        return
+
+    with open(pangenome_taxonomy_file, "r") as fl:
+        lineage = fl.read().split(";")
+
+    taxon_name = lineage[0]
+
+    name_to_taxon_by_depth = create_taxon_from_lineages(
+        ranks=[rank.strip() for rank in taxonomy_source.ranks.split(";")],
+        lineages={tuple(lineage)},
+        taxonomy_source=taxonomy_source,
+        session=session,
+    )
+
+    pangenome_taxon_links: List[PangenomeTaxonLink] = []
+
+    for depth, taxon_name in enumerate(lineage):
+        taxon = name_to_taxon_by_depth[depth][taxon_name]
+        pangenome_taxon_links.append(
+            PangenomeTaxonLink(pangenome_id=pangenome.id, taxon_id=taxon.id)
+        )
+
     session.add_all(pangenome_taxon_links)
 
 
