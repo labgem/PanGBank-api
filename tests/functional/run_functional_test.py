@@ -50,24 +50,24 @@ from tests.functional.test_functional_pangbank_db import (
 def generate_test_data(output_dir: Path) -> Path:
     """Generate test data files in the specified directory."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     print(f"Generating test data in: {output_dir}")
     json_file = setup_functional_test_data(output_dir)
-    
+
     print("\n[SUCCESS] Test data generated successfully!")
     print(f"\nGenerated files:")
     print(f"  - Configuration: {json_file}")
     print(f"  - Taxonomy: {output_dir / 'taxonomy.tsv'}")
-    print(f"  - Metadata: {output_dir / 'metadata.tsv'}")
+    print(f"  - Metadata: {output_dir / 'genome_quality_metrics.tsv'}")
     print(f"  - Genomes: {output_dir / 'genomes/'}")
     print(f"  - Pangenomes: {output_dir / 'pangenomes/'}")
     print(f"  - Status files: {output_dir / 'status/'}")
-    
+
     print(f"\nTo test with pangbank_db CLI:")
     print(f"  export PANGBANK_DB_PATH=./my_test.db")
     print(f"  export PANGBANK_DATA_DIR={output_dir}")
     print(f"  pangbank_db add-collection-release {json_file}")
-    
+
     return json_file
 
 
