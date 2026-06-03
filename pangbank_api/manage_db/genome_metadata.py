@@ -330,13 +330,13 @@ def update_genomes_with_quality_metrics(
                     is_updated = True
                 elif existing_value != converted_value:
                     error_msg = (
-                        f"Genome {genome_name} already has value "
+                        f"Genome {genome_name} value mismatch: existing "
                         f"{metadata.key}='{existing_value}', "
                         f"cannot change to '{converted_value}'."
                     )
                     if allow_overwrite:
                         logger.warning(
-                            f"{error_msg} Overwriting because --force is enabled."
+                            f"{error_msg} Overwriting with new value because --force is enabled."
                         )
                         setattr(genome, metadata.key, converted_value)
                         is_updated = True
