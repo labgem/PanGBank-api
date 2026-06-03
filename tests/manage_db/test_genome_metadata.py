@@ -112,13 +112,6 @@ def test_convert_value_to_field_type_invalid_field():
         convert_value_to_field_type("100", "invalid_field")
 
 
-def test_update_genomes_with_quality_metrics(session: Session):
-    """Test updating genomes with quality metrics (simplified test)."""
-    # Just test that the function doesn't crash - actual integration testing
-    # will be done in functional tests
-    pass  # Integration test covered by functional tests
-
-
 def test_update_genomes_with_quality_metrics_skips_required_fields(session: Session):
     """Test that required fields like 'name' are not overwritten (simplified test)."""
     # Test the field checking logic
