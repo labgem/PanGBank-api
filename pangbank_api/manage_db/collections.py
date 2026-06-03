@@ -79,11 +79,10 @@ def create_collection_release(
         logger.info(
             f"Adding a new collection release to DB: {collection.name}:{collection_release.version}"
         )
+        session.add(collection_release)
         collection_release.collection = collection
         collection_release.taxonomy_source = taxonomy_source
         logger.info(f"New release is linked to taxonomy source {taxonomy_source.name}")
-
-        session.add(collection_release)
         session.commit()
 
     else:
