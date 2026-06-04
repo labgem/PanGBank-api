@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 import typer
-from rich.progress import Progress, track
+from rich.progress import track
 from sqlmodel import Session, select
 
 from pangbank_api.models import (
@@ -114,37 +114,30 @@ def create_taxon_from_lineages(
         for i, taxon_name in enumerate(lineage):
             taxon_names_by_depths[i].add(taxon_name)
 
-    taxa_count = sum(len(taxon_set) for taxon_set in taxon_names_by_depths)
-
     name_to_taxon_by_depth: list[dict[str, Taxon]] = []
 
-    with Progress() as progress:
-        progress_task = progress.add_task("Creating taxa", total=taxa_count)
+    for depth, taxon_set in enumerate(taxon_names_by_depths):
+        taxon_name_to_taxon: dict[str, Taxon] = {}
+        name_to_taxon_by_depth.append(taxon_name_to_taxon)
 
-        for depth, taxon_set in enumerate(taxon_names_by_depths):
-            taxon_name_to_taxon: dict[str, Taxon] = {}
-            name_to_taxon_by_depth.append(taxon_name_to_taxon)
+        name_to_taxon_at_depth = {
+            taxon.name: taxon
+            for taxon in get_taxa_by_depth(depth, taxonomy_source, session)
+        }
 
-            name_to_taxon_at_depth = {
-                taxon.name: taxon
-                for taxon in get_taxa_by_depth(depth, taxonomy_source, session)
-            }
+        for taxon_name in taxon_set:
+            try:
+                taxon = name_to_taxon_at_depth[taxon_name]
+            except KeyError:
+                taxon = Taxon(
+                    name=taxon_name,
+                    rank=ranks[depth],
+                    depth=depth,
+                )
+                new_taxa.append(taxon)
 
-            for taxon_name in taxon_set:
-                try:
-                    taxon = name_to_taxon_at_depth[taxon_name]
-                except KeyError:
-                    taxon = Taxon(
-                        name=taxon_name,
-                        rank=ranks[depth],
-                        depth=depth,
-                    )
-                    new_taxa.append(taxon)
-
-                taxa.append(taxon)
-                taxon_name_to_taxon[taxon.name] = taxon
-
-                progress.update(progress_task, advance=1)
+            taxa.append(taxon)
+            taxon_name_to_taxon[taxon.name] = taxon
 
     logging.info(f"Created {len(new_taxa)} new taxa out of {len(taxa)} total taxa.")
     session.add_all(new_taxa)
