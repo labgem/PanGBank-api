@@ -64,14 +64,14 @@ GCTAGCTAGCTAGCTAGCTA
 
 def create_test_metadata_file(test_dir: Path) -> Path:
     """Create a minimal genome quality metrics TSV file for testing."""
-    metadata_file = test_dir / "genome_quality_metrics.tsv"
+    metadata_file = test_dir / "genome_metadata.tsv"
 
     # First column must be "genomes"
     # Include various quality metrics columns that map to Genome table
-    metadata_content = """genomes\tcheckm2_completeness\tcheckm2_contamination\tgenome_size\tgc_percentage
-GenomeA\t98.5\t0.5\t5000000\t50.5\tGCA_123456
-GenomeB\t99.2\t0.3\t4800000\t51.2\tGCA_789012
-GenomeC\t97.8\t1.2\t5200000\t49.8\tGCA_345678
+    metadata_content = """genomes\tcheckm2_completeness\tcheckm2_contamination\tgenome_size\tgc_percentage\tstrain\torganism_name
+GenomeA\t98.5\t0.5\t5000000\t50.5\tK-12\tEscherichia coli
+GenomeB\t99.2\t0.3\t4800000\t51.2\tO157:H7\tEscherichia coli
+GenomeC\t97.8\t1.2\t5200000\t49.8\tLT2\tSalmonella enterica
 """
 
     metadata_file.write_text(metadata_content)
@@ -329,7 +329,7 @@ def create_collection_release_json(
                 "file": str(genome_list_file),
             }
         ],
-        "genome_quality_metrics": {"file": str(metadata_file)},
+        "genome_metadata": {"file": str(metadata_file)},
         "genome_statuses": [
             {
                 "status_type": "representative",
@@ -455,6 +455,17 @@ def verify_database_content(db_path: Path) -> dict[str, Any]:
                     results["success"] = False
                     results["error"] = (
                         f"Expected GenomeA size 5000000, got {genome_a.genome_size}"
+                    )
+                if genome_a.strain != "K-12":
+                    results["success"] = False
+                    results["error"] = (
+                        f"Expected GenomeA strain 'K-12', got {genome_a.strain}"
+                    )
+                if genome_a.organism_name != "Escherichia coli":
+                    results["success"] = False
+                    results["error"] = (
+                        "Expected GenomeA organism_name 'Escherichia coli', "
+                        f"got {genome_a.organism_name}"
                     )
 
         return results

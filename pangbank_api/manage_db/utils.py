@@ -52,9 +52,9 @@ def parse_collection_release_input_json(
     # Add genome source files
     missing_files += [gs.file for gs in data_input.genome_sources]
 
-    # Add genome quality metrics file if provided
-    if data_input.genome_quality_metrics is not None:
-        missing_files.append(data_input.genome_quality_metrics.file)
+    # Add genome metadata file if provided
+    if data_input.genome_metadata is not None:
+        missing_files.append(data_input.genome_metadata.file)
 
     # Add genome status files
     missing_files += [status_input.file for status_input in data_input.genome_statuses]

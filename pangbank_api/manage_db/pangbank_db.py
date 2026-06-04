@@ -80,7 +80,7 @@ def add_collection_release(
     collection_input = data_input.collection
     collection_release_input = data_input.release
     taxonomy_input = data_input.taxonomy
-    genome_quality_metrics_input = data_input.genome_quality_metrics
+    genome_metadata_input = data_input.genome_metadata
     genome_status_inputs = data_input.genome_statuses
 
     taxonomy_file = taxonomy_input.file
@@ -130,17 +130,17 @@ def add_collection_release(
         # Update the cached counts after all pangenomes have been added
         update_collection_release_counts(collection_release, session)
 
-        # Update Genome table with quality metrics and assembly statistics
-        if genome_quality_metrics_input is not None:
+        # Update Genome table with genome metadata and assembly statistics
+        if genome_metadata_input is not None:
             logging.info(
-                f"Processing genome quality metrics from {genome_quality_metrics_input.file}"
+                f"Processing genome metadata from {genome_metadata_input.file}"
             )
             # Get valid optional columns from the Genome model to filter during parsing
             valid_columns = get_valid_genome_quality_columns()
 
             # Pass the generator directly - saves memory by not materializing entire dict
             genome_quality_metrics_generator = parse_metadata_table(
-                genome_quality_metrics_input.file,
+                genome_metadata_input.file,
                 valid_columns=valid_columns,
             )
 
@@ -321,10 +321,10 @@ def add_quality_metrics(
 
     Examples:
         # Add quality metrics (fails if values already exist and differ)
-        pangbank_db add-quality-metrics genome_quality_metrics.tsv
+        pangbank_db add-quality-metrics genome_metadata.tsv
 
         # Force update existing values
-        pangbank_db add-quality-metrics genome_quality_metrics.tsv --force
+        pangbank_db add-quality-metrics genome_metadata.tsv --force
     """
     set_up_logging_config()
 

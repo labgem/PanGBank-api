@@ -70,7 +70,7 @@ test_data/
 ├── collection_release_info.json    # Main configuration file
 ├── taxonomy.tsv                     # GTDB-style taxonomy (3 genomes)
 ├── genome_list.txt                  # List of genome names
-├── genome_quality_metrics.tsv       # CheckM quality metrics
+├── genome_metadata.tsv              # Genome metadata and quality metrics
 ├── mash_sketch.msh                  # Mash sketch file (dummy)
 ├── genomes/                         # Genome FASTA files
 │   ├── GenomeA.fna

@@ -58,7 +58,7 @@ def generate_test_data(output_dir: Path) -> Path:
     print(f"\nGenerated files:")
     print(f"  - Configuration: {json_file}")
     print(f"  - Taxonomy: {output_dir / 'taxonomy.tsv'}")
-    print(f"  - Metadata: {output_dir / 'genome_quality_metrics.tsv'}")
+    print(f"  - Metadata: {output_dir / 'genome_metadata.tsv'}")
     print(f"  - Genomes: {output_dir / 'genomes/'}")
     print(f"  - Pangenomes: {output_dir / 'pangenomes/'}")
     print(f"  - Status files: {output_dir / 'status/'}")
