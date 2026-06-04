@@ -198,6 +198,33 @@ async def get_pangenome_dbg(
         filename=f"{pangenome.name}_id{pangenome.id}.dbg",
     )
 
+@router.get(
+    "/pangenomes/{pangenome_id}/graph_tool", response_model=str, response_class=FileResponse,
+    include_in_schema=False
+)
+async def get_pangenome_gt(
+    pangenome_id: int, session: SessionDep, settings: SettingsDep
+):
+    pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
+
+    if not pangenome:
+        raise HTTPException(status_code=404, detail="Pangenome not found")
+
+    gt_relative_path = (
+        Path(pangenome.collection_release.pangenomes_directory) / f"../metapang/graph_tool/{pangenome.name}.gt"
+    )
+    gt_full_path = settings.pangbank_data_dir / gt_relative_path
+
+    if not gt_full_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Graph Tool file {gt_relative_path} does not exists",
+        )
+
+    return FileResponse(
+        path=gt_full_path.as_posix(),
+        filename=f"{pangenome.name}_id{pangenome.id}.gt"
+    )
 
 def get_annotation(pangenome_id: int, suffix: str, session: SessionDep, settings: SettingsDep) -> FileResponse:
     pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
