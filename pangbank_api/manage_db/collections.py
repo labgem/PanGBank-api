@@ -13,7 +13,7 @@ from rich.table import Table
 from sqlmodel import Session, select
 
 from pangbank_api.database import engine
-from pangbank_api.manage_db.taxonomy import get_common_taxa, create_taxon_from_lineages
+from pangbank_api.manage_db.taxonomy import create_taxon_from_lineages
 from pangbank_api.models import (
     Collection,
     CollectionRelease,
@@ -23,7 +23,6 @@ from pangbank_api.models import (
     Pangenome,
     PangenomeMetric,
     PangenomeTaxonLink,
-    Taxon,
     TaxonomySource,
 )
 
@@ -484,11 +483,6 @@ def link_pangenome_and_taxonomy(
     taxonomy_source: TaxonomySource,
     session: Session,
 ):
-    if taxonomy_source is None:
-        logger.info(
-            f"Skipping taxonomy linking for pangenome {pangenome.name}: taxonomy source is not defined."
-        )
-        return
 
     if not pangenome_taxonomy_file.exists():
         logger.info(
