@@ -131,16 +131,9 @@ pangbank_db add-collection-release <collection_release.json>
       "url": ""
     }
   ],
-  "genome_metadata_sources": [
-    {
-      "name": "GTDB 10-RS226 metadata",
-      "description": "Metadata collected from GTDB. Some columns have been filtered out.",
-      "url": "https://data.ace.uq.edu.au/public/gtdb/data/releases/release226/226.0/",
-      "strain_attribute": "ncbi_strain_identifiers",
-      "organism_name_attribute": "ncbi_organism_name",
-      "file": "/absolute/path/to/metadata.tsv"
-    }
-  ],
+  "genome_metadata": {
+    "file": "/absolute/path/to/genome_metadata.tsv"
+  },
   "genome_statuses": [
     {
       "status_type": "representative",
@@ -156,12 +149,14 @@ pangbank_db add-collection-release <collection_release.json>
 }
 ```
 
-#### Genome Quality Metrics
+#### Genome Metadata
 
-The `genome_quality_metrics` field (optional) allows you to load assembly quality metrics and statistics into the Genome table during collection import. The TSV file should have:
+The `genome_metadata` field (optional) allows you to load genome metadata and quality metrics into the Genome table during collection import. The TSV file should have:
 
 - **First column**: `genomes` (genome names matching those in your genome_sources)
 - **Other columns**: Any of the following supported quality metrics:
+  - `strain` - Strain identifier
+  - `organism_name` - Organism name
   - `ncbi_genome_category` - NCBI genome category
   - `genome_category` - Custom genome category
   - `checkm2_completeness` - CheckM2 completeness (%)
@@ -186,8 +181,8 @@ This ensures data integrity and prevents accidental corruption of quality metric
 
 #### Note
 * Paths for `pangenomes_directory` and `mash_sketch` must be **relative to `PANGBANK_DATA_DIR`**.
-* Paths for `taxonomy.file`, `genome_sources[*].file`, `genome_quality_metrics.file`, and `genome_statuses[*].file` must be **absolute file paths**.
-* `genome_quality_metrics` and `genome_statuses` are optional.
+* Paths for `taxonomy.file`, `genome_sources[*].file`, `genome_metadata.file`, and `genome_statuses[*].file` must be **absolute file paths**.
+* `genome_metadata` and `genome_statuses` are optional.
 * Each genome status file should contain one genome name per line.
 
 </details>
@@ -244,17 +239,17 @@ The file should contain one genome name per line. Duplicate statuses are automat
 Add or update genome quality metrics (CheckM completeness, contamination, genome size, etc.) for genomes already in the database:
 
 ```bash
-pangbank_db add-quality-metrics <genome_quality_metrics.tsv>
+pangbank_db add-quality-metrics <genome_metadata.tsv>
 
 # Force overwrite existing values (with warnings)
-pangbank_db add-quality-metrics <genome_quality_metrics.tsv> --force
+pangbank_db add-quality-metrics <genome_metadata.tsv> --force
 ```
 
 **Example:**
 
 ```bash
 # Add new quality metrics (fails if trying to change existing values)
-pangbank_db add-quality-metrics /path/to/gtdb_genome_quality_metrics.tsv
+pangbank_db add-quality-metrics /path/to/gtdb_genome_metadata.tsv
 
 # Intentionally overwrite existing metrics (logs warnings)
 pangbank_db add-quality-metrics /path/to/updated_metrics.tsv --force

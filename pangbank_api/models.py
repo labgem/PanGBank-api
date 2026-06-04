@@ -113,10 +113,6 @@ class GenomeInPangenomeMetric(SQLModel):
     spots: int = Field(..., alias="Spots")
     modules: int = Field(..., alias="Modules")
 
-    # info extracted from metadata
-    strain: str | None = None
-    organism_name: str | None = None
-
 class GenomePangenomeLink(GenomeInPangenomeMetric, table=True):
     __table_args__ = (UniqueConstraint("genome_id", "pangenome_id"),)
 
@@ -293,21 +289,23 @@ class TaxonPublic(TaxonBase):
 class GenomeBase(SQLModel):
     name: str = Field(unique=True, index=True)
     genome_source_id: int | None = Field(default=None, foreign_key="genomesource.id")
-    
+
     # Optional genome metadata and quality metrics
     ncbi_genome_category: str | None = None
     genome_category: str | None = None  # Simplified category: isolate, MAG, SAG, unknown
-    
+    strain: str | None = None
+    organism_name: str | None = None
+
     # CheckM2 quality metrics
     checkm2_completeness: float | None = None
     checkm2_contamination: float | None = None
     checkm2_model: str | None = None
-    
+
     # CheckM quality metrics
     checkm_completeness: float | None = None
     checkm_contamination: float | None = None
     checkm_strain_heterogeneity: float | None = None
-    
+
     # Assembly statistics
     gc_count: int | None = None
     gc_percentage: float | None = None
