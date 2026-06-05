@@ -402,6 +402,7 @@ class PangenomeMetric(SQLModel):
 class PangenomeBase(PangenomeMetric):
 
     annotation_source: str | None = None
+    has_multiple_species: bool = False
     name: str
     file_md5sum: str
 

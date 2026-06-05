@@ -413,7 +413,7 @@ def add_pangenomes_to_db(
                 },
             )
             new_pangenomes.append(pangenome)
-            link_pangenome_and_genomes(
+            genomes = link_pangenome_and_genomes(
                 pangenome=pangenome,
                 genome_name_to_genome=genome_name_to_genome,
                 genomes_md5sum_file=genomes_md5sum_file,
@@ -428,14 +428,11 @@ def add_pangenomes_to_db(
                 session,
             )
 
-            # metadata_files = list(
-            #     genomes_metadata_dir.glob("genomes_metadata_from_*.tsv*")
-            # )
+            has_pangenome_multiple_species = has_multiple_species_in_taxonomy(
+                genomes, collection_release.taxonomy_source
+            )
+            pangenome.has_multiple_species = has_pangenome_multiple_species
 
-            # if genomes_metadata_dir.exists() and metadata_files:
-            #     add_metadata_to_genome_pangenome_links(
-            #         metadata_files, pangenome_genome_links, session
-            #     )
         pangenomes.append(pangenome)
 
     session.add_all(new_pangenomes)
@@ -512,6 +509,26 @@ def link_pangenome_and_taxonomy(
         )
 
     session.add_all(pangenome_taxon_links)
+
+
+def has_multiple_species_in_taxonomy(
+    genomes: List[Genome], taxonomy_source: TaxonomySource
+) -> bool:
+    """Return True if genomes span more than one species in the provided taxonomy."""
+    seen_species: set[str] = set()
+
+    for genome in genomes:
+        for taxon in genome.taxa:
+            if taxon.rank.lower() != "species":
+                continue
+            if taxonomy_source.id is not None and taxon.taxonomy_source_id != taxonomy_source.id:
+                continue
+
+            seen_species.add(taxon.name)
+            if len(seen_species) > 1:
+                return True
+
+    return False
 
 
 def link_pangenome_and_genomes(
