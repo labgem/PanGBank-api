@@ -265,7 +265,10 @@ def test_create_collection_release_ppanggo_version_mismatch(
 
 
 def test_add_pangenomes_to_db(
-    pangenome_dir: Path, collection_release: CollectionRelease, session: Session
+    pangenome_dir: Path,
+    collection_release: CollectionRelease,
+    taxonomy_source: TaxonomySource,
+    session: Session,
 ):
     pangenome_main_dir = pangenome_dir.parent
 
@@ -276,6 +279,8 @@ def test_add_pangenomes_to_db(
         "GenomeA": genome_a,
         "GenomeB": genome_b,
     }
+
+    collection_release.taxonomy_source = taxonomy_source
 
     session.add_all([genome_a, genome_b, collection_release])
     session.commit()
@@ -295,6 +300,31 @@ def test_add_pangenomes_to_db(
     pangenome_in_DB = session.exec(select(Pangenome)).all()
 
     assert pangenomes == pangenome_in_DB
+
+
+def test_add_pangenomes_to_db_without_taxonomy_source_fails(
+    pangenome_dir: Path, collection_release: CollectionRelease, session: Session
+):
+    pangenome_main_dir = pangenome_dir.parent
+
+    genome_a = Genome(name="GenomeA")
+    genome_b = Genome(name="GenomeB")
+
+    genome_name_to_genome = {
+        "GenomeA": genome_a,
+        "GenomeB": genome_b,
+    }
+
+    session.add_all([genome_a, genome_b, collection_release])
+    session.commit()
+
+    with pytest.raises(ValueError, match="has no taxonomy source"):
+        add_pangenomes_to_db(
+            pangenome_main_dir=pangenome_main_dir,
+            collection_release=collection_release,
+            genome_name_to_genome=genome_name_to_genome,
+            session=session,
+        )
 
 
 def test_delete_full_collection(
