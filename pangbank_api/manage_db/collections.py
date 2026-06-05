@@ -369,7 +369,13 @@ def add_pangenomes_to_db(
         pangenome.file_name: pangenome for pangenome in existing_pangenomes
     }
 
-    taxonomy_ranks = [rank.strip() for rank in collection_release.taxonomy_source.ranks.split(";")]
+    taxonomy_source = getattr(collection_release, "taxonomy_source", None)
+    if taxonomy_source is None:
+        raise ValueError(
+            "Collection release has no taxonomy source; cannot add pangenomes without taxonomy."
+        )
+
+    taxonomy_ranks = [rank.strip() for rank in taxonomy_source.ranks.split(";")]
     pangenome_dir_to_lineage: dict[str, tuple[str, ...]] = {}
     pangenome_lineages: set[tuple[str, ...]] = set()
 
@@ -476,7 +482,7 @@ def add_pangenomes_to_db(
                 multiple_species_pangenomes_count += 1
                 logger.info(
                     f"Pangenome {pangenome.name} identified as multi-species "
-                    f"for taxonomy source {collection_release.taxonomy_source.name}."
+                    f"for taxonomy source {taxonomy_source.name}."
                 )
         else:
             logger.debug(
@@ -576,7 +582,7 @@ def read_pangenome_taxonomy_lineage(
 
 
 def has_multiple_species_in_taxonomy(
-    genomes: List[Genome], taxonomy_source: TaxonomySource
+    genomes: List[Genome], taxonomy_source: TaxonomySource | None
 ) -> bool:
     """Return True if genomes span more than one species in the provided taxonomy."""
     seen_species: set[str] = set()
@@ -585,7 +591,11 @@ def has_multiple_species_in_taxonomy(
         for taxon in genome.taxa:
             if taxon.rank.lower() != "species":
                 continue
-            if taxonomy_source.id is not None and taxon.taxonomy_source_id != taxonomy_source.id:
+            if (
+                taxonomy_source is not None
+                and taxonomy_source.id is not None
+                and taxon.taxonomy_source_id != taxonomy_source.id
+            ):
                 continue
 
             seen_species.add(taxon.name)
