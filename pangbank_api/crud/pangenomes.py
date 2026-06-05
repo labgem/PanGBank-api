@@ -3,7 +3,8 @@ from typing import Iterator, Sequence
 
 from sqlalchemy import func
 
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, selectinload
+
 
 from sqlmodel import Session, select
 
@@ -183,6 +184,7 @@ def get_genomes_in_pangenome(
 
     query = (
         select(GenomePangenomeLink)
+        .options(selectinload(GenomePangenomeLink.genome))
         .distinct()
         .join(Pangenome)
         .where(Pangenome.id == pangenome_id)
