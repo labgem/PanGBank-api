@@ -23,6 +23,7 @@ from pangbank_api.models import (
     Pangenome,
     PangenomeMetric,
     PangenomeTaxonLink,
+    Taxon,
     TaxonomySource,
 )
 
@@ -368,7 +369,39 @@ def add_pangenomes_to_db(
         pangenome.file_name: pangenome for pangenome in existing_pangenomes
     }
 
+    taxonomy_ranks = [rank.strip() for rank in collection_release.taxonomy_source.ranks.split(";")]
+    pangenome_dir_to_lineage: dict[str, tuple[str, ...]] = {}
+    pangenome_lineages: set[tuple[str, ...]] = set()
+
+    for pangenome_dir in pangenome_dirs:
+        pangenome_taxonomy_file = pangenome_dir / "pangenome_taxonomy.txt"
+        lineage = read_pangenome_taxonomy_lineage(pangenome_taxonomy_file)
+        if lineage is None:
+            continue
+
+        if len(lineage) != len(taxonomy_ranks):
+            raise ValueError(
+                f"Invalid taxonomy lineage length for {pangenome_dir.name}: "
+                f"got {len(lineage)} taxa, expected {len(taxonomy_ranks)} based on taxonomy source ranks."
+            )
+
+        pangenome_dir_to_lineage[pangenome_dir.name] = lineage
+        pangenome_lineages.add(lineage)
+
+    name_to_taxon_by_depth: list[dict[str, Taxon]] | None = None
+    if pangenome_lineages:
+        logger.info(
+            f"Preparing taxonomy cache from {len(pangenome_lineages)} unique pangenome lineages"
+        )
+        name_to_taxon_by_depth = create_taxon_from_lineages(
+            ranks=taxonomy_ranks,
+            lineages=pangenome_lineages,
+            taxonomy_source=collection_release.taxonomy_source,
+            session=session,
+        )
+
     new_pangenomes: List[Pangenome] = []
+    multiple_species_pangenomes_count = 0
 
     for pangenome_dir in track(
         pangenome_dirs,
@@ -396,6 +429,7 @@ def add_pangenomes_to_db(
             pangenome_local_path.as_posix(), None
         )
         if pangenome is None:
+            logger.debug(f"Adding new pangenome {pangenome_dir.name}")
             pangenome_file_md5sum = compute_md5(pangenome_file)
 
             pangenome_metric = get_pangenome_metrics_from_info_files(
@@ -413,6 +447,11 @@ def add_pangenomes_to_db(
                 },
             )
             new_pangenomes.append(pangenome)
+
+            # Flush early so link rows can safely reference a non-null pangenome_id.
+            session.add(pangenome)
+            session.flush()
+
             genomes = link_pangenome_and_genomes(
                 pangenome=pangenome,
                 genome_name_to_genome=genome_name_to_genome,
@@ -423,8 +462,8 @@ def add_pangenomes_to_db(
 
             link_pangenome_and_taxonomy(
                 pangenome,
-                pangenome_taxonomy_file,
-                collection_release.taxonomy_source,
+                pangenome_dir_to_lineage.get(pangenome_dir.name),
+                name_to_taxon_by_depth,
                 session,
             )
 
@@ -433,12 +472,27 @@ def add_pangenomes_to_db(
             )
             pangenome.has_multiple_species = has_pangenome_multiple_species
 
+            if has_pangenome_multiple_species:
+                multiple_species_pangenomes_count += 1
+                logger.info(
+                    f"Pangenome {pangenome.name} identified as multi-species "
+                    f"for taxonomy source {collection_release.taxonomy_source.name}."
+                )
+        else:
+            logger.debug(
+                f"Pangenome {pangenome.file_name} already exists, skipping creation"
+            )
+
         pangenomes.append(pangenome)
 
     session.add_all(new_pangenomes)
     session.commit()
 
     logger.info(f"Added {len(new_pangenomes)} new pangenomes to the database")
+    logger.info(
+        f"Identified {multiple_species_pangenomes_count} multi-species pangenomes "
+        f"out of {len(new_pangenomes)} newly added pangenomes"
+    )
 
     return pangenomes
 
@@ -476,29 +530,23 @@ def extract_source_from_metadata_file(metadata_file: Path) -> str:
 
 def link_pangenome_and_taxonomy(
     pangenome: Pangenome,
-    pangenome_taxonomy_file: Path,
-    taxonomy_source: TaxonomySource,
+    lineage: tuple[str, ...] | None,
+    name_to_taxon_by_depth: list[dict[str, Taxon]] | None,
     session: Session,
 ):
 
-    if not pangenome_taxonomy_file.exists():
+    if lineage is None:
         logger.info(
             f"Skipping taxonomy linking for pangenome {pangenome.name}: "
-            f"missing taxonomy file {pangenome_taxonomy_file}."
+            "missing taxonomy lineage."
         )
         return
 
-    with open(pangenome_taxonomy_file, "r") as fl:
-        lineage = fl.read().split(";")
-
-    taxon_name = lineage[0]
-
-    name_to_taxon_by_depth = create_taxon_from_lineages(
-        ranks=[rank.strip() for rank in taxonomy_source.ranks.split(";")],
-        lineages={tuple(lineage)},
-        taxonomy_source=taxonomy_source,
-        session=session,
-    )
+    if name_to_taxon_by_depth is None:
+        logger.info(
+            f"Skipping taxonomy linking for pangenome {pangenome.name}: taxonomy cache is empty."
+        )
+        return
 
     pangenome_taxon_links: List[PangenomeTaxonLink] = []
 
@@ -509,6 +557,22 @@ def link_pangenome_and_taxonomy(
         )
 
     session.add_all(pangenome_taxon_links)
+
+
+def read_pangenome_taxonomy_lineage(
+    pangenome_taxonomy_file: Path,
+) -> tuple[str, ...] | None:
+    if not pangenome_taxonomy_file.exists():
+        return None
+
+    with open(pangenome_taxonomy_file, "r") as fl:
+        lineage = tuple(name.strip() for name in fl.read().split(";") if name.strip())
+
+    if not lineage:
+        logger.warning(f"Empty taxonomy lineage in file {pangenome_taxonomy_file}")
+        return None
+
+    return lineage
 
 
 def has_multiple_species_in_taxonomy(
