@@ -130,7 +130,7 @@ def get_collection_release(
     return release
 
 
-def get_collection_mash_sketch(
+def get_collection_release_mash_sketch(
     session: Session, collection_id: int, filter_release: FilterReleaseVersion
 ):
     release = get_collection_release(session, collection_id, filter_release)
