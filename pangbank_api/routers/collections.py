@@ -62,6 +62,32 @@ async def get_collection_mash_sketch(
         )
     return FileResponse(path=mash_sketch_path.as_posix(), filename="mash_sketch.msh")
 
+
+@router.get(
+    "/collections/{collection_id}/multiqc_report",
+    response_model=str,
+    response_class=FileResponse,
+)
+async def get_collection_multiqc(
+    collection_id: int, session: SessionDep, settings: SettingsDep
+):
+
+    multiqc_file = collections_crud.get_collection_multiqc(session, collection_id)
+    if not multiqc_file:
+        raise HTTPException(
+            status_code=404,
+            detail=f"MultiQC report of collection with id={collection_id} not found",
+        )
+    multiqc_path = settings.pangbank_data_dir / multiqc_file
+
+    if not multiqc_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"MultiQC file {multiqc_file.name} does not exists",
+        )
+    return FileResponse(path=multiqc_path.as_posix(), filename="multiqc_report.html")
+
+
 @router.get(
     "/collections/{collection_id}/index/info",
     response_model=str,
