@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
 from pangbank_api.crud import collections as collections_crud
-from pangbank_api.crud.common import FilterCollection, FilterRelease
+from pangbank_api.crud.common import (
+    FilterCollection,
+    FilterRelease,
+    FilterReleaseVersion,
+)
 
 from ..dependencies import SessionDep, SettingsDep
 from ..models import CollectionPublicWithReleases
@@ -41,12 +45,15 @@ def get_collection(
     response_model=str,
     response_class=FileResponse,
 )
-async def get_collection_mash_sketch(
-    collection_id: int, session: SessionDep, settings: SettingsDep
+async def get_collection_mash_release_sketch(
+    collection_id: int,
+    session: SessionDep,
+    settings: SettingsDep,
+    filter_release: FilterReleaseVersion = Depends(),
 ):
 
-    mash_sketch_file = collections_crud.get_collection_mash_sketch(
-        session, collection_id
+    mash_sketch_file = collections_crud.get_collection_release_mash_sketch(
+        session, collection_id, filter_release
     )
     if not mash_sketch_file:
         raise HTTPException(
@@ -68,11 +75,16 @@ async def get_collection_mash_sketch(
     response_model=str,
     response_class=FileResponse,
 )
-async def get_collection_multiqc(
-    collection_id: int, session: SessionDep, settings: SettingsDep
+async def get_collection_release_multiqc(
+    collection_id: int,
+    session: SessionDep,
+    settings: SettingsDep,
+    filter_release: FilterReleaseVersion = Depends(),
 ):
 
-    multiqc_file = collections_crud.get_collection_multiqc(session, collection_id)
+    multiqc_file = collections_crud.get_collection_release_multiqc(
+        session, collection_id, filter_release
+    )
     if not multiqc_file:
         raise HTTPException(
             status_code=404,
