@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 
 from pangbank_api.crud import collections as collections_crud
 from pangbank_api.crud.common import (
@@ -72,8 +72,7 @@ async def get_collection_mash_release_sketch(
 
 @router.get(
     "/collections/{collection_id}/multiqc_report",
-    response_model=str,
-    response_class=FileResponse,
+    response_class=HTMLResponse,
 )
 async def get_collection_release_multiqc(
     collection_id: int,
@@ -97,7 +96,7 @@ async def get_collection_release_multiqc(
             status_code=404,
             detail=f"MultiQC file {multiqc_file.name} does not exists",
         )
-    return FileResponse(path=multiqc_path.as_posix(), filename="multiqc_report.html")
+    return HTMLResponse(content=multiqc_path.read_text(), media_type="text/html")
 
 
 @router.get(
