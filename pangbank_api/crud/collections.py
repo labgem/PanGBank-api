@@ -152,6 +152,17 @@ def get_collection_release_multiqc(
     return Path(release.pangenomes_directory) / ".." / "multiqc/multiqc_report.html"
 
 
+def get_collection_release_notes(
+    session: Session, collection_id: int, filter_release: FilterReleaseVersion
+):
+    release = get_collection_release(session, collection_id, filter_release)
+
+    if release is None:
+        return None
+
+    return Path(release.pangenomes_directory) / ".." / "release_notes.md"
+
+
 def get_collection_index_directory(session: Session, collection_id: int):
 
     collection = session.get(Collection, collection_id)

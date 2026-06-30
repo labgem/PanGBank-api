@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 
 from pangbank_api.crud import collections as collections_crud
 from pangbank_api.crud.common import (
@@ -97,6 +97,35 @@ async def get_collection_release_multiqc(
             detail=f"MultiQC file {multiqc_file.name} does not exists",
         )
     return HTMLResponse(content=multiqc_path.read_text(), media_type="text/html")
+
+
+@router.get(
+    "/collections/{collection_id}/release_notes",
+    response_class=PlainTextResponse,
+)
+async def get_collection_release_notes(
+    collection_id: int,
+    session: SessionDep,
+    settings: SettingsDep,
+    filter_release: FilterReleaseVersion = Depends(),
+):
+
+    release_notes_file = collections_crud.get_collection_release_notes(
+        session, collection_id, filter_release
+    )
+    if not release_notes_file:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Release notes of collection with id={collection_id} not found",
+        )
+    release_notes_path = settings.pangbank_data_dir / release_notes_file
+
+    if not release_notes_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Release notes file {release_notes_file.name} does not exists",
+        )
+    return release_notes_path.read_text()
 
 
 @router.get(
