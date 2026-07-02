@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 try:
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.middleware.gzip import GZipMiddleware
 except ImportError:
     raise ImportError(
         "FastAPI is required to run the API server. "
@@ -36,6 +37,10 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
+
+# Compress larger payloads (e.g. MultiQC HTML reports) for clients that send
+# `Accept-Encoding: gzip`.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
 app.include_router(collections.router)
