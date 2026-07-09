@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel  # type: ignore
 
+from pydantic import BaseModel
 
 class GenomeTaxonLink(SQLModel, table=True):
     genome_id: int | None = Field(
@@ -217,7 +218,7 @@ class CollectionReleaseBase(SQLModel):
     taxonomy_source_id: int | None = Field(
         default=None, foreign_key="taxonomysource.id", ondelete="RESTRICT"
     )
-    
+
     # Cached counts for performance
     pangenome_count: int | None = None
     genome_count: int | None = None
@@ -513,3 +514,22 @@ class GenomePangenomeLinkPublic(GenomeInPangenomeMetric):
 
 class GenomePangenomeLinkWithMetadataPublic(GenomePangenomeLinkPublic):
     genome_metadata: list[MetadataBase]
+
+
+class Version(BaseModel):
+    major: int
+    minor: int
+    patch: int
+
+
+class VersionRange(BaseModel):
+    maxv: Version
+    minv: Version
+
+
+class MetaPanGCollection(BaseModel):
+    name: str
+    release: str
+    id: int
+    version: VersionRange
+
