@@ -149,7 +149,9 @@ def get_collection_release_multiqc(
     if release is None:
         return None
 
-    return Path(release.pangenomes_directory) / ".." / "multiqc/multiqc_report.html"
+    return (
+        Path(release.pangenomes_directory) / ".." / "multiqc/multiqc_report_public.html"
+    )
 
 
 def get_collection_release_notes(
