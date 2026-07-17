@@ -21,6 +21,9 @@ dependencies = [
 fastapi = [
     "fastapi[all]>=0.128.0",
 ]
+sdk = [
+    "httpx>=0.28.1",
+]
 dev = [
     "pytest>=8.3.4",
     "requests>=2.32.3",
