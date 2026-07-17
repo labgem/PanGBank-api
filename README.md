@@ -38,6 +38,16 @@ This additionally installs:
 - API routers (`pangbank_api.routers`)
 - API server (`pangbank_api.main`)
 
+### Option 3: Install the Python SDK Client
+
+```bash
+pip install pangbank-api[sdk]
+```
+
+This additionally installs:
+- `httpx`
+- The `pangbank_api.sdk` client (`PanGBankClient`, `AsyncPanGBankClient`)
+
 ### Local Development Setup
 
 1. **Clone the repository**:
@@ -66,6 +76,34 @@ This additionally installs:
 > `PANGBANK_DB_PATH` is the path to your SQLite database file.
 > `PANGBANK_DATA_DIR` is the root directory containing your pangenome data and mash files.
 
+## Python SDK Client
+
+`pangbank_api.sdk` wraps every route on the API behind plain python. Both a sync and an async client are available:
+
+```python
+from pangbank_api.sdk import PanGBankClient
+
+with PanGBankClient(base_url="https://pangbank-api.genoscope.cns.org") as client:
+    pangenomes = client.pangenomes.list(collection_name="GTDB_refseq", limit=10)
+    pangenome = client.pangenomes.get(pangenomes[0].id)
+    client.pangenomes.download_file(pangenome.id, dest="pangenome.h5")
+```
+
+```python
+import asyncio
+
+from pangbank_api.sdk import AsyncPanGBankClient
+
+
+async def main() -> None:
+    async with AsyncPanGBankClient(base_url="https://pangbank-api.genoscope.cns.org") as client:
+        genomes = await client.genomes.list(taxon_name="Bacteria", limit=10)
+        print([genome.name for genome in genomes])
+
+
+asyncio.run(main())
+```
+
 
 ## Managing the Database with `pangbank_db`
 
@@ -90,7 +128,7 @@ pangbank_db add-collection-release <collection_release.json>
 > export PANGBANK_DB_PATH="<path/to/database.sqlite>"
 > export PANGBANK_DATA_DIR="<root/path/serving/pangenomes>"
 > ```
-  
+
 
 <details>
 
