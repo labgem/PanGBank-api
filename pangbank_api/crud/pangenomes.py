@@ -1,6 +1,6 @@
 from pathlib import Path
 from collections import defaultdict
-from typing import Iterator, Sequence
+from typing import Any, Iterator, Sequence, cast
 
 from sqlalchemy import func
 
@@ -80,10 +80,13 @@ def get_pangenome_genome_category_counts(
     session: Session, pangenome_id: int
 ) -> dict[str, int]:
     query = (
-        select(Genome.genome_category, func.count(Genome.id))
-        .join(GenomePangenomeLink, Genome.id == GenomePangenomeLink.genome_id)
-        .where(GenomePangenomeLink.pangenome_id == pangenome_id)
-        .group_by(Genome.genome_category)
+        select(cast(Any, Genome.genome_category), func.count(cast(Any, Genome.id)))
+        .join(
+            GenomePangenomeLink,
+            cast(Any, Genome.id) == cast(Any, GenomePangenomeLink.genome_id),
+        )
+        .where(cast(Any, GenomePangenomeLink.pangenome_id) == pangenome_id)
+        .group_by(cast(Any, Genome.genome_category))
     )
 
     counts_by_category: defaultdict[str, int] = defaultdict(int)
@@ -93,7 +96,48 @@ def get_pangenome_genome_category_counts(
     return dict(counts_by_category)
 
 
-def make_pangenome_public(session: Session, pangenome: Pangenome) -> PangenomePublic:
+def get_pangenome_genome_category_counts_by_pangenome(
+    session: Session, pangenome_ids: Sequence[int]
+) -> dict[int, dict[str, int]]:
+    if not pangenome_ids:
+        return {}
+
+    query = (
+        select(
+            cast(Any, GenomePangenomeLink.pangenome_id),
+            cast(Any, Genome.genome_category),
+            func.count(cast(Any, Genome.id)),
+        )
+        .join(
+            Genome,
+            cast(Any, Genome.id) == cast(Any, GenomePangenomeLink.genome_id),
+        )
+        .where(cast(Any, GenomePangenomeLink.pangenome_id).in_(pangenome_ids))
+        .group_by(
+            cast(Any, GenomePangenomeLink.pangenome_id),
+            cast(Any, Genome.genome_category),
+        )
+    )
+
+    counts_by_pangenome: defaultdict[int, defaultdict[str, int]] = defaultdict(
+        lambda: defaultdict(int)
+    )
+    for pangenome_id, category, count in session.exec(query).all():
+        counts_by_pangenome[pangenome_id][_normalize_genome_category(category)] += count
+
+    return {
+        pangenome_id: dict(category_counts)
+        for pangenome_id, category_counts in counts_by_pangenome.items()
+    }
+
+
+def make_pangenome_public(
+    session: Session,
+    pangenome: Pangenome,
+    genome_category_counts: dict[str, int] | None = None,
+) -> PangenomePublic:
+
+    assert pangenome.id is not None, "Pangenome id should not be None"
 
     taxonomies = get_taxonomies_from_taxa(pangenome.taxa)
 
@@ -117,9 +161,8 @@ def make_pangenome_public(session: Session, pangenome: Pangenome) -> PangenomePu
         **make_pangenome_public_metrics(pangenome),
         collection_release=collection_release_public,
         taxonomy=TaxonomyPublic(**taxonomies[0].model_dump()),
-        genome_category_counts=get_pangenome_genome_category_counts(
-            session, pangenome.id
-        ),
+        genome_category_counts=genome_category_counts
+        or get_pangenome_genome_category_counts(session, pangenome.id),
     )
 
     return pangenome_public
@@ -201,9 +244,24 @@ def get_public_pangenomes(
 ) -> Iterator[PangenomePublic]:
 
     pangenomes = get_pangenomes(session, filter_params, pagination_params)
+    pangenome_ids = [
+        pangenome.id for pangenome in pangenomes if pangenome.id is not None
+    ]
+    counts_by_pangenome = get_pangenome_genome_category_counts_by_pangenome(
+        session, pangenome_ids
+    )
 
     public_pangenomes = (
-        make_pangenome_public(session, pangenome) for pangenome in pangenomes
+        make_pangenome_public(
+            session,
+            pangenome,
+            genome_category_counts=(
+                counts_by_pangenome.get(pangenome.id, {})
+                if pangenome.id is not None
+                else {}
+            ),
+        )
+        for pangenome in pangenomes
     )
 
     return public_pangenomes
@@ -221,7 +279,7 @@ def get_genomes_in_pangenome(
 
     query = (
         select(GenomePangenomeLink)
-        .options(selectinload(GenomePangenomeLink.genome))
+        .options(selectinload(cast(Any, GenomePangenomeLink.genome)))
         .distinct()
         .join(Pangenome)
         .where(Pangenome.id == pangenome_id)
