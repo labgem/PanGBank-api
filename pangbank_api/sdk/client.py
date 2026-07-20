@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import httpx
 
-from .transport import SyncTransport
+from .transport import DEFAULT_BASE_URL, SyncTransport
 from .resources.collections import CollectionsResource
 from .resources.genomes import GenomesResource
 from .resources.pangenomes import PangenomesResource
@@ -25,24 +25,23 @@ class PanGBankClient:
 
     def __init__(
         self,
-        base_url: str | None = None,
+        base_url: str = DEFAULT_BASE_URL,
         timeout: float = 10.0,
         client: httpx.Client | None = None,
     ) -> None:
         """Create a new client.
 
         Args:
-            base_url: Base URL of the PanGBank API. Required unless `client`
-                is provided.
+            base_url: Base URL of the PanGBank API. Defaults to
+                `https://pangbank-api.genoscope.cns.fr/` when omitted unless
+                `client` is provided.
             timeout: Request timeout in seconds, used when a new
                 `httpx.Client` is created from `base_url`.
             client: A pre-configured `httpx.Client` to use instead of
                 creating one from `base_url`. When provided, its lifecycle
                 is not managed by this client (`close` becomes a no-op).
-
-        Raises:
-            ValueError: If neither `base_url` nor `client` is provided.
         """
+
         self._transport = SyncTransport(
             base_url=base_url, timeout=timeout, client=client
         )
