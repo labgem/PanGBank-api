@@ -8,7 +8,11 @@ class PaginationParams(BaseModel):
     limit: int = Field(default=20, le=100)
 
 
-class FilterRelease(BaseModel):
+class FilterReleaseVersion(BaseModel):
+    release_version: str | None = None
+
+
+class FilterRelease(FilterReleaseVersion):
     only_latest_release: bool | None = None
 
 

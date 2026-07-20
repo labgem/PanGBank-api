@@ -95,6 +95,8 @@ except PanGBankNotFoundError as exc:
 | --- | --- |
 | `list(collection_name=None, collection_id=None, only_latest_release=None)` | List collections, optionally filtered by name or id. If `only_latest_release` is `True`, each collection's releases are restricted to the latest one. Returns `list[CollectionPublicWithReleases]`. |
 | `get(collection_id, only_latest_release=None)` | Fetch a single collection by id. Returns `CollectionPublicWithReleases`. |
+| `get_multiqc_report(collection_id, release_version=None)` | Fetch the collection release MultiQC report as HTML text. |
+| `get_release_notes(collection_id, release_version=None)` | Fetch the collection release notes as plain text. |
 | `download_mash_sketch(collection_id, dest=None)` | Download the collection's Mash sketch file. |
 | `download_index_info(collection_id, dest=None)` | Download the collection's index info file. |
 | `download_index_pangenomes(collection_id, dest=None)` | Download the collection's pangenomes index file. |

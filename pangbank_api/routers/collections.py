@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 
 from pangbank_api.crud import collections as collections_crud
-from pangbank_api.crud.common import FilterCollection, FilterRelease
+from pangbank_api.crud.common import (
+    FilterCollection,
+    FilterRelease,
+    FilterReleaseVersion,
+)
 
 from ..dependencies import SessionDep, SettingsDep
 from ..models import CollectionPublicWithReleases
@@ -41,12 +45,15 @@ def get_collection(
     response_model=str,
     response_class=FileResponse,
 )
-async def get_collection_mash_sketch(
-    collection_id: int, session: SessionDep, settings: SettingsDep
+async def get_collection_mash_release_sketch(
+    collection_id: int,
+    session: SessionDep,
+    settings: SettingsDep,
+    filter_release: FilterReleaseVersion = Depends(),
 ):
 
-    mash_sketch_file = collections_crud.get_collection_mash_sketch(
-        session, collection_id
+    mash_sketch_file = collections_crud.get_collection_release_mash_sketch(
+        session, collection_id, filter_release
     )
     if not mash_sketch_file:
         raise HTTPException(
@@ -61,6 +68,65 @@ async def get_collection_mash_sketch(
             detail=f"Pangenome file {mash_sketch_file.name} does not exists",
         )
     return FileResponse(path=mash_sketch_path.as_posix(), filename="mash_sketch.msh")
+
+
+@router.get(
+    "/collections/{collection_id}/multiqc_report",
+    response_class=HTMLResponse,
+)
+async def get_collection_release_multiqc(
+    collection_id: int,
+    session: SessionDep,
+    settings: SettingsDep,
+    filter_release: FilterReleaseVersion = Depends(),
+):
+
+    multiqc_file = collections_crud.get_collection_release_multiqc(
+        session, collection_id, filter_release
+    )
+    if not multiqc_file:
+        raise HTTPException(
+            status_code=404,
+            detail=f"MultiQC report of collection with id={collection_id} not found",
+        )
+    multiqc_path = settings.pangbank_data_dir / multiqc_file
+
+    if not multiqc_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"MultiQC file {multiqc_file.name} does not exists",
+        )
+    return HTMLResponse(content=multiqc_path.read_text(), media_type="text/html")
+
+
+@router.get(
+    "/collections/{collection_id}/release_notes",
+    response_class=PlainTextResponse,
+)
+async def get_collection_release_notes(
+    collection_id: int,
+    session: SessionDep,
+    settings: SettingsDep,
+    filter_release: FilterReleaseVersion = Depends(),
+):
+
+    release_notes_file = collections_crud.get_collection_release_notes(
+        session, collection_id, filter_release
+    )
+    if not release_notes_file:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Release notes of collection with id={collection_id} not found",
+        )
+    release_notes_path = settings.pangbank_data_dir / release_notes_file
+
+    if not release_notes_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Release notes file {release_notes_file.name} does not exists",
+        )
+    return release_notes_path.read_text()
+
 
 @router.get(
     "/collections/{collection_id}/index/info",

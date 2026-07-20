@@ -22,6 +22,10 @@ def _list_params(
     }
 
 
+def _release_version_params(release_version: str | None) -> dict[str, Any]:
+    return {"release_version": release_version}
+
+
 class CollectionsResource:
     """Synchronous access to the `/collections` endpoints."""
 
@@ -143,6 +147,42 @@ class CollectionsResource:
         return self._transport.download(
             f"/collections/{collection_id}/index/genomes", dest
         )
+
+    def get_multiqc_report(
+        self, collection_id: int, release_version: str | None = None
+    ) -> str:
+        """Get the MultiQC HTML report for a collection release.
+
+        Args:
+            collection_id: Id of the collection.
+            release_version: Optional release version to target.
+
+        Returns:
+            The MultiQC report content as HTML text.
+        """
+        response = self._transport.get(
+            f"/collections/{collection_id}/multiqc_report",
+            params=_release_version_params(release_version),
+        )
+        return response.text
+
+    def get_release_notes(
+        self, collection_id: int, release_version: str | None = None
+    ) -> str:
+        """Get the release notes for a collection release.
+
+        Args:
+            collection_id: Id of the collection.
+            release_version: Optional release version to target.
+
+        Returns:
+            The release notes as plain text.
+        """
+        response = self._transport.get(
+            f"/collections/{collection_id}/release_notes",
+            params=_release_version_params(release_version),
+        )
+        return response.text
 
 
 class AsyncCollectionsResource:
@@ -266,3 +306,39 @@ class AsyncCollectionsResource:
         return await self._transport.download(
             f"/collections/{collection_id}/index/genomes", dest
         )
+
+    async def get_multiqc_report(
+        self, collection_id: int, release_version: str | None = None
+    ) -> str:
+        """Get the MultiQC HTML report for a collection release.
+
+        Args:
+            collection_id: Id of the collection.
+            release_version: Optional release version to target.
+
+        Returns:
+            The MultiQC report content as HTML text.
+        """
+        response = await self._transport.get(
+            f"/collections/{collection_id}/multiqc_report",
+            params=_release_version_params(release_version),
+        )
+        return response.text
+
+    async def get_release_notes(
+        self, collection_id: int, release_version: str | None = None
+    ) -> str:
+        """Get the release notes for a collection release.
+
+        Args:
+            collection_id: Id of the collection.
+            release_version: Optional release version to target.
+
+        Returns:
+            The release notes as plain text.
+        """
+        response = await self._transport.get(
+            f"/collections/{collection_id}/release_notes",
+            params=_release_version_params(release_version),
+        )
+        return response.text
