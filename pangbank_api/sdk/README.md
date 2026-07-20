@@ -2,7 +2,6 @@
 
 Python client for the PanGBank API, with synchronous and asynchronous
 variants.
-[pydantic](https://docs.pydantic.dev/) models.
 
 ## Installation
 
