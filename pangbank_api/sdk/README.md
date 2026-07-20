@@ -20,7 +20,7 @@ without it raises an `ImportError` with installation instructions.
 ```python
 from pangbank_api.sdk import PanGBankClient
 
-with PanGBankClient(base_url="https://api.pangbank.example") as client:
+with PanGBankClient(base_url="https://pangbank-api.genoscope.cns.fr") as client:
     collections = client.collections.list()
     genomes = client.genomes.list(taxon_name="Escherichia coli")
     pangenome = client.pangenomes.get(pangenome_id=1)
@@ -33,7 +33,7 @@ import asyncio
 from pangbank_api.sdk import AsyncPanGBankClient
 
 async def main():
-    async with AsyncPanGBankClient(base_url="https://api.pangbank.example") as client:
+    async with AsyncPanGBankClient(base_url="https://pangbank-api.genoscope.cns.fr") as client:
         collections = await client.collections.list()
         genomes = await client.genomes.list(taxon_name="Escherichia coli")
         pangenome = await client.pangenomes.get(pangenome_id=1)
