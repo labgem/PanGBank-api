@@ -1,4 +1,5 @@
 from pathlib import Path
+from collections import defaultdict
 from typing import Iterator, Sequence
 
 from sqlalchemy import func
@@ -61,7 +62,38 @@ def make_pangenome_public_metrics(p: Pangenome) -> dict[str, float]:
     }
 
 
-def make_pangenome_public(pangenome: Pangenome) -> PangenomePublic:
+def _normalize_genome_category(category: str | None) -> str:
+    if not category:
+        return "Unknown"
+
+    normalized = category.strip().lower()
+    if normalized == "isolate":
+        return "Isolate"
+    if normalized in {"mag", "mags"}:
+        return "MAGs"
+    if normalized in {"sag", "sags"}:
+        return "SAGs"
+    return "Unknown"
+
+
+def get_pangenome_genome_category_counts(
+    session: Session, pangenome_id: int
+) -> dict[str, int]:
+    query = (
+        select(Genome.genome_category, func.count(Genome.id))
+        .join(GenomePangenomeLink, Genome.id == GenomePangenomeLink.genome_id)
+        .where(GenomePangenomeLink.pangenome_id == pangenome_id)
+        .group_by(Genome.genome_category)
+    )
+
+    counts_by_category: defaultdict[str, int] = defaultdict(int)
+    for category, count in session.exec(query).all():
+        counts_by_category[_normalize_genome_category(category)] += count
+
+    return dict(counts_by_category)
+
+
+def make_pangenome_public(session: Session, pangenome: Pangenome) -> PangenomePublic:
 
     taxonomies = get_taxonomies_from_taxa(pangenome.taxa)
 
@@ -85,6 +117,9 @@ def make_pangenome_public(pangenome: Pangenome) -> PangenomePublic:
         **make_pangenome_public_metrics(pangenome),
         collection_release=collection_release_public,
         taxonomy=TaxonomyPublic(**taxonomies[0].model_dump()),
+        genome_category_counts=get_pangenome_genome_category_counts(
+            session, pangenome.id
+        ),
     )
 
     return pangenome_public
@@ -96,7 +131,7 @@ def get_public_pangenome(session: Session, pangenome_id: int) -> PangenomePublic
     if pangenome is None:
         return None
 
-    return make_pangenome_public(pangenome)
+    return make_pangenome_public(session, pangenome)
 
 
 def get_pangenomes(
@@ -167,7 +202,9 @@ def get_public_pangenomes(
 
     pangenomes = get_pangenomes(session, filter_params, pagination_params)
 
-    public_pangenomes = (make_pangenome_public(pangenome) for pangenome in pangenomes)
+    public_pangenomes = (
+        make_pangenome_public(session, pangenome) for pangenome in pangenomes
+    )
 
     return public_pangenomes
 
