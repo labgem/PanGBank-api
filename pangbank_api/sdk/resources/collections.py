@@ -1,3 +1,5 @@
+"""Collections resource: list, fetch, and download collection assets."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -21,6 +23,8 @@ def _list_params(
 
 
 class CollectionsResource:
+    """Synchronous access to the `/collections` endpoints."""
+
     def __init__(self, transport: SyncTransport) -> None:
         self._transport = transport
 
@@ -30,6 +34,17 @@ class CollectionsResource:
         collection_id: int | None = None,
         only_latest_release: bool | None = None,
     ) -> list[CollectionPublicWithReleases]:
+        """List collections, optionally filtered.
+
+        Args:
+            collection_name: Filter by exact collection name.
+            collection_id: Filter by collection id.
+            only_latest_release: If `True`, restrict each collection's
+                releases to the latest one.
+
+        Returns:
+            Matching collections, each with its release(s).
+        """
         response = self._transport.get(
             "/collections/",
             params=_list_params(collection_name, collection_id, only_latest_release),
@@ -42,6 +57,19 @@ class CollectionsResource:
     def get(
         self, collection_id: int, only_latest_release: bool | None = None
     ) -> CollectionPublicWithReleases:
+        """Fetch a single collection by id.
+
+        Args:
+            collection_id: Id of the collection to fetch.
+            only_latest_release: If `True`, restrict the returned releases
+                to the latest one.
+
+        Returns:
+            The requested collection with its release(s).
+
+        Raises:
+            PanGBankNotFoundError: If no collection with that id exists.
+        """
         response = self._transport.get(
             f"/collections/{collection_id}",
             params={"only_latest_release": only_latest_release},
@@ -51,6 +79,16 @@ class CollectionsResource:
     def download_mash_sketch(
         self, collection_id: int, dest: str | Path | None = None
     ) -> bytes | Path:
+        """Download the Mash sketch file for a collection.
+
+        Args:
+            collection_id: Id of the collection.
+            dest: If given, write the file to this path and return it;
+                otherwise return the raw content as `bytes`.
+
+        Returns:
+            The file content as `bytes`, or the `Path` written to.
+        """
         return self._transport.download(
             f"/collections/{collection_id}/mash_sketch", dest
         )
@@ -58,6 +96,16 @@ class CollectionsResource:
     def download_index_info(
         self, collection_id: int, dest: str | Path | None = None
     ) -> bytes | Path:
+        """Download the index info file for a collection.
+
+        Args:
+            collection_id: Id of the collection.
+            dest: If given, write the file to this path and return it;
+                otherwise return the raw content as `bytes`.
+
+        Returns:
+            The file content as `bytes`, or the `Path` written to.
+        """
         return self._transport.download(
             f"/collections/{collection_id}/index/info", dest
         )
@@ -65,6 +113,16 @@ class CollectionsResource:
     def download_index_pangenomes(
         self, collection_id: int, dest: str | Path | None = None
     ) -> bytes | Path:
+        """Download the pangenomes index file for a collection.
+
+        Args:
+            collection_id: Id of the collection.
+            dest: If given, write the file to this path and return it;
+                otherwise return the raw content as `bytes`.
+
+        Returns:
+            The file content as `bytes`, or the `Path` written to.
+        """
         return self._transport.download(
             f"/collections/{collection_id}/index/pangenomes", dest
         )
@@ -72,12 +130,24 @@ class CollectionsResource:
     def download_index_genomes(
         self, collection_id: int, dest: str | Path | None = None
     ) -> bytes | Path:
+        """Download the genomes index file for a collection.
+
+        Args:
+            collection_id: Id of the collection.
+            dest: If given, write the file to this path and return it;
+                otherwise return the raw content as `bytes`.
+
+        Returns:
+            The file content as `bytes`, or the `Path` written to.
+        """
         return self._transport.download(
             f"/collections/{collection_id}/index/genomes", dest
         )
 
 
 class AsyncCollectionsResource:
+    """Asynchronous access to the `/collections` endpoints."""
+
     def __init__(self, transport: AsyncTransport) -> None:
         self._transport = transport
 
@@ -87,6 +157,17 @@ class AsyncCollectionsResource:
         collection_id: int | None = None,
         only_latest_release: bool | None = None,
     ) -> list[CollectionPublicWithReleases]:
+        """List collections, optionally filtered.
+
+        Args:
+            collection_name: Filter by exact collection name.
+            collection_id: Filter by collection id.
+            only_latest_release: If `True`, restrict each collection's
+                releases to the latest one.
+
+        Returns:
+            Matching collections, each with its release(s).
+        """
         response = await self._transport.get(
             "/collections/",
             params=_list_params(collection_name, collection_id, only_latest_release),
@@ -99,6 +180,19 @@ class AsyncCollectionsResource:
     async def get(
         self, collection_id: int, only_latest_release: bool | None = None
     ) -> CollectionPublicWithReleases:
+        """Fetch a single collection by id.
+
+        Args:
+            collection_id: Id of the collection to fetch.
+            only_latest_release: If `True`, restrict the returned releases
+                to the latest one.
+
+        Returns:
+            The requested collection with its release(s).
+
+        Raises:
+            PanGBankNotFoundError: If no collection with that id exists.
+        """
         response = await self._transport.get(
             f"/collections/{collection_id}",
             params={"only_latest_release": only_latest_release},
@@ -108,6 +202,16 @@ class AsyncCollectionsResource:
     async def download_mash_sketch(
         self, collection_id: int, dest: str | Path | None = None
     ) -> bytes | Path:
+        """Download the Mash sketch file for a collection.
+
+        Args:
+            collection_id: Id of the collection.
+            dest: If given, write the file to this path and return it;
+                otherwise return the raw content as `bytes`.
+
+        Returns:
+            The file content as `bytes`, or the `Path` written to.
+        """
         return await self._transport.download(
             f"/collections/{collection_id}/mash_sketch", dest
         )
@@ -115,6 +219,16 @@ class AsyncCollectionsResource:
     async def download_index_info(
         self, collection_id: int, dest: str | Path | None = None
     ) -> bytes | Path:
+        """Download the index info file for a collection.
+
+        Args:
+            collection_id: Id of the collection.
+            dest: If given, write the file to this path and return it;
+                otherwise return the raw content as `bytes`.
+
+        Returns:
+            The file content as `bytes`, or the `Path` written to.
+        """
         return await self._transport.download(
             f"/collections/{collection_id}/index/info", dest
         )
@@ -122,6 +236,16 @@ class AsyncCollectionsResource:
     async def download_index_pangenomes(
         self, collection_id: int, dest: str | Path | None = None
     ) -> bytes | Path:
+        """Download the pangenomes index file for a collection.
+
+        Args:
+            collection_id: Id of the collection.
+            dest: If given, write the file to this path and return it;
+                otherwise return the raw content as `bytes`.
+
+        Returns:
+            The file content as `bytes`, or the `Path` written to.
+        """
         return await self._transport.download(
             f"/collections/{collection_id}/index/pangenomes", dest
         )
@@ -129,6 +253,16 @@ class AsyncCollectionsResource:
     async def download_index_genomes(
         self, collection_id: int, dest: str | Path | None = None
     ) -> bytes | Path:
+        """Download the genomes index file for a collection.
+
+        Args:
+            collection_id: Id of the collection.
+            dest: If given, write the file to this path and return it;
+                otherwise return the raw content as `bytes`.
+
+        Returns:
+            The file content as `bytes`, or the `Path` written to.
+        """
         return await self._transport.download(
             f"/collections/{collection_id}/index/genomes", dest
         )

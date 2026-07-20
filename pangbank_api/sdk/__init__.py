@@ -1,3 +1,9 @@
+"""Python SDK for the PanGBank API.
+
+Provides :class:`PanGBankClient` (sync) and :class:`AsyncPanGBankClient`
+(async) for accessing collections, genomes, and pangenomes.
+"""
+
 try:
     import httpx  # noqa: F401
 except ImportError as exc:
