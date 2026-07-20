@@ -1,7 +1,7 @@
 # PanGBank SDK
 
 Python client for the PanGBank API, with synchronous and asynchronous
-variants. Built on [httpx](https://www.python-httpx.org/) and
+variants.
 [pydantic](https://docs.pydantic.dev/) models.
 
 ## Installation
@@ -10,7 +10,7 @@ variants. Built on [httpx](https://www.python-httpx.org/) and
 pip install pangbank-api[sdk]
 ```
 
-The SDK requires `httpx` to be installed; importing `pangbank_api.sdk`
+The SDK requires `httpx` to be installed. Importing `pangbank_api.sdk`
 without it raises an `ImportError` with installation instructions.
 
 ## Quick start
