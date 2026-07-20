@@ -15,6 +15,9 @@ import httpx
 from .exceptions import PanGBankAPIError, PanGBankConnectionError, PanGBankNotFoundError
 
 
+DEFAULT_BASE_URL = "https://pangbank-api.genoscope.cns.fr/"
+
+
 def _response_detail(response: httpx.Response) -> str:
     """Extract a human-readable error message from an API response.
 

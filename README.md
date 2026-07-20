@@ -83,7 +83,7 @@ This additionally installs:
 ```python
 from pangbank_api.sdk import PanGBankClient
 
-with PanGBankClient(base_url="https://pangbank-api.genoscope.cns.org") as client:
+with PanGBankClient() as client:
     pangenomes = client.pangenomes.list(collection_name="GTDB_refseq", limit=10)
     pangenome = client.pangenomes.get(pangenomes[0].id)
     client.pangenomes.download_file(pangenome.id, dest="pangenome.h5")
@@ -96,7 +96,7 @@ from pangbank_api.sdk import AsyncPanGBankClient
 
 
 async def main() -> None:
-    async with AsyncPanGBankClient(base_url="https://pangbank-api.genoscope.cns.org") as client:
+    async with AsyncPanGBankClient() as client:
         genomes = await client.genomes.list(taxon_name="Bacteria", limit=10)
         print([genome.name for genome in genomes])
 

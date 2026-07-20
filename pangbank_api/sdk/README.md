@@ -19,7 +19,7 @@ without it raises an `ImportError` with installation instructions.
 ```python
 from pangbank_api.sdk import PanGBankClient
 
-with PanGBankClient(base_url="https://pangbank-api.genoscope.cns.fr") as client:
+with PanGBankClient() as client:
     collections = client.collections.list()
     genomes = client.genomes.list(taxon_name="Escherichia coli")
     pangenome = client.pangenomes.get(pangenome_id=1)
@@ -32,7 +32,7 @@ import asyncio
 from pangbank_api.sdk import AsyncPanGBankClient
 
 async def main():
-    async with AsyncPanGBankClient(base_url="https://pangbank-api.genoscope.cns.fr") as client:
+    async with AsyncPanGBankClient() as client:
         collections = await client.collections.list()
         genomes = await client.genomes.list(taxon_name="Escherichia coli")
         pangenome = await client.pangenomes.get(pangenome_id=1)
@@ -49,11 +49,11 @@ Both clients can also be constructed without a context manager; call
 
 | Argument   | Type                                   | Description                                                                                                 |
 | ---------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `base_url` | `str \| None`                          | Base URL of the PanGBank API. Required unless `client` is provided.                                          |
+| `base_url` | `str \| None`                          | Base URL of the PanGBank API. Defaults to `https://pangbank-api.genoscope.cns.fr/` when omitted unless `client` is provided. |
 | `timeout`  | `float` (default `10.0`)               | Request timeout in seconds, used when a new `httpx.Client`/`AsyncClient` is created from `base_url`.          |
 | `client`   | `httpx.Client \| httpx.AsyncClient \| None` | A pre-configured httpx client to reuse instead of creating one. Its lifecycle is not managed (`close` is a no-op). |
 
-Raises `ValueError` if neither `base_url` nor `client` is given.
+When `client` is not provided, the SDK uses `https://pangbank-api.genoscope.cns.fr/` by default.
 
 Each client exposes three resources, mirroring the API's routers:
 
