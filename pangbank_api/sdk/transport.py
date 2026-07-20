@@ -29,7 +29,7 @@ def _response_detail(response: httpx.Response) -> str:
     except ValueError:
         return response.text
     if isinstance(body, dict) and "detail" in body:
-        return str(body["detail"])
+        return str(body["detail"])  # type: ignore
     return response.text
 
 
