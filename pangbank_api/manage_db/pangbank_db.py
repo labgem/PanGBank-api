@@ -5,7 +5,7 @@ from typing import Optional
 
 import typer
 from sqlmodel import Session, select
-from typing_extensions import Annotated
+from typing import Annotated
 
 from pangbank_api.database import create_db_and_tables, engine
 from pangbank_api.manage_db.collections import (
@@ -16,6 +16,10 @@ from pangbank_api.manage_db.collections import (
     print_collections,
     update_collection_release_counts,
 )
+
+from pangbank_api.manage_db.summary_db import update_database_statistics
+
+
 from pangbank_api.manage_db.genome_metadata import (
     update_genomes_with_quality_metrics,
     app as genome_metadata_app,
@@ -35,11 +39,7 @@ from pangbank_api.manage_db.utils import (
     parse_collection_release_input_json,
     set_up_logging_config,
 )
-from pangbank_api.models import (
-    Collection,
-    CollectionRelease,
-    Genome,
-)
+from pangbank_api.models import Collection, CollectionRelease, Genome
 
 cli = typer.Typer(
     no_args_is_help=True,
@@ -95,7 +95,6 @@ def add_collection_release(
     create_db_and_tables()
 
     with Session(engine) as session:
-
         genome_name_to_genome = add_genomes_to_db(genome_sources, session)
 
         taxonomy_source = create_taxonomy_source(taxonomy_input, session=session)
@@ -159,6 +158,8 @@ def add_collection_release(
             session=session,
         )
 
+        update_database_statistics(session=session)
+
 
 @cli.command()
 def list_collections():
@@ -169,6 +170,18 @@ def list_collections():
     create_db_and_tables()
 
     print_collections()
+
+
+@cli.command()
+def compute_database_statistics():
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+    set_up_logging_config()
+    create_db_and_tables()
+
+    with Session(engine) as session:
+        update_database_statistics(session=session)
 
 
 @cli.command(no_args_is_help=True)
@@ -196,6 +209,7 @@ def delete_collection(
         else:
             delete_full_collection(session, collection_name)
 
+        update_database_statistics(session=session)
 
 @cli.command(no_args_is_help=True)
 def add_genome_statuses(
