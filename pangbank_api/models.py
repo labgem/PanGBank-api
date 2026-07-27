@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, Index
 from sqlmodel import Field, Relationship, SQLModel  # type: ignore
 
 
@@ -114,7 +114,14 @@ class GenomeInPangenomeMetric(SQLModel):
     modules: int = Field(..., alias="Modules")
 
 class GenomePangenomeLink(GenomeInPangenomeMetric, table=True):
-    __table_args__ = (UniqueConstraint("genome_id", "pangenome_id"),)
+    __table_args__ = (
+        UniqueConstraint("genome_id", "pangenome_id"),
+        Index(
+            "ix_genomepangenomelink_pangenome_genome",
+            "pangenome_id",
+            "genome_id",
+        ),
+    )
 
     id: int | None = Field(default=None, primary_key=True)
     genome_id: int | None = Field(default=None, foreign_key="genome.id")
@@ -223,6 +230,15 @@ class CollectionReleaseBase(SQLModel):
     genome_count: int | None = None
 
 class CollectionRelease(CollectionReleaseBase, table=True):
+
+    __table_args__ = (
+        Index(
+            "ix_collectionrelease_collection_latest",
+            "collection_id",
+            "latest",
+        ),
+    )
+
     id: int | None = Field(default=None, primary_key=True)
 
     mash_sketch: str
@@ -516,3 +532,27 @@ class GenomePangenomeLinkPublic(GenomeInPangenomeMetric):
 
 class GenomePangenomeLinkWithMetadataPublic(GenomePangenomeLinkPublic):
     genome_metadata: list[MetadataBase]
+
+
+class PanGBankSummary(SQLModel, table=True):
+    """
+    Summary statistics computed from the latest release
+    of every PanGBank collection.
+    """
+
+    id: int | None = Field(default=1, primary_key=True)
+
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    collection_count: int
+    release_count: int
+    pangenome_count: int
+    genome_count: int
+
+    species_count: int
+    genus_count: int
+    family_count: int
+    order_count: int
+    class_count: int
+    phylum_count: int
+    domain_count: int
