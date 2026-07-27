@@ -9,8 +9,9 @@ from pangbank_api.crud.common import (
 )
 
 from ..dependencies import SessionDep, SettingsDep
-from ..models import CollectionPublicWithReleases
+from ..models import CollectionPublicWithReleases, MetaPanGCollection
 
+import json
 
 router = APIRouter(
     tags=["collections"],
@@ -154,6 +155,31 @@ async def get_collection_index_info(
         )
 
     return FileResponse(path=index_info_file, filename="index_info.json")
+
+@router.get(
+    "/collections/metapang",
+    response_model=list[MetaPanGCollection],
+    include_in_schema=False
+)
+async def get_metapang_ready_collections(session: SessionDep, settings: SettingsDep):
+    metapang_file = settings.pangbank_data_dir / "metapang.json"
+
+    if not metapang_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"MetaPanG data are missing."
+        )
+
+    with open(metapang_file) as mf:
+        metapang_data = json.load(mf)
+
+    try:
+        return [MetaPanGCollection(**entry) for entry in metapang_data]
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal error"
+        )
 
 @router.get(
     "/collections/{collection_id}/index/pangenomes",
