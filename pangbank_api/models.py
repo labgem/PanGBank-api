@@ -1,5 +1,4 @@
-from datetime import UTC, datetime
-
+from datetime import datetime, timezone
 from sqlalchemy import UniqueConstraint, Index
 from sqlmodel import Field, Relationship, SQLModel  # type: ignore
 
@@ -540,7 +539,7 @@ class PanGBankSummary(SQLModel, table=True):
 
     id: int | None = Field(default=1, primary_key=True)
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     collection_count: int
     release_count: int
