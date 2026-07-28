@@ -160,6 +160,9 @@ def make_pangenome_public(
         **pangenome.model_dump(),  # type: ignore
         **make_pangenome_public_metrics(pangenome),
         collection_release=collection_release_public,
+        average_families_per_genome=pangenome.mean_persistent_families_count_per_genome
+        + pangenome.mean_shell_families_count_per_genome
+        + pangenome.mean_cloud_families_count_per_genome,
         taxonomy=TaxonomyPublic(**taxonomies[0].model_dump()),
         genome_category_counts=genome_category_counts
         or get_pangenome_genome_category_counts(session, pangenome.id),
