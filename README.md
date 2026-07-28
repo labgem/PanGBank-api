@@ -104,6 +104,7 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
+See [pangbank_api/sdk/README.md](./pangbank_api/sdk/README.md) for complete SDK documentation.
 
 ## Managing the Database with `pangbank_db`
 
