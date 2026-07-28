@@ -441,7 +441,9 @@ class PangenomePublic(PangenomeBase):
     persistent_fraction: float
     shell_fraction: float
     cloud_fraction: float
+    average_families_per_genome: float
     genome_category_counts: dict[str, int] = Field(default_factory=dict)
+
 
 class TaxonomyBase(SQLModel):
     pass
