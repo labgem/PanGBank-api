@@ -4,7 +4,7 @@ Every trap in SKILL.md applies to these — read them first.
 
 ## Rate limit — one request every 30 seconds
 
-The service runs on a shared machine with no monitoring (see SKILL.md). Every recipe below must respect **1 HTTP request per 30 seconds**. That makes request count the thing to optimise:
+The service runs on shared academic infrastructure (see SKILL.md). Every recipe below must respect **1 HTTP request per 30 seconds**. That makes request count the thing to optimise:
 
 - **`/pangenomes/count/` before any listing** — it is one request and often makes the listing unnecessary.
 - **Filter server-side** (`taxon_name`, `collection_name`, `only_latest_release`) instead of fetching broadly and filtering locally.

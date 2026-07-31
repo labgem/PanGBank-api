@@ -27,7 +27,7 @@ Procedures live in four companion files — on disk next to this one, or at the 
 
 ## Rate limit — one request every 30 seconds
 
-PanGBank runs on a **shared Genoscope machine with no dedicated resources and no monitoring**: overload it and nobody sees it happen — the service simply goes down for everyone.
+PanGBank runs on **shared academic infrastructure**: an overload degrades the service for every other user.
 
 > **Never send more than 1 HTTP request per 30 seconds**, across every route: API calls, file downloads, CGView maps. Sleep between calls, and never parallelise requests across agents or threads.
 
