@@ -1,6 +1,6 @@
 # Flagship workflow — project a user's genome onto a PanGBank pangenome
 
-This is the highest-value thing PanGBank enables: take a newly sequenced isolate and characterise it against 2,000 reference genomes **without rebuilding anything**. Every gene is assigned to a pangenome family (or flagged genome-specific), its RGPs are detected, and those RGPs are matched to the species' known insertion spots.
+This is one of the highest-value things PanGBank enables: take a newly sequenced isolate and characterise it against 2,000 reference genomes **without rebuilding anything**. Every gene is assigned to a pangenome family (or flagged genome-specific), its RGPs are detected, and those RGPs are matched to the species' known insertion spots.
 
 ```bash
 # 0. Install. Name every external binary explicitly — projection needs mmseqs2,
