@@ -1,7 +1,9 @@
+from typing import Annotated
+
 from pydantic import BaseModel, Field
 
 from pangbank_api.models import Taxon, Taxonomy
-from typing import Annotated
+
 
 class PaginationParams(BaseModel):
     offset: int = 0
@@ -16,9 +18,13 @@ class FilterRelease(FilterReleaseVersion):
     only_latest_release: bool | None = None
 
 
-class FilterCollection(FilterRelease):
+class FilterCollection(BaseModel):
     collection_name: str | None = None
     collection_id: int | None = None
+
+
+class FilterCollectionAndRelease(FilterCollection, FilterRelease):
+    pass
 
 
 class FilterTaxon(BaseModel):
@@ -53,7 +59,7 @@ class FilterCollectionTaxonGenome(
 
 
 class FilterGenomeTaxonGenomePangenome(
-    FilterCollection, FilterTaxon, FilterGenome, FilterPangenome
+    FilterCollection, FilterRelease, FilterTaxon, FilterGenome, FilterPangenome
 ):
     pass
 

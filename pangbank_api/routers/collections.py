@@ -3,9 +3,10 @@ from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 
 from pangbank_api.crud import collections as collections_crud
 from pangbank_api.crud.common import (
-    FilterCollection,
+    FilterCollectionAndRelease,
     FilterRelease,
     FilterReleaseVersion,
+    # FilterCollectionAndRelease,
 )
 
 from ..dependencies import SessionDep, SettingsDep
@@ -19,24 +20,29 @@ router = APIRouter(
 
 
 @router.get("/collections/", response_model=list[CollectionPublicWithReleases])
-def get_collections(session: SessionDep, filter_params: FilterCollection = Depends()):
+def get_collections(
+    session: SessionDep, filter_params: FilterCollectionAndRelease = Depends()
+):
     collections = collections_crud.get_collections(session, filter_params)
 
     return collections
 
 
 @router.get("/collections/{collection_id}", response_model=CollectionPublicWithReleases)
-def get_collection(
+def get_collections(
     collection_id: int, session: SessionDep, filter_release: FilterRelease = Depends()
 ):
 
     collection = collections_crud.get_collection(session, collection_id, filter_release)
 
     if not collection:
-        raise HTTPException(
-            status_code=404, detail=f"Collection with id={collection_id} not found"
-        )
 
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Collection with id={collection_id} not found or no matching release was found"
+            ),
+        )
     return collection
 
 
@@ -58,14 +64,14 @@ async def get_collection_mash_release_sketch(
     if not mash_sketch_file:
         raise HTTPException(
             status_code=404,
-            detail=f"Mash sketch of collection with id={collection_id} not found",
+            detail=f"Mash sketch of collection with id={collection_id} not found or no matching release was found",
         )
     mash_sketch_path = settings.pangbank_data_dir / mash_sketch_file
 
     if not mash_sketch_path.exists():
         raise HTTPException(
             status_code=404,
-            detail=f"Pangenome file {mash_sketch_file.name} does not exists",
+            detail=f"Mash sketch file {mash_sketch_file.name} does not exists",
         )
     return FileResponse(path=mash_sketch_path.as_posix(), filename="mash_sketch.msh")
 
@@ -87,7 +93,7 @@ async def get_collection_release_multiqc(
     if not multiqc_file:
         raise HTTPException(
             status_code=404,
-            detail=f"MultiQC report of collection with id={collection_id} not found",
+            detail=f"MultiQC report of collection with id={collection_id} not found or no matching release was found",
         )
     multiqc_path = settings.pangbank_data_dir / multiqc_file
 
