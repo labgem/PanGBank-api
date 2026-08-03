@@ -12,7 +12,7 @@ Short web entry point: <https://pangbank.genoscope.cns.fr/llms.txt>
 ## Always true
 
 - **Never scrape <https://pangbank.genoscope.cns.fr>.** Single-page app; the HTML carries no data, and dynamic routes return HTTP 404 server-side while rendering fine in a browser. Use <https://pangbank-api.genoscope.cns.fr>.
-- **Pin the release** with `only_latest_release=true`, or filter client-side on `collection_release.version`. Without it results are summed across every release.
+- **Pin the release** with `release_version=<x.y.z>` for reproducible queries, or `only_latest_release=true` to target the latest published release. Without a release filter, results are summed across every release.
 - **`taxon_name` needs the GTDB rank prefix** and is an exact match: `g__Escherichia` works, `Escherichia` returns nothing.
 - **At most 1 HTTP request every 30 seconds**, across all routes, never parallelised across agents or threads. PanGBank runs on shared academic infrastructure: an overload degrades the service for every other user. Call `/pangenomes/count/` before any listing, filter server-side, use `limit=100`, and download a pangenome once rather than re-fetching it.
 
@@ -46,15 +46,14 @@ Verified output today: **only the three `dbg/*` routes**, which are live but del
 Then re-read the traps against your change. Each was established by direct request and each misleads if the behaviour moves:
 
 - `limit` caps at 100; `taxon_name` has a 3-character minimum; `HEAD` on `/pangenomes/{pangenome_id}/file` returns 405.
-- `release_version` is accepted but has **no effect** on list routes, while it is honoured on `release_notes`, `mash_sketch` and `multiqc_report`.
+- `release_version` and `only_latest_release` are server-side list filters on `/collections/`, `/pangenomes/` and `/pangenomes/count/`; `release_version` is also honoured on `release_notes`, `mash_sketch` and `multiqc_report`.
 - The ETag on `/pangenomes/{pangenome_id}/file` is not the file's md5 — clients must validate against `file_md5sum`.
-- `only_latest_release` is the only working server-side release filter.
+- A nonexistent `release_version` should return empty list/count results, not silently fall back to all releases.
 
 If you fix one of the discrepancies below, delete the skill's corresponding trap in the same change — a trap warning about a bug you just fixed is worse than no trap.
 
 Known API-side discrepancies an agent should not be surprised by, and which the skill documents:
 
-- `release_version` is accepted but has **no effect** on `/pangenomes/`, `/pangenomes/count/` and `/collections/`; it works correctly on `release_notes`, `mash_sketch` and `multiqc_report`. Either make it filter or drop it from those routes.
 - The `dbg/graph`, `dbg/family_annotations` and `dbg/genome_annotations` endpoints are live but **absent from the OpenAPI schema** (14 documented paths). Note the path shape `dbg/graph`, not `dbg_graph` — the underscore form collides with the `{genome_id}` route and returns 422.
 - The HTTP `ETag` on `/pangenomes/{pid}/file` is **not** the file checksum. Validate against the `file_md5sum` field.
 - `limit` is capped at 100; `HEAD` on `/file` returns 405.
