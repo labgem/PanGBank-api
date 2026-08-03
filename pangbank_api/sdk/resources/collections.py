@@ -14,11 +14,13 @@ def _list_params(
     collection_name: str | None,
     collection_id: int | None,
     only_latest_release: bool | None,
+    release_version: str | None = None,
 ) -> dict[str, Any]:
     return {
         "collection_name": collection_name,
         "collection_id": collection_id,
         "only_latest_release": only_latest_release,
+        "release_version": release_version,
     }
 
 
@@ -37,6 +39,7 @@ class CollectionsResource:
         collection_name: str | None = None,
         collection_id: int | None = None,
         only_latest_release: bool | None = None,
+        release_version: str | None = None,
     ) -> list[CollectionPublicWithReleases]:
         """List collections, optionally filtered.
 
@@ -51,7 +54,9 @@ class CollectionsResource:
         """
         response = self._transport.get(
             "/collections/",
-            params=_list_params(collection_name, collection_id, only_latest_release),
+            params=_list_params(
+                collection_name, collection_id, only_latest_release, release_version
+            ),
         )
         return [
             CollectionPublicWithReleases.model_validate(item)
@@ -59,7 +64,10 @@ class CollectionsResource:
         ]
 
     def get(
-        self, collection_id: int, only_latest_release: bool | None = None
+        self,
+        collection_id: int,
+        only_latest_release: bool | None = None,
+        release_version: str | None = None,
     ) -> CollectionPublicWithReleases:
         """Fetch a single collection by id.
 
@@ -76,7 +84,10 @@ class CollectionsResource:
         """
         response = self._transport.get(
             f"/collections/{collection_id}",
-            params={"only_latest_release": only_latest_release},
+            params={
+                "only_latest_release": only_latest_release,
+                "release_version": release_version,
+            },
         )
         return CollectionPublicWithReleases.model_validate(response.json())
 
@@ -196,6 +207,7 @@ class AsyncCollectionsResource:
         collection_name: str | None = None,
         collection_id: int | None = None,
         only_latest_release: bool | None = None,
+        release_version: str | None = None,
     ) -> list[CollectionPublicWithReleases]:
         """List collections, optionally filtered.
 
@@ -210,7 +222,9 @@ class AsyncCollectionsResource:
         """
         response = await self._transport.get(
             "/collections/",
-            params=_list_params(collection_name, collection_id, only_latest_release),
+            params=_list_params(
+                collection_name, collection_id, only_latest_release, release_version
+            ),
         )
         return [
             CollectionPublicWithReleases.model_validate(item)
@@ -218,7 +232,10 @@ class AsyncCollectionsResource:
         ]
 
     async def get(
-        self, collection_id: int, only_latest_release: bool | None = None
+        self,
+        collection_id: int,
+        only_latest_release: bool | None = None,
+        release_version: str | None = None,
     ) -> CollectionPublicWithReleases:
         """Fetch a single collection by id.
 
@@ -235,7 +252,10 @@ class AsyncCollectionsResource:
         """
         response = await self._transport.get(
             f"/collections/{collection_id}",
-            params={"only_latest_release": only_latest_release},
+            params={
+                "only_latest_release": only_latest_release,
+                "release_version": release_version,
+            },
         )
         return CollectionPublicWithReleases.model_validate(response.json())
 
