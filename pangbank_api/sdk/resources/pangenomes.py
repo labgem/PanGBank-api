@@ -14,6 +14,7 @@ def _filter_params(
     collection_name: str | None,
     collection_id: int | None,
     only_latest_release: bool | None,
+    release_version: str | None,
     taxon_name: str | None,
     substring_taxon_match: bool,
     genome_name: str | None,
@@ -23,6 +24,7 @@ def _filter_params(
         "collection_name": collection_name,
         "collection_id": collection_id,
         "only_latest_release": only_latest_release,
+        "release_version": release_version,
         "taxon_name": taxon_name,
         "substring_taxon_match": substring_taxon_match,
         "genome_name": genome_name,
@@ -41,6 +43,7 @@ class PangenomesResource:
         collection_name: str | None = None,
         collection_id: int | None = None,
         only_latest_release: bool | None = None,
+        release_version: str | None = None,
         taxon_name: str | None = None,
         substring_taxon_match: bool = False,
         genome_name: str | None = None,
@@ -55,6 +58,8 @@ class PangenomesResource:
             collection_id: Filter by the id of the owning collection.
             only_latest_release: If `True`, restrict to pangenomes from the
                 latest release of their collection.
+            release_version: Restrict to pangenomes from this collection
+                release version.
             taxon_name: Filter by taxon name.
             substring_taxon_match: If `True`, match `taxon_name` as a
                 substring instead of requiring an exact match.
@@ -67,10 +72,12 @@ class PangenomesResource:
         Returns:
             Matching pangenomes.
         """
+
         params = _filter_params(
             collection_name,
             collection_id,
             only_latest_release,
+            release_version,
             taxon_name,
             substring_taxon_match,
             genome_name,
@@ -100,6 +107,7 @@ class PangenomesResource:
         collection_name: str | None = None,
         collection_id: int | None = None,
         only_latest_release: bool | None = None,
+        release_version: str | None = None,
         taxon_name: str | None = None,
         substring_taxon_match: bool = False,
         genome_name: str | None = None,
@@ -112,6 +120,8 @@ class PangenomesResource:
             collection_id: Filter by the id of the owning collection.
             only_latest_release: If `True`, restrict to pangenomes from the
                 latest release of their collection.
+            release_version: Restrict to pangenomes from this collection
+                release version.
             taxon_name: Filter by taxon name.
             substring_taxon_match: If `True`, match `taxon_name` as a
                 substring instead of requiring an exact match.
@@ -122,10 +132,12 @@ class PangenomesResource:
         Returns:
             The number of matching pangenomes.
         """
+
         params = _filter_params(
             collection_name,
             collection_id,
             only_latest_release,
+            release_version,
             taxon_name,
             substring_taxon_match,
             genome_name,
@@ -289,6 +301,7 @@ class AsyncPangenomesResource:
         collection_name: str | None = None,
         collection_id: int | None = None,
         only_latest_release: bool | None = None,
+        release_version: str | None = None,
         taxon_name: str | None = None,
         substring_taxon_match: bool = False,
         genome_name: str | None = None,
@@ -303,6 +316,8 @@ class AsyncPangenomesResource:
             collection_id: Filter by the id of the owning collection.
             only_latest_release: If `True`, restrict to pangenomes from the
                 latest release of their collection.
+            release_version: Restrict to pangenomes from this collection
+                release version.
             taxon_name: Filter by taxon name.
             substring_taxon_match: If `True`, match `taxon_name` as a
                 substring instead of requiring an exact match.
@@ -315,10 +330,12 @@ class AsyncPangenomesResource:
         Returns:
             Matching pangenomes.
         """
+
         params = _filter_params(
             collection_name,
             collection_id,
             only_latest_release,
+            release_version,
             taxon_name,
             substring_taxon_match,
             genome_name,
@@ -348,6 +365,7 @@ class AsyncPangenomesResource:
         collection_name: str | None = None,
         collection_id: int | None = None,
         only_latest_release: bool | None = None,
+        release_version: str | None = None,
         taxon_name: str | None = None,
         substring_taxon_match: bool = False,
         genome_name: str | None = None,
@@ -360,6 +378,8 @@ class AsyncPangenomesResource:
             collection_id: Filter by the id of the owning collection.
             only_latest_release: If `True`, restrict to pangenomes from the
                 latest release of their collection.
+            release_version: Restrict to pangenomes from this collection
+                release version.
             taxon_name: Filter by taxon name.
             substring_taxon_match: If `True`, match `taxon_name` as a
                 substring instead of requiring an exact match.
@@ -370,10 +390,12 @@ class AsyncPangenomesResource:
         Returns:
             The number of matching pangenomes.
         """
+
         params = _filter_params(
             collection_name,
             collection_id,
             only_latest_release,
+            release_version,
             taxon_name,
             substring_taxon_match,
             genome_name,

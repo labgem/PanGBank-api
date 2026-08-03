@@ -1,7 +1,7 @@
 from sqlmodel import Session
 
 from pangbank_api.crud.common import FilterGenomeTaxonGenomePangenome, PaginationParams
-from pangbank_api.crud.pangenomes import get_pangenomes
+from pangbank_api.crud.pangenomes import get_pangenomes, get_pangenomes_count
 from pangbank_api.models import Pangenome
 from ..mock_session import session_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 from ..mock_data import (
@@ -79,6 +79,40 @@ def test_get_pangenomes_with_combined_filters(session: Session, mock_data: None)
     result = get_pangenomes(session=session, filter_params=filter_params)
     assert len(result) == 1  # Only one result should match the combined filters
     assert result[0].collection_release.latest is True
+
+
+def test_get_pangenomes_with_release_version_filter(session: Session, mock_data: None):
+    """Test with release_version filter applied in SQL."""
+
+    filter_params = FilterGenomeTaxonGenomePangenome(release_version="2.0.0")
+    result = get_pangenomes(session=session, filter_params=filter_params)
+
+    assert len(result) == 1
+    assert all(p.collection_release.version == "2.0.0" for p in result)
+
+
+def test_get_pangenomes_with_non_existing_release_version(
+    session: Session, mock_data: None
+):
+    """Unknown release_version should return an empty list."""
+
+    filter_params = FilterGenomeTaxonGenomePangenome(release_version="9.9.9")
+    result = get_pangenomes(
+        session=session, filter_params=filter_params, pagination_params=None
+    )
+
+    assert len(result) == 0
+
+
+def test_get_pangenomes_count_with_release_version_filter(
+    session: Session, mock_data: None
+):
+    """Count should be computed in SQL and honor release_version."""
+
+    filter_params = FilterGenomeTaxonGenomePangenome(release_version="1.0.0")
+    result = get_pangenomes_count(session=session, filter_params=filter_params)
+
+    assert result == 2
 
 
 def test_get_pangenomes_no_results(session: Session):

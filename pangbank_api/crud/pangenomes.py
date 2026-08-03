@@ -1,35 +1,87 @@
-from pathlib import Path
 from collections import defaultdict
-from typing import Any, Iterator, Sequence, cast
+from collections.abc import Iterator, Sequence
+from pathlib import Path
+from typing import Any, cast
 
 from sqlalchemy import func
-
-from sqlalchemy.orm import aliased, selectinload
-
-
+from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
 from pangbank_api.crud.common import (
-    FilterGenomeTaxonGenomePangenome,
-    PaginationParams,
     FilterGenome,
     FilterGenomeMetadata,
+    FilterGenomeTaxonGenomePangenome,
+    PaginationParams,
     get_taxonomies_from_taxa,
 )
 from pangbank_api.models import (
+    Collection,
+    CollectionPublic,
+    CollectionRelease,
+    CollectionReleasePublic,
     Genome,
     GenomePangenomeLink,
     Pangenome,
     PangenomePublic,
     PangenomeTaxonLink,
     Taxon,
-    CollectionRelease,
-    CollectionReleasePublic,
-    Collection,
-    TaxonomySourcePublic,
-    CollectionPublic,
     TaxonomyPublic,
+    TaxonomySourcePublic,
 )
+
+def _build_pangenomes_query(
+    filter_params: FilterGenomeTaxonGenomePangenome | None = None,
+):
+    query = select(Pangenome).distinct()
+
+    if filter_params and filter_params.pangenome_name is not None:
+        query = query.where(Pangenome.name == filter_params.pangenome_name)
+
+    needs_release_join = bool(
+        filter_params
+        and (
+            filter_params.release_version is not None
+            or filter_params.only_latest_release
+            or filter_params.collection_name is not None
+            or filter_params.collection_id is not None
+        )
+    )
+    if needs_release_join:
+        query = query.join(CollectionRelease)
+
+    if filter_params and filter_params.release_version is not None:
+        query = query.where(CollectionRelease.version == filter_params.release_version)
+
+    if filter_params and filter_params.only_latest_release is True:
+        query = query.where(CollectionRelease.latest)
+
+    if filter_params and (
+        filter_params.collection_name is not None
+        or filter_params.collection_id is not None
+    ):
+        query = query.join(Collection)
+        if filter_params.collection_name is not None:
+            query = query.where(Collection.name == filter_params.collection_name)
+        if filter_params.collection_id is not None:
+            query = query.where(Collection.id == filter_params.collection_id)
+
+    if filter_params and filter_params.genome_name is not None:
+        query = (
+            query.join(GenomePangenomeLink)
+            .join(Genome)
+            .where(Genome.name == filter_params.genome_name)
+        )
+
+    if filter_params and filter_params.taxon_name is not None:
+        query = query.join(PangenomeTaxonLink).join(Taxon)
+        if filter_params.substring_taxon_match:
+            query = query.where(
+                func.lower(Taxon.name).like(f"%{filter_params.taxon_name.lower()}%")
+            )
+        else:
+            query = query.where(Taxon.name == filter_params.taxon_name)
+
+    return query
 
 
 def get_pangenome_file(session: Session, pangenome_id: int) -> Path | None:
@@ -185,59 +237,28 @@ def get_pangenomes(
     filter_params: FilterGenomeTaxonGenomePangenome | None = None,
     pagination_params: PaginationParams | None = None,
 ) -> Sequence[Pangenome]:
+    query = _build_pangenomes_query(filter_params)
 
-    query = select(Pangenome).distinct()
-
-    if filter_params and filter_params.pangenome_name is not None:
-        query = query.where(Pangenome.name == filter_params.pangenome_name)
-
-    collectionrelease_alias = aliased(CollectionRelease)
-    # collectionrelease_alias_2 = aliased(CollectionRelease)
-
-    if filter_params and filter_params.only_latest_release is True:
-        query = query.join(collectionrelease_alias).where(
-            collectionrelease_alias.latest
-        )
-
-    if filter_params and filter_params.collection_name is not None:
-        query = (
-            query.join(CollectionRelease)
-            .join(Collection)
-            .where(Collection.name == filter_params.collection_name)
-        )
-
-    if filter_params and filter_params.collection_id is not None:
-        query = (
-            query.join(CollectionRelease)
-            .join(Collection)
-            .where(Collection.id == filter_params.collection_id)
-        )
-
-    if filter_params and filter_params.genome_name is not None:
-        query = (
-            query.join(GenomePangenomeLink)
-            .join(Genome)
-            .where(Genome.name == filter_params.genome_name)
-        )
-
-    if filter_params and filter_params.taxon_name is not None:
-        # Apply offset and limit
-
-        query = query.join(PangenomeTaxonLink).join(Taxon)
-        if filter_params.substring_taxon_match:
-            query = query.where(
-                func.lower(Taxon.name).like(f"%{filter_params.taxon_name.lower()}%")
-            )
-        else:
-            # exact match
-            query = query.where(Taxon.name == filter_params.taxon_name)
-    # Apply offset and limit
     if pagination_params:
         query = query.offset(pagination_params.offset).limit(pagination_params.limit)
 
     pangenomes = session.exec(query).all()
 
     return pangenomes
+
+
+def get_pangenomes_count(
+    session: Session,
+    filter_params: FilterGenomeTaxonGenomePangenome | None = None,
+) -> int:
+    pangenome_ids_query = (
+        _build_pangenomes_query(filter_params)
+        .with_only_columns(cast(Any, Pangenome.id))
+        .order_by(None)
+        .subquery()
+    )
+    count_query = select(func.count()).select_from(pangenome_ids_query)
+    return session.exec(count_query).one()
 
 
 def get_public_pangenomes(

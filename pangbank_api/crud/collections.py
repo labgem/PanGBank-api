@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 from packaging.version import parse
 
 from pangbank_api.crud.common import (
-    FilterCollection,
+    FilterCollectionAndRelease,
     FilterRelease,
     FilterReleaseVersion,
 )
@@ -14,34 +14,54 @@ from pangbank_api.models import (
     Collection,
     CollectionReleasePublic,
     CollectionPublicWithReleases,
+    CollectionRelease,
 )
 
+from sqlalchemy.orm import selectinload, contains_eager
 
 def get_collections(
-    session: Session, filter_params: FilterCollection
+    session: Session, filter_params: FilterCollectionAndRelease
 ) -> Sequence[CollectionPublicWithReleases]:
+
     query = select(Collection)
 
-    # Check if filter_params.collection_release_id is provided
+    if filter_params.collection_id is not None:
+        query = query.where(Collection.id == filter_params.collection_id)
+
     if filter_params.collection_name is not None:
         query = query.where(Collection.name == filter_params.collection_name)
 
-    collections = session.exec(query).all()
-
-    public_collections: List[CollectionPublicWithReleases] = []
-
-    for collection in collections:
-        collection_public = make_collection_public_with_releases(
-            collection, filter_params.only_latest_release
+    if filter_params.release_version is not None or filter_params.only_latest_release:
+        query = (
+            query.join(Collection.releases)  # pyright: ignore
+            .where(
+                *(
+                    [CollectionRelease.version == filter_params.release_version]
+                    if filter_params.release_version is not None
+                    else []
+                ),
+                *(
+                    [CollectionRelease.latest.is_(True)]  # type: ignore
+                    if filter_params.only_latest_release
+                    else []
+                ),
+            )
+            .options(contains_eager(Collection.releases))  # pyright: ignore
         )
-        public_collections.append(collection_public)
 
-    return public_collections
+    else:
+        query = query.options(selectinload(Collection.releases))  # pyright: ignore
+
+    collections = session.exec(query).unique().all()
+
+    return [
+        make_collection_public_with_releases(collection) for collection in collections
+    ]
 
 
 def make_collection_public_with_releases(
     collection: Collection,
-    only_latest_release: bool | None,
+    only_latest_release: bool | None = None,
     version: str | None = None,
 ):
     public_releases: List[CollectionReleasePublic] = []
@@ -89,18 +109,39 @@ def make_collection_public_with_releases(
     return collection_public
 
 
-def get_collection(session: Session, collection_id: int, filter_release: FilterRelease):
+def get_collection(
+    session: Session,
+    collection_id: int,
+    filter_release: FilterRelease,
+):
+    query = select(Collection).where(Collection.id == collection_id)
 
-    collection = session.get(Collection, collection_id)
+    if filter_release.release_version is not None or filter_release.only_latest_release:
+        conditions = []
+
+        if filter_release.release_version is not None:
+            conditions.append(
+                CollectionRelease.version == filter_release.release_version
+            )
+
+        if filter_release.only_latest_release:
+            conditions.append(CollectionRelease.latest.is_(True))
+
+        query = (
+            query.join(Collection.releases)
+            .where(*conditions)
+            .options(contains_eager(Collection.releases))
+        )
+
+    else:
+        query = query.options(selectinload(Collection.releases))
+
+    collection = session.exec(query).unique().one_or_none()
+
     if collection is None:
         return None
 
-    public_collection = make_collection_public_with_releases(
-        collection,
-        only_latest_release=filter_release.only_latest_release,
-        version=filter_release.release_version,
-    )
-    return public_collection
+    return make_collection_public_with_releases(collection)
 
 
 def get_collection_release(

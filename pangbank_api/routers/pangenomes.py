@@ -167,9 +167,7 @@ async def get_genome_cgview_map(
 async def get_pangenome_count(
     session: SessionDep, filter_params: FilterGenomeTaxonGenomePangenome = Depends()
 ):
-    pangenomes = pangenomes_crud.get_pangenomes(session, filter_params)
-
-    return len(pangenomes)
+    return pangenomes_crud.get_pangenomes_count(session, filter_params)
 
 @router.get(
     "/pangenomes/{pangenome_id}/dbg/graph", response_model=str, response_class=FileResponse,
@@ -265,4 +263,3 @@ async def get_pangenome_dbg_annotations_genomes(
     pangenome_id: int, session: SessionDep, settings: SettingsDep
 ):
     return get_annotation(pangenome_id, "_genomes", session, settings)
-
