@@ -97,7 +97,7 @@ except PanGBankNotFoundError as exc:
 | `get(collection_id, only_latest_release=None, release_version=None)` | Fetch a single collection by id. Optionally restrict the returned releases to the latest one (`only_latest_release`) or pin to a specific release (`release_version`). Returns `CollectionPublicWithReleases`. |
 | `get_multiqc_report(collection_id, release_version=None)` | Fetch the collection release MultiQC report as HTML text. |
 | `get_release_notes(collection_id, release_version=None)` | Fetch the collection release notes as plain text. |
-| `download_mash_sketch(collection_id, dest=None)` | Download the collection's Mash sketch file. |
+| `download_mash_sketch(collection_id, release_version=None, dest=None)` | Download the collection's Mash sketch file for a specific release. If `release_version` is omitted the latest release is used. |
 | `download_index_info(collection_id, dest=None)` | Download the collection's index info file. |
 | `download_index_pangenomes(collection_id, dest=None)` | Download the collection's pangenomes index file. |
 | `download_index_genomes(collection_id, dest=None)` | Download the collection's genomes index file. |
