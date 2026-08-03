@@ -92,20 +92,27 @@ class CollectionsResource:
         return CollectionPublicWithReleases.model_validate(response.json())
 
     def download_mash_sketch(
-        self, collection_id: int, dest: str | Path | None = None
+        self,
+        collection_id: int,
+        release_version: str | None = None,
+        dest: str | Path | None = None,
     ) -> bytes | Path:
         """Download the Mash sketch file for a collection.
 
         Args:
             collection_id: Id of the collection.
+            release_version: Version of the release to download the Mash sketch for. If `None`, the latest release will be used.
             dest: If given, write the file to this path and return it;
                 otherwise return the raw content as `bytes`.
 
         Returns:
             The file content as `bytes`, or the `Path` written to.
         """
+
         return self._transport.download(
-            f"/collections/{collection_id}/mash_sketch", dest
+            f"/collections/{collection_id}/mash_sketch",
+            dest,
+            params={"release_version": release_version},
         )
 
     def download_index_info(
@@ -260,20 +267,27 @@ class AsyncCollectionsResource:
         return CollectionPublicWithReleases.model_validate(response.json())
 
     async def download_mash_sketch(
-        self, collection_id: int, dest: str | Path | None = None
+        self,
+        collection_id: int,
+        release_version: str | None = None,
+        dest: str | Path | None = None,
     ) -> bytes | Path:
         """Download the Mash sketch file for a collection.
 
         Args:
             collection_id: Id of the collection.
+            release_version: Version of the release to download the Mash sketch for. If `None`, the latest release will be used.
             dest: If given, write the file to this path and return it;
                 otherwise return the raw content as `bytes`.
 
         Returns:
             The file content as `bytes`, or the `Path` written to.
         """
+
         return await self._transport.download(
-            f"/collections/{collection_id}/mash_sketch", dest
+            f"/collections/{collection_id}/mash_sketch",
+            dest,
+            params={"release_version": release_version},
         )
 
     async def download_index_info(
