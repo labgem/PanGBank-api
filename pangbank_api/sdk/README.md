@@ -93,8 +93,8 @@ except PanGBankNotFoundError as exc:
 
 | Method | Description |
 | --- | --- |
-| `list(collection_name=None, collection_id=None, only_latest_release=None)` | List collections, optionally filtered by name or id. If `only_latest_release` is `True`, each collection's releases are restricted to the latest one. Returns `list[CollectionPublicWithReleases]`. |
-| `get(collection_id, only_latest_release=None)` | Fetch a single collection by id. Returns `CollectionPublicWithReleases`. |
+| `list(collection_name=None, collection_id=None, only_latest_release=None, release_version=None)` | List collections, optionally filtered by name, id, or release. If `only_latest_release` is `True`, each collection's releases are restricted to the latest one. `release_version` pins results to a specific release version. Returns `list[CollectionPublicWithReleases]`. |
+| `get(collection_id, only_latest_release=None, release_version=None)` | Fetch a single collection by id. Optionally restrict the returned releases to the latest one (`only_latest_release`) or pin to a specific release (`release_version`). Returns `CollectionPublicWithReleases`. |
 | `get_multiqc_report(collection_id, release_version=None)` | Fetch the collection release MultiQC report as HTML text. |
 | `get_release_notes(collection_id, release_version=None)` | Fetch the collection release notes as plain text. |
 | `download_mash_sketch(collection_id, dest=None)` | Download the collection's Mash sketch file. |
@@ -126,9 +126,9 @@ data = client.collections.download_index_info(collection_id=1)  # bytes
 
 | Method | Description |
 | --- | --- |
-| `list(collection_name=None, collection_id=None, only_latest_release=None, taxon_name=None, substring_taxon_match=False, genome_name=None, pangenome_name=None, offset=0, limit=20)` | List pangenomes, filtered by any combination of owning collection, taxon, containing genome, or pangenome name. Returns `list[PangenomePublic]`. |
+| `list(collection_name=None, collection_id=None, only_latest_release=None, release_version=None, taxon_name=None, substring_taxon_match=False, genome_name=None, pangenome_name=None, offset=0, limit=20)` | List pangenomes, filtered by any combination of owning collection, release, taxon, containing genome, or pangenome name. Returns `list[PangenomePublic]`. |
 | `get(pangenome_id)` | Fetch a single pangenome by id. Returns `PangenomePublic`. |
-| `count(collection_name=None, collection_id=None, only_latest_release=None, taxon_name=None, substring_taxon_match=False, genome_name=None, pangenome_name=None)` | Count pangenomes matching the same filters as `list` (no pagination). Returns `int`. |
+| `count(collection_name=None, collection_id=None, only_latest_release=None, release_version=None, taxon_name=None, substring_taxon_match=False, genome_name=None, pangenome_name=None)` | Count pangenomes matching the same filters as `list` (no pagination). Supports `release_version` and `only_latest_release`. Returns `int`. |
 | `list_genomes(pangenome_id, genome_name=None, offset=0, limit=20)` | List the genomes belonging to a pangenome. Returns `list[GenomePangenomeLinkPublic]`. |
 | `get_genome(pangenome_id, genome_id)` | Fetch the link between a pangenome and one of its genomes. Returns `GenomePangenomeLinkPublic`. |
 | `download_file(pangenome_id, dest=None)` | Download the pangenome file. |
