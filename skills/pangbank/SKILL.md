@@ -112,14 +112,14 @@ Consequences: a count near 2,000 genomes means **dereplicated, not exhaustive** 
 | GET | `/genomes/` | genomes (paginated) |
 | GET | `/genomes/{gid}` | one genome: CheckM/CheckM2, GC, N50/L50, **all** taxonomies, statuses |
 
-Filters on `/pangenomes/` and `/pangenomes/count/`: `taxon_name`, `substring_taxon_match`, `pangenome_name`, `genome_name`, `collection_name`, `collection_id`, `only_latest_release`, `offset`, `limit` (≤ 100) — plus `release_version`, which the schema advertises but which **does nothing here** (trap 1b). On `/genomes/`: `taxon_name`, `substring_taxon_match`, `genome_name`, `offset`, `limit`. On `/pangenomes/{pid}/genomes`: `genome_name`, `offset`, `limit`.
+Filters on `/pangenomes/` and `/pangenomes/count/`: `taxon_name`, `substring_taxon_match`, `pangenome_name`, `genome_name`, `collection_name`, `collection_id`, `only_latest_release`, `release_version`, `offset`, `limit` (≤ 100). On `/genomes/`: `taxon_name`, `substring_taxon_match`, `genome_name`, `offset`, `limit`. On `/pangenomes/{pid}/genomes`: `genome_name`, `offset`, `limit`.
 
 There is **no filter on metrics** — fetch, then filter locally.
 ## Traps — every one verified by direct request
 
 **1. Without `only_latest_release=true`, results sum across releases.** `/pangenomes/count/` alone → 17,523; with the flag → 6,723. "5 *E. coli* pangenomes" is meaningless: that is 5 (collection × release) pairs. Always pin the release dimension, and say how in your answer.
 
-**1b. `release_version` is silently ignored as a list filter — do not use it to pin a release.** On `/pangenomes/`, `/pangenomes/count/` and `/collections/` the parameter is accepted and has **no effect**: *A. baumannii* in `GTDB_refseq` counts 2 with `release_version=2.0.0`, 2 with `1.0.0`, and still 2 with a nonexistent `9.9.9` — never an error, just no filtering. `only_latest_release=true` is the **only** server-side release filter that works. To pin a specific (non-latest) release, filter client-side on `collection_release.version`, or use the CLI's `--release-version`, which does exactly that for you.
+**1b. `release_version` now works as a server-side list filter.** On `/pangenomes/`, `/pangenomes/count/` and `/collections/`, use `release_version` to pin an explicit release during query time. A nonexistent version returns no result (`[]` / `0`) instead of silently falling back to all releases.
 
 The same parameter **does** work on the per-release artifact endpoints, where it selects which release's file to serve: `/collections/{id}/release_notes` returns different content per version, and `/collections/{id}/mash_sketch` returns 14.5 MB for v1.0.0 versus 16.7 MB for v2.0.0. Both default to the latest release when omitted.
 
