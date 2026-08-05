@@ -13,6 +13,9 @@ from typing import Any
 import httpx
 
 from .exceptions import PanGBankAPIError, PanGBankConnectionError, PanGBankNotFoundError
+from collections.abc import Callable
+
+ProgressCallback = Callable[[int, int | None], None]
 
 
 DEFAULT_BASE_URL = "https://pangbank-api.genoscope.cns.fr/"
@@ -124,6 +127,7 @@ class SyncTransport:
         path: str,
         dest: str | Path | None = None,
         params: dict[str, Any] | None = None,
+        progress_callback: ProgressCallback | None = None,
     ) -> bytes | Path:
         """Stream a GET response to memory or to a file.
 
@@ -133,6 +137,9 @@ class SyncTransport:
                 and the path is returned. If `None`, the full body is
                 buffered in memory and returned as `bytes`.
             params: Query parameters; entries with a `None` value are omitted.
+            progress_callback: Optional callback called during download with
+                                `(downloaded_bytes, total_bytes)`. `total_bytes` is extracted
+                                from the Content-Length header when available.
 
         Returns:
             The downloaded content as `bytes`, or the `Path` written to if
@@ -143,19 +150,38 @@ class SyncTransport:
             PanGBankNotFoundError: If the API responds with 404.
             PanGBankAPIError: If the API responds with another error status.
         """
+
         try:
-            with self._client.stream("GET", path, params=_clean_params(params)) as response:
+            with self._client.stream(
+                "GET", path, params=_clean_params(params)
+            ) as response:
                 if response.is_error:
                     response.read()
                     _raise_for_response(response)
                 if dest is None:
                     response.read()
                     return response.content
+
                 dest_path = Path(dest)
+
+                total_size = response.headers.get("Content-Length")
+                total_bytes = int(total_size) if total_size else None
+
+                if progress_callback:
+                    progress_callback(0, total_bytes)
+
+                downloaded_bytes = 0
+
                 with dest_path.open("wb") as file_obj:
                     for chunk in response.iter_bytes():
                         file_obj.write(chunk)
+                        downloaded_bytes += len(chunk)
+
+                        if progress_callback:
+                            progress_callback(downloaded_bytes, total_bytes)
+
                 return dest_path
+
         except httpx.HTTPError as exc:
             raise PanGBankConnectionError(str(exc)) from exc
 
@@ -235,6 +261,7 @@ class AsyncTransport:
         path: str,
         dest: str | Path | None = None,
         params: dict[str, Any] | None = None,
+        progress_callback: ProgressCallback | None = None,
     ) -> bytes | Path:
         """Stream a GET response to memory or to a file.
 
@@ -244,6 +271,9 @@ class AsyncTransport:
                 and the path is returned. If `None`, the full body is
                 buffered in memory and returned as `bytes`.
             params: Query parameters; entries with a `None` value are omitted.
+            progress_callback: Optional callback called during download with
+                                `(downloaded_bytes, total_bytes)`. `total_bytes` is extracted
+                                from the Content-Length header when available.
 
         Returns:
             The downloaded content as `bytes`, or the `Path` written to if
@@ -254,6 +284,7 @@ class AsyncTransport:
             PanGBankNotFoundError: If the API responds with 404.
             PanGBankAPIError: If the API responds with another error status.
         """
+
         try:
             async with self._client.stream(
                 "GET", path, params=_clean_params(params)
@@ -264,11 +295,27 @@ class AsyncTransport:
                 if dest is None:
                     await response.aread()
                     return response.content
+
                 dest_path = Path(dest)
+
+                total_size = response.headers.get("Content-Length")
+                total_bytes = int(total_size) if total_size else None
+
+                if progress_callback:
+                    progress_callback(0, total_bytes)
+
+                downloaded_bytes = 0
+
                 with dest_path.open("wb") as file_obj:
                     async for chunk in response.aiter_bytes():
                         file_obj.write(chunk)
+
+                        downloaded_bytes += len(chunk)
+                        if progress_callback:
+                            progress_callback(downloaded_bytes, total_bytes)
+
                 return dest_path
+
         except httpx.HTTPError as exc:
             raise PanGBankConnectionError(str(exc)) from exc
 
