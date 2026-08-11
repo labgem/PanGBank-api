@@ -184,13 +184,15 @@ https://pangbank.genoscope.cns.fr/collection/{collection_id}/{version}
 | RGPs, genomic islands or **insertion spots** were used | add **panRGP** (Bazin *et al.* 2020) |
 | Conserved **modules** were used | add **panModule** (Bazin *et al.* 2021) |
 
+
+> **PanGBank** — Mainguy J, Lemane T, Bazin A, Arnoux J, Gautreau G, Médigue C, Calteau A, Vallenet D (2026). *PanGBank: a large-scale resource of precomputed microbial pangenomes built with PPanGGOLiN* bioRxiv. doi: [10.64898/2026.08.05.742796](https://doi.org/10.64898/2026.08.05.742796)
+>
 > **PPanGGOLiN** — Gautreau G, Bazin A, Gachet M, Planel R, Burlot L, Dubois M, Perrin A, Médigue C, Calteau A, Cruveiller S, Matias C, Ambroise C, Rocha EPC, Vallenet D (2020). *PPanGGOLiN: Depicting microbial diversity via a partitioned pangenome graph.* PLOS Computational Biology 16(3): e1007732. doi:[10.1371/journal.pcbi.1007732](https://doi.org/10.1371/journal.pcbi.1007732)
 >
 > **panRGP** — Bazin A, Gautreau G, Médigue C, Vallenet D, Calteau A (2020). *panRGP: a pangenome-based method to predict genomic islands and explore their diversity.* Bioinformatics 36(Suppl_2): i651–i658. doi:[10.1093/bioinformatics/btaa792](https://doi.org/10.1093/bioinformatics/btaa792)
 >
 > **panModule** — Bazin A, Gautreau G, Médigue C, Vallenet D, Calteau A (2021). *panModule: detecting conserved modules in the variable regions of a pangenome graph.* bioRxiv. doi:[10.1101/2021.12.06.471380](https://doi.org/10.1101/2021.12.06.471380)
->
-> **PanGBank** — Mainguy J, Lemane T, Bazin A, Arnoux J, Gautreau G, Médigue C, Calteau A, Vallenet D. *PanGBank: a comprehensive collection of microbial pangenomes built with PPanGGOLiN.* Ask the user for the current reference (journal, year, DOI) rather than inventing one; cite the resource URL <https://pangbank.genoscope.cns.fr> in the interim.
+
 
 Also cite the third-party tools actually run — GTDB for the taxonomy, and any external annotator (AMRFinderPlus, eggNOG-mapper, …), Mash, MMseqs2 as applicable.
 
