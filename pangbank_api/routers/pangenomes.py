@@ -204,7 +204,7 @@ async def get_pangenome_count(
 async def get_pangenome_dbg(
     pangenome_id: int, session: SessionDep, settings: SettingsDep
 ):
-    
+
     pangenome = pangenomes_crud.get_pangenome(session, pangenome_id)
 
     if not pangenome:
