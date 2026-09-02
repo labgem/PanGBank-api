@@ -7,8 +7,7 @@ from typing import Any
 
 from pangbank_api.models import GenomePangenomeLinkPublic, PangenomePublic
 
-from ..transport import AsyncTransport, SyncTransport
-
+from ..transport import AsyncTransport, SyncTransport, ProgressCallback
 
 def _filter_params(
     collection_name: str | None,
@@ -191,7 +190,10 @@ class PangenomesResource:
         return GenomePangenomeLinkPublic.model_validate(response.json())
 
     def download_file(
-        self, pangenome_id: int, dest: str | Path | None = None
+        self,
+        pangenome_id: int,
+        dest: str | Path | None = None,
+        progress_callback: ProgressCallback | None = None,
     ) -> bytes | Path:
         """Download the pangenome file.
 
@@ -199,11 +201,19 @@ class PangenomesResource:
             pangenome_id: Id of the pangenome.
             dest: If given, write the file to this path and return it;
                 otherwise return the raw content as `bytes`.
+            progress_callback: Optional callback called during download with
+                `(downloaded_bytes, total_bytes)`. `total_bytes` is extracted
+                from the Content-Length header when available.
 
         Returns:
             The file content as `bytes`, or the `Path` written to.
         """
-        return self._transport.download(f"/pangenomes/{pangenome_id}/file", dest)
+
+        return self._transport.download(
+            f"/pangenomes/{pangenome_id}/file",
+            dest,
+            progress_callback=progress_callback,
+        )
 
     def download_cgview_map(
         self, pangenome_id: int, genome_id: int, dest: str | Path | None = None

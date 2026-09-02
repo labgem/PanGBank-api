@@ -7,8 +7,7 @@ from typing import Any
 
 from pangbank_api.models import CollectionPublicWithReleases
 
-from ..transport import AsyncTransport, SyncTransport
-
+from ..transport import AsyncTransport, SyncTransport, ProgressCallback
 
 def _list_params(
     collection_name: str | None,
@@ -96,6 +95,7 @@ class CollectionsResource:
         collection_id: int,
         release_version: str | None = None,
         dest: str | Path | None = None,
+        progress_callback: ProgressCallback | None = None,
     ) -> bytes | Path:
         """Download the Mash sketch file for a collection.
 
@@ -104,6 +104,10 @@ class CollectionsResource:
             release_version: Version of the release to download the Mash sketch for. If `None`, the latest release will be used.
             dest: If given, write the file to this path and return it;
                 otherwise return the raw content as `bytes`.
+            progress_callback: Optional callback called during download with
+                `(downloaded_bytes, total_bytes)`. `total_bytes` is extracted
+                from the Content-Length header when available.
+
 
         Returns:
             The file content as `bytes`, or the `Path` written to.
@@ -113,6 +117,7 @@ class CollectionsResource:
             f"/collections/{collection_id}/mash_sketch",
             dest,
             params={"release_version": release_version},
+            progress_callback=progress_callback,
         )
 
     def download_index_info(
