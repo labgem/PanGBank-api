@@ -14,6 +14,10 @@ from .database import create_db_and_tables
 from .routers import collections, genomes, pangenomes
 from .config import get_settings
 from importlib.metadata import version
+from starlette.middleware.gzip import (
+    DEFAULT_EXCLUDED_CONTENT_TYPES,
+    GZipMiddleware,
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -40,7 +44,19 @@ app.add_middleware(
 
 # Compress larger payloads (e.g. MultiQC HTML reports) for clients that send
 # `Accept-Encoding: gzip`.
-app.add_middleware(GZipMiddleware, minimum_size=1024)
+# app.add_middleware(GZipMiddleware, minimum_size=1024)
+
+
+app.add_middleware(
+    GZipMiddleware,
+    minimum_size=1024,
+    exclude_content_types=(
+        *DEFAULT_EXCLUDED_CONTENT_TYPES,
+        "application/x-hdf5",
+        "application/octet-stream",
+        "model/mesh",
+    ),
+)
 
 
 app.include_router(collections.router)
