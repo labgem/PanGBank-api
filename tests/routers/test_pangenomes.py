@@ -1,5 +1,5 @@
 # tests/test_pangenomes.py
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 from unittest.mock import patch
@@ -28,7 +28,7 @@ def collection_release_data(tmp_path: Path) -> dict[str, Any]:
         "release_note": "Initial release.",
         "mash_sketch": "sketch/path",
         "mash_version": "2.0",
-        "date": datetime.now(),
+        "date": datetime.now(timezone.utc),
         "collection_id": 1,
         "taxonomy_source_id": 1,
         "mash_sketch_md5sum": "1234567890abcdef",
