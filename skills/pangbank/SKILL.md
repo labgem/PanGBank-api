@@ -185,7 +185,7 @@ https://pangbank.genoscope.cns.fr/collection/{collection_id}/{version}
 | Conserved **modules** were used | add **panModule** (Bazin *et al.* 2021) |
 
 
-> **PanGBank** — Mainguy J, Lemane T, Bazin A, Arnoux J, Gautreau G, Médigue C, Calteau A, Vallenet D (2026). *PanGBank: a large-scale resource of precomputed microbial pangenomes built with PPanGGOLiN* bioRxiv. doi: [10.64898/2026.08.05.742796](https://doi.org/10.64898/2026.08.05.742796)
+> **PanGBank** — Mainguy J, Lemane T, Bazin A, Arnoux J, Gautreau G, Médigue C, Calteau A, Vallenet D (2026). *PanGBank: a large-scale resource of precomputed microbial pangenomes built with PPanGGOLiN* Nucleic Acids Research. doi: [10.1093/nar/gkag948](https://doi.org/10.1093/nar/gkag948)
 >
 > **PPanGGOLiN** — Gautreau G, Bazin A, Gachet M, Planel R, Burlot L, Dubois M, Perrin A, Médigue C, Calteau A, Cruveiller S, Matias C, Ambroise C, Rocha EPC, Vallenet D (2020). *PPanGGOLiN: Depicting microbial diversity via a partitioned pangenome graph.* PLOS Computational Biology 16(3): e1007732. doi:[10.1371/journal.pcbi.1007732](https://doi.org/10.1371/journal.pcbi.1007732)
 >
