@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import pytest
 from pangbank_api.manage_db.collections import (
@@ -33,7 +33,7 @@ def taxonomy_source():
 def collection_release():
     collection_release = CollectionRelease(
         version="1.0",
-        date=datetime(2021, 1, 1),
+        date=datetime(2021, 1, 1, tzinfo=timezone.utc),
         ppanggolin_version="3.0.0",
         pangbank_wf_version="1.0.0",
         release_note="This is the first release of the collection",
@@ -50,7 +50,7 @@ def collection_release():
 def collection_release2():
     collection_release2 = CollectionRelease(
         version="2.0",
-        date=datetime(2021, 1, 1),
+        date=datetime(2021, 1, 1, tzinfo=timezone.utc),
         ppanggolin_version="3.0.0",
         pangbank_wf_version="1.0.0",
         release_note="This is the first release of the collection",
@@ -195,7 +195,7 @@ def test_create_collection_release(
 
     assert collection_release.collection.name == "collection_A"
     assert collection_release.version == "1.0"
-    assert collection_release.date == datetime(2021, 1, 1)
+    assert collection_release.date == datetime(2021, 1, 1, tzinfo=timezone.utc)
     assert collection_release.ppanggolin_version == "3.0.0"
     assert collection_release.pangbank_wf_version == "1.0.0"
 
@@ -238,7 +238,7 @@ def test_create_collection_release_ppanggo_version_mismatch(
 ):
     collection_release_with_version_mismatch = CollectionRelease(
         version="1.0",
-        date=datetime(2021, 1, 1),
+        date=datetime(2021, 1, 1, tzinfo=timezone.utc),
         ppanggolin_version="4.0.0",
         pangbank_wf_version="1.0.0",
         release_note="This is the first release of the collection",

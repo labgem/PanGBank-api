@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import gzip
 import pytest
@@ -61,17 +61,17 @@ def collection_release(session: Session):
     session.add(taxonomy_source)
     session.commit()
     session.refresh(taxonomy_source)
-    
+
     # Create collection
     collection = Collection(name="Test Collection")
     session.add(collection)
     session.commit()
     session.refresh(collection)
-    
+
     # Create release
     release = CollectionRelease(
         version="1.0",
-        date=datetime(2021, 1, 1),
+        date=datetime(2021, 1, 1, tzinfo=timezone.utc),
         ppanggolin_version="3.0.0",
         pangbank_wf_version="1.0.0",
         release_note="Test release",
@@ -85,7 +85,7 @@ def collection_release(session: Session):
     session.add(release)
     session.commit()
     session.refresh(release)
-    
+
     return release
 
 

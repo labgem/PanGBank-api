@@ -12,7 +12,7 @@ from __future__ import annotations
 import gzip
 import json
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -306,7 +306,7 @@ def create_collection_release_json(
             "pangbank_wf_version": "1.0.0",
             "release_note": "Functional test release",
             "mash_version": "2.3",
-            "date": datetime.now().isoformat(),
+            "date": datetime.now(timezone.utc).isoformat(),
             "pangenomes_directory": str(test_dir / "pangenomes"),
             "mash_sketch": str(mash_sketch_file),
         },

@@ -13,7 +13,7 @@ from pangbank_api.models import (
     Collection,
     CollectionRelease,
 )
-from datetime import datetime
+from datetime import datetime, timezone
 from ..mock_session import session_fixture, client_fixture  # type: ignore # noqa: F401 # pylint: disable=unused-import
 
 
@@ -225,7 +225,7 @@ def test_get_genome_with_statuses(client: TestClient, session: Session):
         mash_sketch_md5sum="abc123",
         mash_sketch="sketch_data",
         pangenomes_directory="/test",
-        date=datetime.now(),
+        date=datetime.now(timezone.utc),
         collection=collection,
         taxonomy_source=taxonomy_source,
     )
