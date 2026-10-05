@@ -115,7 +115,7 @@ def mock_data(
         release_note="Initial release.",
         mash_sketch="sketch/path",
         mash_version="2.0",
-        date=datetime.datetime.now(),
+        date=datetime.datetime.now(datetime.timezone.utc),
         collection=collection,
         mash_sketch_md5sum="1234567890abcdef",
     )
@@ -127,7 +127,7 @@ def mock_data(
         release_note="Initial release.",
         mash_sketch="sketch/path",
         mash_version="2.0",
-        date=datetime.datetime.now(),
+        date=datetime.datetime.now(datetime.timezone.utc),
         collection=collection,
         latest=True,
         mash_sketch_md5sum="1234567890abcdef",
